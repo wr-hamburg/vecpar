@@ -11,8 +11,9 @@ This is a header-only library for enabling single source code (C++) to target he
 <ul>
   <li> clang 13 with nvptx support to build the sources </li>
   <li> [vecmem library](https://github.com/acts-project/vecmem) </li>
-  <li> OpenMP 5.0 support for CPU backend </li>
-  <li> CUDA 11.5.0 runtime for the GPU backend </li>
+  <li> (optional) OpenMP 5.0 support for CPU backend </li>
+  <li> (optional) CUDA 11.5.0 runtime for the GPU backend </li>
+  <li> (optional) GoogleTest for running the automated tests </li>
 </ul>
 
 ## Build & install
