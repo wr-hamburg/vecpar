@@ -1,0 +1,71 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"install"
+		],
+		"files" : 
+		[
+			"backend/cuda/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 23,
+				"parent" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 28,
+				"parent" : 0
+			}
+		]
+	},
+	"installers" : 
+	[
+		{
+			"backtrace" : 1,
+			"component" : "Unspecified",
+			"destination" : "lib64/cmake/vecpar-0.0.1",
+			"exportName" : "vecpar_cuda",
+			"exportTargets" : 
+			[
+				{
+					"id" : "vecpar_cuda::@66bab1c99a13c3574d2a",
+					"index" : 12
+				},
+				{
+					"id" : "vecpar_core::@57760688d1f824db5d9c",
+					"index" : 11
+				}
+			],
+			"paths" : 
+			[
+				"backend/cuda/CMakeFiles/Export/lib64/cmake/vecpar-0.0.1/vecpar.cmake"
+			],
+			"type" : "export"
+		},
+		{
+			"backtrace" : 2,
+			"component" : "Unspecified",
+			"destination" : "include",
+			"paths" : 
+			[
+				"backend/cuda/include/vecpar"
+			],
+			"type" : "directory"
+		}
+	],
+	"paths" : 
+	{
+		"build" : "backend/cuda",
+		"source" : "backend/cuda"
+	}
+}

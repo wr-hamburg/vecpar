@@ -1,0 +1,191 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "test/omp/tests_omp"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"target_link_libraries",
+			"target_compile_options",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"test/omp/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 1,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 10,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 6,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 3,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-std=c++20"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-DVECMEM_HAVE_PMR_MEMORY_RESOURCE"
+				},
+				{
+					"backtrace" : 2,
+					"fragment" : "-fopenmp=libomp"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 2,
+					"define" : "GTEST_LINKED_AS_SHARED_LIBRARY=1"
+				},
+				{
+					"backtrace" : 2,
+					"define" : "VECMEM_HAVE_PMR_MEMORY_RESOURCE"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 4,
+					"path" : "/home/maniageo/dev/phd/examples/vecpar/test/omp/common"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/maniageo/dev/phd/examples/vecpar/backend/omp/include"
+				},
+				{
+					"backtrace" : 2,
+					"path" : "/home/maniageo/dev/phd/examples/vecpar/core/include"
+				},
+				{
+					"backtrace" : 2,
+					"isSystem" : true,
+					"path" : "/home/maniageo/tools/spack/opt/spack/linux-fedora33-skylake/gcc-10.3.1/googletest-1.10.0-6yu4p6gxlqk2a4k727ecrcunqe7jj6jb/include"
+				}
+			],
+			"language" : "CXX",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"dependencies" : 
+	[
+		{
+			"backtrace" : 2,
+			"id" : "vecpar_core::@57760688d1f824db5d9c"
+		},
+		{
+			"backtrace" : 2,
+			"id" : "vecpar_omp::@75dbdbebb809a662070f"
+		}
+	],
+	"id" : "tests_omp::@3bb3daeca6e695869df4",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-g",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-Wl,-rpath,/home/maniageo/tools/spack/opt/spack/linux-fedora33-skylake/gcc-10.3.1/googletest-1.10.0-6yu4p6gxlqk2a4k727ecrcunqe7jj6jb/lib64:/usr/local/lib64",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "/home/maniageo/tools/spack/opt/spack/linux-fedora33-skylake/gcc-10.3.1/googletest-1.10.0-6yu4p6gxlqk2a4k727ecrcunqe7jj6jb/lib64/libgtest_main.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/home/maniageo/tools/spack/opt/spack/linux-fedora33-skylake/gcc-10.3.1/googletest-1.10.0-6yu4p6gxlqk2a4k727ecrcunqe7jj6jb/lib64/libgtest.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/local/lib64/libvecmem_core.so.0.10.0",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/lib64/libomp.so",
+				"role" : "libraries"
+			},
+			{
+				"fragment" : "/usr/lib64/libpthread.a",
+				"role" : "libraries"
+			}
+		],
+		"language" : "CXX"
+	},
+	"name" : "tests_omp",
+	"nameOnDisk" : "tests_omp",
+	"paths" : 
+	{
+		"build" : "test/omp",
+		"source" : "test/omp"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "test/omp/OmpTests.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "EXECUTABLE"
+}
