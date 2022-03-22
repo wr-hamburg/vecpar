@@ -9,6 +9,7 @@ This is a header-only library for enabling single source code (C++) to target he
 
 ## Dependencies
 <ul>
+  <li> clang 13 with nvptx support to build the sources </li>
   <li> [vecmem library](https://github.com/acts-project/vecmem) </li>
   <li> OpenMP 5.0 support for CPU backend </li>
   <li> CUDA 11.5.0 runtime for the GPU backend </li>
