@@ -29,7 +29,7 @@ namespace vecpar::omp {
                                     vecmem::vector<T>& data,
                                     Arguments... args) {
         internal::offload_map(data.size(),
-                              [&] TARGET(int idx) mutable {
+                              [&] (int idx) mutable {
                                   algorithm.map(data[idx], args...);
                               });
         return new vecmem::vector<R>(data);
@@ -46,7 +46,7 @@ namespace vecpar::omp {
                                     Arguments... args) {
         vecmem::vector<R>* map_result = new vecmem::vector<R>(data.size(), &mr);
         internal::offload_map(data.size(),
-                              [&] TARGET(int idx) mutable {
+                              [&] (int idx) mutable {
                                       algorithm.map(map_result->at(idx), data[idx], args...);
                               });
         return map_result;
@@ -58,7 +58,7 @@ namespace vecpar::omp {
                        vecmem::vector<R>& data) {
         R* result = new R();
         internal::offload_reduce(data.size(), result,
-                                 [&] TARGET(R* r, R tmp) mutable {
+                                 [&] (R* r, R tmp) mutable {
                                      algorithm.reduce(r, tmp);
                                  }, data);
 
@@ -72,7 +72,7 @@ namespace vecpar::omp {
 
         vecmem::vector<T> *result = new vecmem::vector<T>(data.size(), &mr);
         internal::offload_filter(data.size(), result,
-                                 [&] TARGET (int idx, int& result_index, vecmem::vector<T>& result) mutable {
+                                 [&] (int idx, int& result_index, vecmem::vector<T>& result) mutable {
                                      if (algorithm.filter(data[idx])) {
                                          result[result_index] = data[idx];
                                          result_index ++;
@@ -87,7 +87,6 @@ namespace vecpar::omp {
     }
 
     template<typename Function, typename... Arguments>
-    TARGET
     void parallel_reduce(int size, Function f, Arguments... args) {
         internal::offload_reduce(size, f, args...);
     }

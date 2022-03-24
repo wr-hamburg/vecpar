@@ -2,25 +2,24 @@
 #define VECPAR_OMP_INTERNAL_HPP
 
 #include <omp.h>
+#include "config.hpp"
 
 namespace internal {
     template<typename Function, typename... Arguments>
     void offload_map(vecpar::config config, int size, Function f, Arguments... args) {
-      //  int threadsNum;
-        #pragma omp teams distribute parallel for
-        //num_threads(config.gridSize * config.blockSize)
+    //    int threadsNum;
+        #pragma omp teams distribute parallel for num_threads(config.gridSize * config.blockSize)
         for (int i = 0; i < size; i++) {
             f(i, args...);
-      //      threadsNum = omp_get_num_threads();
+     //       threadsNum = omp_get_num_threads();
         }
-     //   printf("Using %d OpenMP threads \n",threadsNum);
+    //    printf("Using %d OpenMP threads \n",threadsNum);
     }
 
     template<typename Function, typename... Arguments>
     void offload_map(int size, Function f, Arguments... args) {
-        vecpar::config c{1, 16};// TODO: get based on hardware; currently unused
         //  printf("Num Threads in map: %d\n", c.gridSize * c.blockSize);
-        offload_map(c, size, f, args...);
+        offload_map(vecpar::omp::getDefaultConfig(size), size, f, args...);
     }
 
     /// based on article:
@@ -40,10 +39,9 @@ namespace internal {
     }
 
     template<typename R, typename Function, typename... Arguments>
-    void offload_filter(vecpar::config config, int size, R* result, Function f, Arguments... args) {
+    void offload_filter(int size, R* result, Function f, Arguments... args) {
         int idx = 0;
         #pragma omp teams distribute parallel for
-        //num_threads(config.gridSize * config.blockSize)
         for (int i = 0; i < size; i++) {
             #pragma omp critical
                 f(i, idx, *result, args...);
@@ -51,13 +49,5 @@ namespace internal {
         result->resize(idx);
 
     }
-
-    template<typename R, typename Function, typename... Arguments>
-    void offload_filter(int size, R* result, Function f, Arguments... args) {
-        vecpar::config c{1, 16}; // TODO: get based on hardware; currently unused
-        //   printf("Num Threads in filter: %d\n", c.gridSize * c.blockSize);
-        offload_filter(c, size, result, f, args...);
-    }
-
 }
 #endif //VECPAR_OMP_INTERNAL_HPP

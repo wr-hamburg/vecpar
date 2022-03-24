@@ -6,10 +6,10 @@
 
 #include "vecpar/core/definitions/config.hpp"
 
-#include "cuda_utils.hpp"
+#include "vecpar/cuda/detail/cuda_utils.hpp"
+#include "vecpar/cuda/detail/config.hpp"
 
 namespace internal {
-//       typename std::enable_if<!std::is_same<T, R>::value, void>::type* = nullptr
 
     template<typename Algorithm,
             typename R,
@@ -63,7 +63,7 @@ namespace internal {
                       vecmem::data::vector_view<T> data ,
                       Arguments... args) {
 
-        vecpar::config c = vecpar::getDefaultConfig(size);
+        vecpar::config c = vecpar::cuda::getDefaultConfig(size);
         //printf("nBlocks:%d, nThreads:%d, memorySize:%zu\n", c.gridSize, c.blockSize, c.memorySize);
         parallel_map(c, size, algorithm, result, data, args...);
     }
@@ -74,7 +74,7 @@ namespace internal {
                       vecmem::data::vector_view<TT> &input_output,
                       Arguments... args) {
 
-        vecpar::config c = vecpar::getDefaultConfig(size);
+        vecpar::config c = vecpar::cuda::getDefaultConfig(size);
         //printf("nBlocks:%d, nThreads:%d, memorySize:%zu\n", c.gridSize, c.blockSize, c.memorySize);
         parallel_map(c, size, algorithm, input_output, args...);
     }
@@ -135,7 +135,7 @@ namespace internal {
                          Algorithm algorithm,
                          R *result,
                          vecmem::data::vector_view<R> partial_result) {
-        vecpar::config c = vecpar::getReduceConfig<R>(size);
+        vecpar::config c = vecpar::cuda::getReduceConfig<R>(size);
         //     printf("nBlocks:%d, nThreads:%d, memorySize:%zu\n", c.gridSize, c.blockSize, c.memorySize);
         parallel_reduce(c, size, algorithm, result, partial_result);
     }
@@ -205,7 +205,7 @@ namespace internal {
                          int* idx,
                          vecmem::data::vector_view<R>& result_view,
                          vecmem::data::vector_view<R> partial_result) {
-        vecpar::config c = vecpar::getReduceConfig<R>(size);
+        vecpar::config c = vecpar::cuda::getReduceConfig<R>(size);
         parallel_filter(c, size, algorithm, idx, result_view, partial_result);
     }
 

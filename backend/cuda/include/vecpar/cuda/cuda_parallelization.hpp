@@ -15,12 +15,13 @@
 #include "vecpar/cuda/detail/host_memory.hpp"
 #include "vecpar/cuda/detail/managed_memory.hpp"
 #include "vecpar/cuda/detail/cuda_utils.hpp"
+#include "vecpar/cuda/detail/config.hpp"
 
 namespace vecpar::cuda {
 
     template<typename Function, typename... Arguments>
     void offload_map(int size, Function f, Arguments... args) {
-        vecpar::config config = vecpar::getDefaultConfig(size); // TODO: read from hardware
+        vecpar::config config = vecpar::cuda::getDefaultConfig(size);
         vecpar::cuda::kernel<<<config.gridSize, config.blockSize, config.memorySize>>>(size, f, args...);
         CHECK_ERROR(cudaGetLastError());
         CHECK_ERROR(cudaDeviceSynchronize());
@@ -32,7 +33,7 @@ namespace vecpar::cuda {
         int* lock;//all threads share on mutex.
         cudaMallocManaged((void**)&lock, sizeof(int));
         *lock = 0;
-        vecpar::config config = vecpar::getReduceConfig<double>(size); // TODO: hack!!! get from args & hardwae
+        vecpar::config config = vecpar::cuda::getReduceConfig<double>(size);
         vecpar::cuda::rkernel<<<config.gridSize, config.blockSize, config.memorySize>>>(lock, size, f, args...);
         CHECK_ERROR(cudaGetLastError());
         CHECK_ERROR(cudaDeviceSynchronize());
