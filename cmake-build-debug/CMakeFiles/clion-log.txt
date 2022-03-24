@@ -1,7 +1,0 @@
-/home/maniageo/tools/clion-2021.1.1/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/maniageo/tools/clion-2021.1.1/bin/ninja/linux/ninja -DCMAKE_C_COMPILER=/home/maniageo/tools/spack/opt/spack/linux-fedora33-skylake/clang-12.0.0/llvm-13.0.0-yva5rl5rycciimnkcjkiyfat7kqsl77t/bin/clang -DCMAKE_CXX_COMPILER=/home/maniageo/tools/spack/opt/spack/linux-fedora33-skylake/clang-12.0.0/llvm-13.0.0-yva5rl5rycciimnkcjkiyfat7kqsl77t/bin/clang++ -G Ninja /home/maniageo/dev/phd/examples/vecpar
--- Found OpenMP version 5.0
--- Found CUDA 11.6
--- Found GTest
--- Configuring done
--- Generating done
--- Build files have been written to: /home/maniageo/dev/phd/examples/vecpar/cmake-build-debug
