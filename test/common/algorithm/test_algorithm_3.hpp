@@ -22,7 +22,7 @@ public:
         return (int (result_i) % 2 == 0);
     };
 
-    TARGET vecmem::vector<double>& operator() (vecmem::vector<int> data, vecmem::vector<double>& result) {
+    vecmem::vector<double>& operator() (vecmem::vector<int> data, vecmem::vector<double>& result) {
         vecmem::vector<double> result_tmp(data.size(), &m_mr);
         int idx = 0;
         for (int i = 0; i < data.size(); i++) {
@@ -36,7 +36,7 @@ public:
         return result;
     }
 
-    TARGET vecmem::vector<double>& operator() (vecmem::vector<int> data)  {
+    vecmem::vector<double>& operator() (vecmem::vector<int> data)  {
         vecmem::vector<double>* result = new vecmem::vector<double>(data.size(),&m_mr);
         this->operator()(data, *result);
         return *result;

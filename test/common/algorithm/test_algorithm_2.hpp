@@ -13,7 +13,7 @@ class test_algorithm_2 :
 
 public:
 
-    TARGET test_algorithm_2(vecmem::memory_resource& mr): parallelizable_map_reduce(), algorithm(), m_mr(mr) {}
+    test_algorithm_2(vecmem::memory_resource& mr): parallelizable_map_reduce(), algorithm(), m_mr(mr) {}
 
     TARGET double& map(double& result_i, int& first_i, X second_i) override {
         result_i = first_i * second_i.f();
@@ -25,14 +25,14 @@ public:
         return result;
     }
 
-    TARGET double* operator() (vecmem::vector<int> data, X x, double* result) {
+    double* operator() (vecmem::vector<int> data, X x, double* result) {
         vecmem::vector<double> result_tmp(data.size(), &m_mr);
         for (int i = 0; i < data.size(); i++)
             reduce(result, map(result_tmp[i], data[i], x));
         return result;
     }
 
-    TARGET double* operator() (vecmem::vector<int> data, X more_data) override {
+    double* operator() (vecmem::vector<int> data, X more_data) override {
         double* result = new double();
         this->operator()(data, more_data, result);
         return result;

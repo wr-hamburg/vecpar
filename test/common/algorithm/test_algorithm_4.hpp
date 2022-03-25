@@ -25,13 +25,13 @@ public:
         return result;
     }
 
-    TARGET double* operator() (vecmem::vector<double> data, double* result) {
+    double* operator() (vecmem::vector<double> data, double* result) {
         for (int i = 0; i < data.size(); i++)
             reduce(result, map(data[i]));
         return result;
     }
 
-    TARGET double* operator() (vecmem::vector<double> data) override {
+    double* operator() (vecmem::vector<double> data) override {
         double* result = new double();
         this->operator()(data, result);
         return result;

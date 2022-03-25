@@ -18,7 +18,7 @@ namespace traccc {
 
         using function_type = R(A...);
 
-        TARGET virtual output_type operator()(A... args) = 0;
+        virtual output_type operator()(A... args) = 0;
     };
 }
 #endif //VECPAR_ALGORITHM_HPP

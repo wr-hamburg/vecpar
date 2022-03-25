@@ -12,6 +12,8 @@
 #include "../../common/algorithm/test_algorithm_4.hpp"
 #include "../../common/algorithm/test_algorithm_5.hpp"
 
+#include "../native_algorithms/test_algorithm_2_cuda.hpp"
+
 #include "vecpar/cuda/cuda_parallelization.hpp"
 
 namespace {
@@ -145,6 +147,31 @@ namespace {
         // parallel execution
         double* par_reduced = vecpar::cuda::parallel_algorithm(alg, mr, *vec, x);
         EXPECT_EQ(*par_reduced, expectedReduceResult);
+    }
+
+    TEST_P(GpuManagedMemoryTest, Parallel_MapReduce_Lib_vs_Op_Cuda_Overhead) {
+        test_algorithm_2 alg(mr);
+        test_algorithm_2_cuda alg_cuda(mr);
+
+        X x{1, 1.0};
+
+        std::chrono::time_point<std::chrono::steady_clock> start_time;
+        std::chrono::time_point<std::chrono::steady_clock> end_time;
+
+        start_time = std::chrono::steady_clock::now();
+        double* par_reduced = vecpar::cuda::parallel_algorithm(alg, mr, *vec, x);
+        end_time = std::chrono::steady_clock::now();
+
+        std::chrono::duration<double> diff = end_time - start_time;
+        std::cout << "Time for MapReduce vecpar  = " << diff.count() << " s\n";
+
+        start_time = std::chrono::steady_clock::now();
+        double reduced = alg_cuda(*vec, x);
+        end_time = std::chrono::steady_clock::now();
+
+        diff = end_time - start_time;
+        std::cout << "Time for CUDA              = " << diff.count() << " s\n";
+        EXPECT_EQ(*par_reduced, reduced);
     }
 
     TEST_P(GpuManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {

@@ -20,7 +20,7 @@ public:
         return i;
     }
 
-    TARGET vecmem::vector<double> operator() (vecmem::vector<double> data, X more_data) override {
+    vecmem::vector<double> operator() (vecmem::vector<double> data, X more_data) override {
         for (int i = 0; i < data.size(); i++)
             map(data[i], more_data);
         return data;
