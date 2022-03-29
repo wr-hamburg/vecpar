@@ -26,7 +26,7 @@ spack install llvm@13.0.0 +all_targets +cuda cuda_arch=<XY>
 To build the code:
 
 ```sh
-cmake  -S vecpar -B <build_directory>
+cmake -S <source_dir> -B <build_directory>
 ```
 
 ```sh
