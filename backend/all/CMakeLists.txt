@@ -5,7 +5,7 @@ target_include_directories(vecpar_all INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-target_link_libraries(vecpar_all INTERFACE vecpar_omp vecpar_cuda OpenMP::OpenMP_CXX)
+target_link_libraries(vecpar_all INTERFACE vecpar_omp vecpar_cuda)
 
 install(TARGETS vecpar_all vecpar_cuda vecpar_omp vecpar_core
         EXPORT vecpar_all

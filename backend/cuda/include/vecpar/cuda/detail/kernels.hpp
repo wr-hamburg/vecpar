@@ -1,6 +1,8 @@
 #ifndef VECPAR_KERNELS_HPP
 #define VECPAR_KERNELS_HPP
 
+#include <cuda.h>
+
 namespace vecpar::cuda {
 
     template<typename Function, typename... Arguments>

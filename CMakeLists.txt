@@ -24,8 +24,8 @@ endif()
 
 ### dependencies for CUDA backend ###
 if (VECPAR_BUILD_CUDA_BACKEND)
-    find_package(CUDA REQUIRED 11.5)
-    message(STATUS "Found CUDA ${CUDA_VERSION}")
+    find_package(CUDAToolkit REQUIRED 11.5)
+    message(STATUS "Found CUDATookit ${CUDAToolkit_VERSION}")
 endif()
 
 ### depencies for TEST ###

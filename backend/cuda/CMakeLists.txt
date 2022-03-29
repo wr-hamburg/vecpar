@@ -12,8 +12,7 @@ target_include_directories(vecpar_cuda INTERFACE
 
 target_link_libraries(vecpar_cuda INTERFACE
         vecpar_core
-        vecmem::core vecmem::cuda
-        ${CUDA_LIBRARIES})
+        vecmem::core vecmem::cuda CUDA::cudart)
 
 install(TARGETS vecpar_cuda vecpar_core
         EXPORT vecpar_cuda
