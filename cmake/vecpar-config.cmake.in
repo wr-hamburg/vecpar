@@ -1,0 +1,36 @@
+@PACKAGE_INIT@
+
+set(VECPAR_BUILD_OMP_BACKEND @VECPAR_BUILD_OMP_BACKEND@)
+set(VECPAR_BUILD_CUDA_BACKEND @VECPAR_BUILD_CUDA_BACKEND@)
+set(VECPAR_BUILD_TESTS @VECPAR_BUILD_TESTS@)
+
+include( CMakeFindDependencyMacro )
+
+find_dependency(vecmem)
+
+if (VECPAR_BUILD_OMP_BACKEND)
+    find_dependency(OpenMP)
+endif()
+
+if (VECPAR_BUILD_CUDA_BACKEND)
+    find_dependency(CUDAToolkit)
+endif()
+
+if (VECPAR_BUILD_TESTS)
+    find_dependency(GTest)
+endif()
+
+# Set up some simple variables for using the package.
+set(vecpar_VERSION "@PROJECT_VERSION@" )
+set_and_check(vecpar_INCLUDE_DIR
+   "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@" )
+set_and_check(vecpar_CMAKE_DIR "@PACKAGE_CMAKE_INSTALL_CMAKEDIR@" )
+
+# Print a standard information message about the package being found.
+include( FindPackageHandleStandardArgs )
+find_package_handle_standard_args(vecpar REQUIRED_VARS
+   CMAKE_CURRENT_LIST_FILE
+   VERSION_VAR vecpar_VERSION )
+
+# Include the file listing all the imported targets and options.
+include("${vecpar_CMAKE_DIR}/vecpar-config-targets.cmake" )
