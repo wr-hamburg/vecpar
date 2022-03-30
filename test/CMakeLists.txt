@@ -9,8 +9,10 @@ if (VECPAR_BUILD_CUDA_BACKEND)
 endif()
 
 ### Test common interface that chooses from {CUDA,OMP} based on compiler ###
-if (VECPAR_BUILD_OMP_BACKEND AND VECPAR_BUILD_CUDA_BACKEND)
+if (VECPAR_BUILD_OMP_BACKEND OR VECPAR_BUILD_CUDA_BACKEND)
     add_subdirectory(single_source)
-    add_subdirectory(hybrid)
 endif()
 
+if (VECPAR_BUILD_OMP_BACKEND AND VECPAR_BUILD_CUDA_BACKEND)
+    add_subdirectory(hybrid)
+endif()

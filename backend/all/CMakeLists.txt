@@ -5,7 +5,10 @@ target_include_directories(vecpar_all INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-target_link_libraries(vecpar_all INTERFACE vecpar_omp vecpar_cuda)
+target_link_libraries(vecpar_all INTERFACE
+        $<TARGET_NAME_IF_EXISTS:vecpar_omp>
+        $<TARGET_NAME_IF_EXISTS:vecpar_cuda>)
+
 set_target_properties(vecpar_all PROPERTIES EXPORT_NAME all)
 add_library(vecpar::all ALIAS vecpar_all)
 

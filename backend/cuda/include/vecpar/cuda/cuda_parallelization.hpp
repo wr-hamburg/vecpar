@@ -19,35 +19,39 @@
 
 namespace vecpar::cuda {
 
-    template<typename Function, typename... Arguments>
-    void offload_map(int size, Function f, Arguments... args) {
-        vecpar::config config = vecpar::cuda::getDefaultConfig(size);
-        vecpar::cuda::kernel<<<config.gridSize, config.blockSize, config.memorySize>>>(size, f, args...);
-        CHECK_ERROR(cudaGetLastError());
-        CHECK_ERROR(cudaDeviceSynchronize());
-    }
+template <typename Function, typename... Arguments>
+void offload_map(size_t size, Function f, Arguments... args) {
+  vecpar::config config = vecpar::cuda::getDefaultConfig(size);
+  vecpar::cuda::
+      kernel<<<config.gridSize, config.blockSize, config.memorySize>>>(size, f,
+                                                                       args...);
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
+}
 
-    template<typename Function, typename... Arguments>
-    void offload_reduce(int size, Function f, Arguments... args) {
-        //TODO: improve performance by allocate the mutex on the device only
-        int* lock;//all threads share on mutex.
-        cudaMallocManaged((void**)&lock, sizeof(int));
-        *lock = 0;
-        vecpar::config config = vecpar::cuda::getReduceConfig<double>(size);
-        vecpar::cuda::rkernel<<<config.gridSize, config.blockSize, config.memorySize>>>(lock, size, f, args...);
-        CHECK_ERROR(cudaGetLastError());
-        CHECK_ERROR(cudaDeviceSynchronize());
-    }
+template <typename Function, typename... Arguments>
+void offload_reduce(size_t size, Function f, Arguments... args) {
+  // TODO: improve performance by allocate the mutex on the device only
+  int *lock; // all threads share on mutex.
+  cudaMallocManaged((void **)&lock, sizeof(int));
+  *lock = 0;
+  vecpar::config config = vecpar::cuda::getReduceConfig<double>(size);
+  vecpar::cuda::
+      rkernel<<<config.gridSize, config.blockSize, config.memorySize>>>(
+          lock, size, f, args...);
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
+}
 
-    template<typename Function, typename... Arguments>
-    void parallel_map(int size, Function f, Arguments... args) {
-        offload_map(size, f, args...);
-    }
+template <typename Function, typename... Arguments>
+void parallel_map(size_t size, Function f, Arguments... args) {
+  offload_map(size, f, args...);
+}
 
-    template<typename Function, typename... Arguments>
-    void parallel_reduce(int size, Function f, Arguments... args) {
-        offload_reduce(size, f, args...);
-    }
+template <typename Function, typename... Arguments>
+void parallel_reduce(size_t size, Function f, Arguments... args) {
+  offload_reduce(size, f, args...);
+}
 
     template<class MemoryResource,
             class Algorithm,

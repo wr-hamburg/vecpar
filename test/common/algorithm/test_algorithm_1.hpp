@@ -25,8 +25,8 @@ public:
 
     double* operator() (vecmem::vector<int> data, double* result) {
         vecmem::vector<double> result_tmp(data.size(), &m_mr);
-        for (int i = 0; i < data.size(); i++)
-            reduce(result, map(result_tmp[i], data[i]));
+        for (size_t i = 0; i < data.size(); i++)
+          reduce(result, map(result_tmp[i], data[i]));
         return result;
     }
 

@@ -20,11 +20,8 @@ namespace vecpar::cuda {
         vecmem::vector<R>* map_result = new vecmem::vector<R>(data.size(), &mr);
         auto map_view = vecmem::get_data(*map_result);
 
-        internal::parallel_map(data.size(),
-                                     algorithm,
-                                     map_view,
-                                     vecmem::get_data(data),
-                                     args...);
+        internal::parallel_map(data.size(), algorithm, map_view,
+                               vecmem::get_data(data), args...);
         return map_result;
     }
 

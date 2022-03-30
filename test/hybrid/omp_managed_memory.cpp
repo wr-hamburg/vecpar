@@ -216,7 +216,7 @@ namespace {
 
     TEST_P(CpuManagedMemoryTest, Serial_MapFilter_MapReduce_Chained) {
         test_algorithm_3 first_alg(mr);
-        test_algorithm_4 second_alg(mr);
+        test_algorithm_4 second_alg;
 
         vecmem::vector<double> first_result = first_alg(*vec);
         double *second_result = second_alg(first_result);
@@ -226,7 +226,7 @@ namespace {
 
     TEST_P(CpuManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
         test_algorithm_3 first_alg(mr);
-        test_algorithm_4 second_alg(mr);
+        test_algorithm_4 second_alg;
 
         vecmem::vector<double>* first_result = vecpar::omp::parallel_algorithm(first_alg, mr, *vec);
         double* second_result = vecpar::omp::parallel_algorithm(second_alg, mr, *first_result);

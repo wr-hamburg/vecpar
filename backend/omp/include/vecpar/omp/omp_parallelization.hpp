@@ -1,11 +1,10 @@
 #ifndef VECPAR_OMP_PARALLELIZATION_HPP
 #define VECPAR_OMP_PARALLELIZATION_HPP
 
+#include <cmath>
 #include <omp.h>
-#include <utility>
-#include <math.h>
-
 #include <type_traits>
+#include <utility>
 
 #include "vecpar/core/definitions/config.hpp"
 #include "vecpar/core/algorithms/detail/map.hpp"
@@ -81,14 +80,14 @@ namespace vecpar::omp {
         return result;
     }
 
-    template<typename Function, typename... Arguments>
-    void parallel_map(int size, Function f, Arguments... args) {
-        internal::offload_map(size, f, args...);
+    template <typename Function, typename... Arguments>
+    void parallel_map(size_t size, Function f, Arguments... args) {
+      internal::offload_map(size, f, args...);
     }
 
-    template<typename Function, typename... Arguments>
-    void parallel_reduce(int size, Function f, Arguments... args) {
-        internal::offload_reduce(size, f, args...);
+    template <typename Function, typename... Arguments>
+    void parallel_reduce(size_t size, Function f, Arguments... args) {
+      internal::offload_reduce(size, f, args...);
     }
 
     template<class Algorithm, typename R, typename T, typename... Arguments>

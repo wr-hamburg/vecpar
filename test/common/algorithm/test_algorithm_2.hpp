@@ -12,12 +12,12 @@ class test_algorithm_2 :
         public vecpar::algorithm::parallelizable_map_reduce<double, int, X> {
 
 public:
+  test_algorithm_2(vecmem::memory_resource &mr)
+      : algorithm(), parallelizable_map_reduce(), m_mr(mr) {}
 
-    test_algorithm_2(vecmem::memory_resource& mr): parallelizable_map_reduce(), algorithm(), m_mr(mr) {}
-
-    TARGET double& map(double& result_i, int& first_i, X second_i) override {
-        result_i = first_i * second_i.f();
-        return result_i;
+  TARGET double &map(double &result_i, int &first_i, X second_i) override {
+    result_i = first_i * second_i.f();
+    return result_i;
     }
 
     TARGET double* reduce(double* result, double& result_i) override {
@@ -27,8 +27,8 @@ public:
 
     double* operator() (vecmem::vector<int> data, X x, double* result) {
         vecmem::vector<double> result_tmp(data.size(), &m_mr);
-        for (int i = 0; i < data.size(); i++)
-            reduce(result, map(result_tmp[i], data[i], x));
+        for (size_t i = 0; i < data.size(); i++)
+          reduce(result, map(result_tmp[i], data[i], x));
         return result;
     }
 

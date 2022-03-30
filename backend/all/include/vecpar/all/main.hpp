@@ -1,11 +1,13 @@
 #ifndef VECPAR_MAIN_HPP
 #define VECPAR_MAIN_HPP
 
+#include <vecmem/containers/vector.hpp>
+
 #ifdef __CUDACC__
     #include "vecpar/cuda/cuda_parallelization.hpp"
-#else
+#endif
 
-#include <vecmem/containers/vector.hpp>
+#if _OPENMP
 #include "vecpar/omp/omp_parallelization.hpp"
 #endif
 
@@ -22,8 +24,9 @@ namespace vecpar {
                     Arguments... args) {
 #ifdef __CUDACC__
         return vecpar::cuda::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
-#else
-        return vecpar::omp::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
+#elif _OPENMP
+      return vecpar::omp::parallel_map<Algorithm, R, T, Arguments...>(
+          algorithm, mr, data, args...);
 #endif
     }
 
@@ -35,8 +38,8 @@ namespace vecpar {
                        vecmem::vector<R>& data) {
 #ifdef __CUDACC__
         return vecpar::cuda::parallel_reduce<Algorithm, R>(algorithm, mr, data);
-#else
-        return vecpar::omp::parallel_reduce<Algorithm, R>(algorithm, mr, data);
+#elif _OPENMP
+      return vecpar::omp::parallel_reduce<Algorithm, R>(algorithm, mr, data);
 #endif
     }
 
@@ -48,8 +51,8 @@ namespace vecpar {
                                         vecmem::vector<T>& data){
 #ifdef __CUDACC__
         return vecpar::cuda::parallel_filter<Algorithm, T>(algorithm, mr, data);
-#else
-        return vecpar::omp::parallel_filter<Algorithm, T>(algorithm, mr, data);
+#elif _OPENMP
+      return vecpar::omp::parallel_filter<Algorithm, T>(algorithm, mr, data);
 #endif
     }
 
@@ -64,8 +67,9 @@ namespace vecpar {
                           Arguments... args) {
 #ifdef __CUDACC__
         return vecpar::cuda::parallel_map_reduce<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
-#else
-        return vecpar::omp::parallel_map_reduce<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
+#elif _OPENMP
+      return vecpar::omp::parallel_map_reduce<Algorithm, R, T, Arguments...>(
+          algorithm, mr, data, args...);
 #endif
     }
 
@@ -80,8 +84,9 @@ namespace vecpar {
                                           Arguments... args) {
 #ifdef __CUDACC__
         return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
-#else
-        return vecpar::omp::parallel_map_filter<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
+#elif _OPENMP
+      return vecpar::omp::parallel_map_filter<Algorithm, R, T, Arguments...>(
+          algorithm, mr, data, args...);
 #endif
     }
 

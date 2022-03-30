@@ -176,7 +176,7 @@ namespace {
 
     TEST_P(GpuManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
         test_algorithm_3 first_alg(mr);
-        test_algorithm_4 second_alg(mr);
+        test_algorithm_4 second_alg;
 
         vecmem::vector<double>* first_result = vecpar::cuda::parallel_algorithm(first_alg, mr, *vec);
         double* second_result = vecpar::cuda::parallel_algorithm(second_alg, mr, *first_result);
@@ -185,15 +185,16 @@ namespace {
     }
 
     TEST_P(GpuManagedMemoryTest, Parallel_Map_Extra_Param) {
-        test_algorithm_5 alg(mr);
+      test_algorithm_5 alg;
 
-        X x{1, 1.0};
-        // parallel execution + distructive change on the input!!!
-        vecmem::vector<double>* result = vecpar::cuda::parallel_map(alg, mr, *vec_d, x);
-        EXPECT_EQ(result->size(), vec_d->size());
-        for (int i = 0; i < result->size(); i++) {
-            EXPECT_EQ(result->at(i), vec_d->at(i));
-            EXPECT_EQ(result->at(i), (vec->at(i) + x.a) * x.b );
+      X x{1, 1.0};
+      // parallel execution + distructive change on the input!!!
+      vecmem::vector<double> *result =
+          vecpar::cuda::parallel_map(alg, mr, *vec_d, x);
+      EXPECT_EQ(result->size(), vec_d->size());
+      for (int i = 0; i < result->size(); i++) {
+        EXPECT_EQ(result->at(i), vec_d->at(i));
+        EXPECT_EQ(result->at(i), (vec->at(i) + x.a) * x.b);
         }
     }
 

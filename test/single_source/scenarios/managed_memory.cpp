@@ -22,11 +22,11 @@ namespace {
         SingleSourceManagedMemoryTest() {
             vec = new vecmem::vector<int>(GetParam(), &mr);
             vec_d = new vecmem::vector<double>(GetParam(), &mr);
-            for (int i = 0; i < vec->size(); i++) {
-                vec->at(i) = i;
-                vec_d->at(i) = i * 1.0;
-                expectedReduceResult += i * 1.0;
-                expectedFilterReduceResult += (i % 2 == 0) ? (i * 1.0) * 2 : 0;
+            for (size_t i = 0; i < vec->size(); i++) {
+              vec->at(i) = i;
+              vec_d->at(i) = i * 1.0;
+              expectedReduceResult += i * 1.0;
+              expectedFilterReduceResult += (i % 2 == 0) ? (i * 1.0) * 2 : 0;
             }
             printf("*******************************\n");
         }
@@ -46,7 +46,7 @@ namespace {
         test_algorithm_1 alg(mr);
 
         start_time = std::chrono::steady_clock::now();
-        vecmem::vector<double>* result = vecpar::parallel_map(alg, mr, *vec);
+        vecpar::parallel_map(alg, mr, *vec);
         end_time = std::chrono::steady_clock::now();
 
         std::chrono::duration<double> diff = end_time - start_time;
@@ -57,8 +57,8 @@ namespace {
         test_algorithm_1 alg(mr);
         vecmem::vector<double>* result = vecpar::parallel_map(alg, mr, *vec);
 
-        for (int i = 0; i < vec->size(); i++)
-            EXPECT_EQ(vec->at(i) * 1.0, result->at(i));
+        for (size_t i = 0; i < vec->size(); i++)
+          EXPECT_EQ(vec->at(i) * 1.0, result->at(i));
     }
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Reduce_Time) {
@@ -68,7 +68,7 @@ namespace {
         test_algorithm_1 alg(mr);
 
         start_time = std::chrono::steady_clock::now();
-        double* result = vecpar::parallel_reduce(alg, mr, *vec_d);
+        vecpar::parallel_reduce(alg, mr, *vec_d);
         end_time = std::chrono::steady_clock::now();
 
         std::chrono::duration<double> diff = end_time - start_time;
@@ -82,7 +82,7 @@ namespace {
         test_algorithm_3 alg(mr);
 
         start_time = std::chrono::steady_clock::now();
-        vecmem::vector<double>* result = vecpar::parallel_filter(alg, mr, *vec_d);
+        vecpar::parallel_filter(alg, mr, *vec_d);
         end_time = std::chrono::steady_clock::now();
 
         std::chrono::duration<double> diff = end_time - start_time;
@@ -99,8 +99,8 @@ namespace {
 
         // the order can be different
         std::sort(result->begin(), result->end());
-        for (int i = 0; i < result->size(); i++) {
-            EXPECT_EQ(vec_d->at(2 * i), result->at(i));
+        for (size_t i = 0; i < result->size(); i++) {
+          EXPECT_EQ(vec_d->at(2 * i), result->at(i));
         }
     }
 
@@ -147,7 +147,7 @@ namespace {
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
         test_algorithm_3 first_alg(mr);
-        test_algorithm_4 second_alg(mr);
+        test_algorithm_4 second_alg;
 
         vecmem::vector<double>* first_result = vecpar::parallel_algorithm(first_alg, mr, *vec);
         double* second_result = vecpar::parallel_algorithm(second_alg, mr, *first_result);
@@ -156,16 +156,16 @@ namespace {
     }
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Extra_Param) {
-        test_algorithm_5 alg(mr);
+      test_algorithm_5 alg;
 
-        X x{1, 1.0};
-        // parallel execution + distructive change on the input!!!
-        vecmem::vector<double>* result = vecpar::parallel_map(alg, mr, *vec_d, x);
-        EXPECT_EQ(result->size(), vec_d->size());
-        for (int i = 0; i < result->size(); i++) {
-            EXPECT_EQ(result->at(i), vec_d->at(i));
-            EXPECT_EQ(result->at(i), (vec->at(i) + x.a) * x.b );
-        }
+      X x{1, 1.0};
+      // parallel execution + distructive change on the input!!!
+      vecmem::vector<double> *result = vecpar::parallel_map(alg, mr, *vec_d, x);
+      EXPECT_EQ(result->size(), vec_d->size());
+      for (size_t i = 0; i < result->size(); i++) {
+        EXPECT_EQ(result->at(i), vec_d->at(i));
+        EXPECT_EQ(result->at(i), (vec->at(i) + x.a) * x.b);
+      }
     }
 
 

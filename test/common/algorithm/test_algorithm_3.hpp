@@ -25,12 +25,12 @@ public:
     vecmem::vector<double>& operator() (vecmem::vector<int> data, vecmem::vector<double>& result) {
         vecmem::vector<double> result_tmp(data.size(), &m_mr);
         int idx = 0;
-        for (int i = 0; i < data.size(); i++) {
-            map(result_tmp[i], data[i]);
-            if (filter(result_tmp[i])) {
-                result[idx] = result_tmp[i];
-                idx++;
-            }
+        for (size_t i = 0; i < data.size(); i++) {
+          map(result_tmp[i], data[i]);
+          if (filter(result_tmp[i])) {
+            result[idx] = result_tmp[i];
+            idx++;
+          }
         }
         result.resize(idx);
         return result;
