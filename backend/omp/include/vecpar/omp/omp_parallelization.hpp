@@ -71,11 +71,12 @@ namespace vecpar::omp {
 
         vecmem::vector<T> *result = new vecmem::vector<T>(data.size(), &mr);
         internal::offload_filter(data.size(), result,
-                                 [&] (int idx, int& result_index, vecmem::vector<T>& result) mutable {
-                                     if (algorithm.filter(data[idx])) {
-                                         result[result_index] = data[idx];
-                                         result_index ++;
-                                     }
+                                 [&](int idx, int &result_index,
+                                     vecmem::vector<T> &local_result) mutable {
+                                   if (algorithm.filter(data[idx])) {
+                                     local_result[result_index] = data[idx];
+                                     result_index++;
+                                   }
                                  });
         return result;
     }
