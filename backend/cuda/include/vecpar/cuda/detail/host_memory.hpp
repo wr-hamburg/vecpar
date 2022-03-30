@@ -68,7 +68,7 @@ namespace vecpar::cuda {
 
     template<typename Algorithm, typename R>
     R* parallel_reduce(Algorithm algorithm,
-                       vecmem::host_memory_resource& mr,
+                       __attribute__((unused)) vecmem::host_memory_resource& mr,
                        vecmem::vector<R>& data) {
 
         // copy input data from host to device
@@ -161,7 +161,7 @@ namespace vecpar::cuda {
             typename... Arguments,
             typename std::enable_if<std::is_same<T, R>::value, void>::type* = nullptr>
     R* parallel_map_reduce(Algorithm algorithm,
-                           vecmem::host_memory_resource& mr,
+                           __attribute__((unused)) vecmem::host_memory_resource& mr,
                            vecmem::vector<T>& data,
                            Arguments... args)  {
         // copy input data from host to device
@@ -206,18 +206,18 @@ namespace vecpar::cuda {
         auto data_view = vecmem::get_data(data_buffer);
 
         // allocate temp map result on host and copy to device
-        vecmem::vector<R> map_result(data.size(), &mr);
+        vecmem::vector<R> map_result(size, &mr);
         auto map_result_buffer = copy.to(vecmem::get_data(map_result), d_mem, vecmem::copy::type::host_to_device);
         auto map_result_view = vecmem::get_data(map_result_buffer);
 
-        internal::parallel_map(data.size(),
-                                     algorithm,
-                                     map_result_view,
-                                     data_view,
-                                     args...);
+        internal::parallel_map(size,
+                               algorithm,
+                               map_result_view,
+                               data_view,
+                               args...);
 
         // allocate result on host and device
-        vecmem::vector<R>* result = new vecmem::vector<R>(data.size(), &mr);
+        vecmem::vector<R>* result = new vecmem::vector<R>(size, &mr);
         auto result_buffer = copy.to(vecmem::get_data(*result), d_mem,
                                      vecmem::copy::type::host_to_device);
         auto result_view = vecmem::get_data(result_buffer);
@@ -225,11 +225,11 @@ namespace vecpar::cuda {
         int* idx; // global index
         cudaMallocManaged((void**)&idx, sizeof(int));
         *idx = 0;
-        internal::parallel_filter(data.size(),
-                                        algorithm,
-                                        idx,
-                                        result_view,
-                                        map_result_view);
+        internal::parallel_filter(size,
+                                  algorithm,
+                                  idx,
+                                  result_view,
+                                  map_result_view);
 
         //copy back results
         copy(result_buffer, *result, vecmem::copy::type::device_to_host);
@@ -256,13 +256,13 @@ namespace vecpar::cuda {
       //  auto map_result_buffer = copy.to(vecmem::get_data(map_result), d_mem, vecmem::copy::type::host_to_device);
       //  auto map_result_view = vecmem::get_data(map_result_buffer);
 
-        internal::parallel_map(data.size(),
+        internal::parallel_map(size,
                                algorithm,
                                data_view,
                                args...);
 
         // allocate result on host and device
-        vecmem::vector<R>* result = new vecmem::vector<R>(data.size(), &mr);
+        vecmem::vector<R>* result = new vecmem::vector<R>(size, &mr);
         auto result_buffer = copy.to(vecmem::get_data(*result), d_mem,
                                      vecmem::copy::type::host_to_device);
         auto result_view = vecmem::get_data(result_buffer);
@@ -270,7 +270,7 @@ namespace vecpar::cuda {
         int* idx; // global index
         cudaMallocManaged((void**)&idx, sizeof(int));
         *idx = 0;
-        internal::parallel_filter(data.size(),
+        internal::parallel_filter(size,
                                   algorithm,
                                   idx,
                                   result_view,

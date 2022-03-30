@@ -15,5 +15,13 @@ target_include_directories(vecpar_core INTERFACE
 
 target_link_libraries(vecpar_core INTERFACE)
 
+set_target_properties(vecpar_core PROPERTIES EXPORT_NAME core)
+add_library(vecpar::core ALIAS vecpar_core)
+
+install(TARGETS vecpar_core
+        EXPORT vecpar-exports
+        LIBRARY DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/vecpar
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

@@ -15,7 +15,7 @@ namespace vecpar::cuda {
         }
         const int nBlocks =
                 static_cast<int>((size + nThreadsPerBlock - 1) / nThreadsPerBlock);
-        return config{nBlocks, nThreadsPerBlock};
+        return config{nBlocks, nThreadsPerBlock, 0};
     }
 
     template <typename Ri>

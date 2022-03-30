@@ -51,7 +51,7 @@ namespace vecpar::cuda {
 
     template<typename Algorithm, typename R>
     R* parallel_reduce(Algorithm algorithm,
-                       vecmem::cuda::managed_memory_resource& mr,
+                       __attribute__((unused))vecmem::cuda::managed_memory_resource& mr,
                        vecmem::vector<R>& data) {
 
         R* d_result;

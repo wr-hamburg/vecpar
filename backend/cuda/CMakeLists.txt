@@ -14,15 +14,13 @@ target_link_libraries(vecpar_cuda INTERFACE
         vecpar_core
         vecmem::core vecmem::cuda CUDA::cudart)
 
-install(TARGETS vecpar_cuda vecpar_core
-        EXPORT vecpar_cuda
+set_target_properties(vecpar_cuda PROPERTIES EXPORT_NAME cuda)
+add_library(vecpar::cuda ALIAS vecpar_cuda)
+
+install(TARGETS vecpar_cuda
+        EXPORT vecpar-exports
         LIBRARY DESTINATION ${CMAKE_INSTALL_CMAKEDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-install(EXPORT vecpar_cuda
-        FILE vecpar.cmake
-        NAMESPACE vecpar::
-        DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/vecpar
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

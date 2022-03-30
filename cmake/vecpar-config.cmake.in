@@ -1,30 +1,30 @@
 @PACKAGE_INIT@
 
+# Set up some simple variables for using the package.
+set(vecpar_VERSION "@PROJECT_VERSION@" )
+set_and_check(vecpar_INCLUDE_DIR
+   "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@" )
+set_and_check(vecpar_CMAKE_DIR "@PACKAGE_CMAKE_INSTALL_CMAKEDIR@" )
+
 set(VECPAR_BUILD_OMP_BACKEND @VECPAR_BUILD_OMP_BACKEND@)
 set(VECPAR_BUILD_CUDA_BACKEND @VECPAR_BUILD_CUDA_BACKEND@)
 set(VECPAR_BUILD_TESTS @VECPAR_BUILD_TESTS@)
 
 include( CMakeFindDependencyMacro )
 
-find_dependency(vecmem)
+find_dependency(vecmem QUIET)
 
 if (VECPAR_BUILD_OMP_BACKEND)
-    find_dependency(OpenMP)
+    find_dependency(OpenMP QUIET)
 endif()
 
 if (VECPAR_BUILD_CUDA_BACKEND)
-    find_dependency(CUDAToolkit)
+    find_dependency(CUDAToolkit QUIET)
 endif()
 
 if (VECPAR_BUILD_TESTS)
-    find_dependency(GTest)
+    find_dependency(GTest QUIET)
 endif()
-
-# Set up some simple variables for using the package.
-set(vecpar_VERSION "@PROJECT_VERSION@" )
-set_and_check(vecpar_INCLUDE_DIR
-   "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@" )
-set_and_check(vecpar_CMAKE_DIR "@PACKAGE_CMAKE_INSTALL_CMAKEDIR@" )
 
 # Print a standard information message about the package being found.
 include( FindPackageHandleStandardArgs )

@@ -1,6 +1,8 @@
 include(CMakePackageConfigHelpers)
-include(GenerateExportHeader)
 include(CPack)
+
+set(CMAKE_INSTALL_CMAKEDIR
+        "${CMAKE_INSTALL_LIBDIR}/cmake/vecpar-${PROJECT_VERSION}")
 
 install(EXPORT vecpar-exports
         NAMESPACE "vecpar::"

@@ -25,7 +25,7 @@ namespace vecpar::omp {
             typename... Arguments,
             typename std::enable_if<std::is_base_of<detail::parallel_mmap<R, Arguments...>, Algorithm>::value>::type* = nullptr>
     vecmem::vector<R>* parallel_map(Algorithm& algorithm,
-                                    vecmem::memory_resource& mr,
+                                    __attribute__((unused)) vecmem::memory_resource& mr,
                                     vecmem::vector<T>& data,
                                     Arguments... args) {
         internal::offload_map(data.size(),
@@ -54,7 +54,7 @@ namespace vecpar::omp {
 
     template<typename Algorithm, typename R>
     R* parallel_reduce(Algorithm algorithm,
-                       vecmem::memory_resource& mr,
+                       __attribute__((unused)) vecmem::memory_resource& mr,
                        vecmem::vector<R>& data) {
         R* result = new R();
         internal::offload_reduce(data.size(), result,
