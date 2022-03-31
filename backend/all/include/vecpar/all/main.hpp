@@ -11,6 +11,9 @@
 #include "vecpar/omp/omp_parallelization.hpp"
 #endif
 
+#include "vecpar/core/algorithms/parallelizable_map_filter.hpp"
+#include "vecpar/core/algorithms/parallelizable_map_reduce.hpp"
+
 namespace vecpar {
 
     template<class Algorithm,

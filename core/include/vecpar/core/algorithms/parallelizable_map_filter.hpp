@@ -19,7 +19,7 @@ namespace vecpar::algorithm {
     template<typename TT, typename... Arguments>
     struct parallelizable_map_filter<TT, TT, Arguments...>
             : public vecpar::detail::parallel_mmap<TT, TT, Arguments...>,
-              public vecpar::detail::parallel_reduce<TT> {
+              public vecpar::detail::parallel_filter<TT> {
         using result_type = TT;
 
         TARGET virtual TT& map(TT& input_output_i, Arguments... args) = 0;
