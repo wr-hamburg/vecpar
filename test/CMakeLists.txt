@@ -4,7 +4,7 @@ if (VECPAR_BUILD_OMP_BACKEND)
 endif()
 
 ### Test CUDA code ###
-if (VECPAR_BUILD_CUDA_BACKEND)
+if (VECPAR_BUILD_CUDA_BACKEND AND ${VECPAR_BUILD_WITH_CLANG})
     add_subdirectory(cuda)
 endif()
 

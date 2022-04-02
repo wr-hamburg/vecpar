@@ -1,11 +1,12 @@
 #ifndef VECPAR_CUDA_CONFIG_HPP
 #define VECPAR_CUDA_CONFIG_HPP
 
+#include <cstddef>
 #include "vecpar/core/definitions/config.hpp"
 
 namespace vecpar::cuda {
 
-static config getDefaultConfig(size_t size) {
+static vecpar::config getDefaultConfig(size_t size) {
   int nThreadsPerBlock = 256;
 
   // If the arrays are not even this large, then reduce the value to the
@@ -15,10 +16,10 @@ static config getDefaultConfig(size_t size) {
   }
   const int nBlocks =
       static_cast<int>((size + nThreadsPerBlock - 1) / nThreadsPerBlock);
-  return config{nBlocks, nThreadsPerBlock, 0};
+  return vecpar::config{nBlocks, nThreadsPerBlock, 0};
 }
 
-template <typename Ri> static config getReduceConfig(size_t size) {
+template <typename Ri> static vecpar::config getReduceConfig(size_t size) {
   int nThreadsPerBlock = 256; // must be power of 2
 
   if (static_cast<int>(size) < nThreadsPerBlock) {

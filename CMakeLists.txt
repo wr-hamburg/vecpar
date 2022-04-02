@@ -13,8 +13,8 @@ option(VECPAR_BUILD_CUDA_BACKEND "Build CUDA support for GPU offloading" ON)
 option(VECPAR_BUILD_TESTS "Build automated tests" OFF)
 
 ### dependencies for all the backends ###
-find_package(LLVM 13.0.0 REQUIRED CONFIG)
-find_package(Clang REQUIRED)
+#find_package(LLVM REQUIRED)
+#find_package(Clang REQUIRED)
 find_package(vecmem 0.10.0 REQUIRED)
 
 ### dependencies for OMP backend ###
@@ -33,6 +33,12 @@ endif()
 if (VECPAR_BUILD_TESTS)
     find_package(GTest REQUIRED)
 #    message(STATUS "Found GTest")
+endif()
+
+if (${CUDAToolkit_FOUND} AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
+    set(VECPAR_BUILD_WITH_CLANG True)
+else()
+    set(VECPAR_BUILD_WITH_CLANG False)
 endif()
 
 ### include sources ###

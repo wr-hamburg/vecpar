@@ -15,7 +15,7 @@ if (${OpenMP_FOUND})
 endif()
 
 ### compiled for GPU ###
-if (${CUDAToolkit_FOUND})
+if (VECPAR_BUILD_WITH_CLANG)
     add_executable(tests_compiled_for_gpu "SingleSourceTests.cpp")
 
     target_include_directories(tests_compiled_for_gpu PUBLIC

@@ -6,6 +6,7 @@ target_include_directories(vecpar_all INTERFACE
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 target_link_libraries(vecpar_all INTERFACE
+        vecpar_core
         $<TARGET_NAME_IF_EXISTS:vecpar_omp>
         $<TARGET_NAME_IF_EXISTS:vecpar_cuda>)
 

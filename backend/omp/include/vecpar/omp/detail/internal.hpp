@@ -8,7 +8,7 @@ namespace internal {
     template<typename Function, typename... Arguments>
     void offload_map(vecpar::config config, int size, Function f, Arguments... args) {
     //    int threadsNum;
-        #pragma omp teams distribute parallel for num_threads(config.gridSize * config.blockSize)
+        #pragma omp parallel for num_threads(config.gridSize * config.blockSize)
         for (int i = 0; i < size; i++) {
             f(i, args...);
      //       threadsNum = omp_get_num_threads();
