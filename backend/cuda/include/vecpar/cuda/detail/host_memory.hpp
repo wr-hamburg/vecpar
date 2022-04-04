@@ -19,7 +19,7 @@ namespace vecpar::cuda {
             typename T,
             typename... Arguments,
             typename std::enable_if<!std::is_same<T, R>::value, void>::type* = nullptr>
-    vecmem::vector<R>* parallel_map(Algorithm algorithm,
+    vecmem::vector<R>& parallel_map(Algorithm algorithm,
                                     vecmem::host_memory_resource& mr,
                                     vecmem::vector<T>& data,
                                     Arguments... args) {
@@ -40,7 +40,7 @@ namespace vecpar::cuda {
                                args...);
 
         copy(result_buffer, *map_result, vecmem::copy::type::device_to_host);
-        return map_result;
+        return *map_result;
     }
 
     template<typename Algorithm,
@@ -48,7 +48,7 @@ namespace vecpar::cuda {
             typename T,
             typename... Arguments,
             typename std::enable_if<std::is_same<T, R>::value, void>::type* = nullptr>
-    vecmem::vector<R>* parallel_map(Algorithm algorithm,
+    vecmem::vector<R>& parallel_map(Algorithm algorithm,
                                     vecmem::host_memory_resource& mr,
                                     vecmem::vector<T>& data,
                                     Arguments... args) {
@@ -63,11 +63,12 @@ namespace vecpar::cuda {
                                args...);
 
         copy(data_buffer, data, vecmem::copy::type::device_to_host);
-        return new vecmem::vector<R>(data, &mr);
+        return data;
+        //return new vecmem::vector<R>(data, &mr);
     }
 
     template<typename Algorithm, typename R>
-    R* parallel_reduce(Algorithm algorithm,
+    R& parallel_reduce(Algorithm algorithm,
                        __attribute__((unused)) vecmem::host_memory_resource& mr,
                        vecmem::vector<R>& data) {
 
@@ -84,11 +85,11 @@ namespace vecpar::cuda {
                                   algorithm,
                                   d_result,
                                   data_view);
-        return d_result;
+        return *d_result;
     }
 
     template<typename Algorithm, typename R>
-    vecmem::vector<R>* parallel_filter(Algorithm algorithm,
+    vecmem::vector<R>& parallel_filter(Algorithm algorithm,
                                        vecmem::host_memory_resource& mr,
                                        vecmem::vector<R>& data) {
 
@@ -115,7 +116,7 @@ namespace vecpar::cuda {
         //copy back results
         copy(result_buffer, *result, vecmem::copy::type::device_to_host);
         result->resize(*idx);
-        return result;
+        return *result;
     }
 
     template<class Algorithm,
@@ -123,7 +124,7 @@ namespace vecpar::cuda {
             typename T,
             typename... Arguments,
             typename std::enable_if<!std::is_same<T, R>::value, void>::type* = nullptr>
-    R* parallel_map_reduce(Algorithm algorithm,
+    R& parallel_map_reduce(Algorithm algorithm,
                            vecmem::host_memory_resource& mr,
                            vecmem::vector<T>& data,
                            Arguments... args)  {
@@ -152,7 +153,7 @@ namespace vecpar::cuda {
                                         d_result,
                                         result_view);
 
-        return d_result;
+        return *d_result;
     }
 
     template<class Algorithm,
@@ -160,7 +161,7 @@ namespace vecpar::cuda {
             typename T,
             typename... Arguments,
             typename std::enable_if<std::is_same<T, R>::value, void>::type* = nullptr>
-    R* parallel_map_reduce(Algorithm algorithm,
+    R& parallel_map_reduce(Algorithm algorithm,
                            __attribute__((unused)) vecmem::host_memory_resource& mr,
                            vecmem::vector<T>& data,
                            Arguments... args)  {
@@ -188,7 +189,7 @@ namespace vecpar::cuda {
                                   d_result,
                                   data_view);
 
-        return d_result;
+        return *d_result;
     }
 
     template<class Algorithm,
@@ -196,7 +197,7 @@ namespace vecpar::cuda {
             typename T,
             typename... Arguments,
             typename std::enable_if<!std::is_same<T, R>::value, void>::type* = nullptr>
-    vecmem::vector<R>* parallel_map_filter(Algorithm algorithm,
+    vecmem::vector<R>& parallel_map_filter(Algorithm algorithm,
                                            vecmem::host_memory_resource& mr,
                                            vecmem::vector<T>& data,
                                            Arguments... args)  {
@@ -230,7 +231,7 @@ namespace vecpar::cuda {
       // copy back results
       copy(result_buffer, *result, vecmem::copy::type::device_to_host);
       result->resize(*idx);
-      return result;
+      return *result;
     }
 
     template<class Algorithm,
@@ -238,7 +239,7 @@ namespace vecpar::cuda {
             typename T,
             typename... Arguments,
             typename std::enable_if<std::is_same<T, R>::value, void>::type* = nullptr>
-    vecmem::vector<R>* parallel_map_filter(Algorithm algorithm,
+    vecmem::vector<R>& parallel_map_filter(Algorithm algorithm,
                                            vecmem::host_memory_resource& mr,
                                            vecmem::vector<T>& data,
                                            Arguments... args)  {
@@ -276,7 +277,7 @@ namespace vecpar::cuda {
         //copy back results
         copy(result_buffer, *result, vecmem::copy::type::device_to_host);
         result->resize(*idx);
-        return result;
+        return *result;
     }
 
 }

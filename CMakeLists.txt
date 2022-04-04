@@ -10,7 +10,7 @@ list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
 ### build options ###
 option(VECPAR_BUILD_OMP_BACKEND "Build OpenMP support for CPU parallelization" ON)
 option(VECPAR_BUILD_CUDA_BACKEND "Build CUDA support for GPU offloading" ON)
-option(VECPAR_BUILD_TESTS "Build automated tests" OFF)
+option(VECPAR_BUILD_TESTS "Build automated tests" ON)
 
 ### dependencies for all the backends ###
 #find_package(LLVM REQUIRED)

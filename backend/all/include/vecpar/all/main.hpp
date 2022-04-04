@@ -21,7 +21,7 @@ namespace vecpar {
             typename R = typename Algorithm::result_type,
             typename T,
             typename... Arguments>
-    vecmem::vector<R>* parallel_map(Algorithm& algorithm,
+    vecmem::vector<R>& parallel_map(Algorithm& algorithm,
                     MemoryResource& mr,
                     vecmem::vector<T>& data,
                     Arguments... args) {
@@ -36,7 +36,7 @@ namespace vecpar {
     template<class Algorithm,
             class MemoryResource,
             typename R>
-    R* parallel_reduce(Algorithm& algorithm,
+    R& parallel_reduce(Algorithm& algorithm,
                        MemoryResource& mr,
                        vecmem::vector<R>& data) {
 #if defined(__CUDACC__) && defined(__clang__)
@@ -49,7 +49,7 @@ namespace vecpar {
     template<class Algorithm,
             class MemoryResource,
             typename T>
-    vecmem::vector<T>* parallel_filter(Algorithm& algorithm,
+    vecmem::vector<T>& parallel_filter(Algorithm& algorithm,
                                         MemoryResource& mr,
                                         vecmem::vector<T>& data){
 #if defined(__CUDACC__) && defined(__clang__)
@@ -64,7 +64,7 @@ namespace vecpar {
             typename R = typename Algorithm::result_type,
             typename T,
             typename... Arguments>
-    R* parallel_map_reduce(Algorithm& algorithm,
+    R& parallel_map_reduce(Algorithm& algorithm,
                           MemoryResource& mr,
                           vecmem::vector<T>& data,
                           Arguments... args) {
@@ -81,7 +81,7 @@ namespace vecpar {
             class R = typename Algorithm::result_type,
             typename T,
             typename... Arguments>
-    vecmem::vector<R>* parallel_map_filter(Algorithm& algorithm,
+    vecmem::vector<R>& parallel_map_filter(Algorithm& algorithm,
                                           MemoryResource& mr,
                                           vecmem::vector<T>& data,
                                           Arguments... args) {
@@ -98,7 +98,7 @@ namespace vecpar {
             class R = typename Algorithm::result_type,
             class T, typename... Arguments,
             typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
-    vecmem::vector<R>* parallel_algorithm(Algorithm algorithm,
+    vecmem::vector<R>& parallel_algorithm(Algorithm algorithm,
                                          MemoryResource& mr,
                                          vecmem::vector<T>& data,
                                          Arguments... args) {
@@ -111,7 +111,7 @@ namespace vecpar {
             class R = typename Algorithm::result_type,
             class T, typename... Arguments,
             typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
-    R* parallel_algorithm(Algorithm algorithm,
+    R& parallel_algorithm(Algorithm algorithm,
                          MemoryResource& mr,
                          vecmem::vector<T>& data,
                          Arguments... args) {

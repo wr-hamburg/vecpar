@@ -55,10 +55,10 @@ namespace {
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Correctness) {
         test_algorithm_1 alg(mr);
-        vecmem::vector<double>* result = vecpar::parallel_map(alg, mr, *vec);
+        vecmem::vector<double> result = vecpar::parallel_map(alg, mr, *vec);
 
         for (size_t i = 0; i < vec->size(); i++)
-          EXPECT_EQ(vec->at(i) * 1.0, result->at(i));
+          EXPECT_EQ(vec->at(i) * 1.0, result.at(i));
     }
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Reduce_Time) {
@@ -92,15 +92,15 @@ namespace {
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Filter_Correctness) {
         test_algorithm_3 alg(mr);
 
-        vecmem::vector<double>* result = vecpar::parallel_filter(alg, mr, *vec_d);
+        vecmem::vector<double> result = vecpar::parallel_filter(alg, mr, *vec_d);
 
         int size = vec_d->size() % 2 == 0 ? int(vec_d->size()/2) : int(vec_d->size()/2) + 1;
-        EXPECT_EQ(result->size(), size);
+        EXPECT_EQ(result.size(), size);
 
         // the order can be different
-        std::sort(result->begin(), result->end());
-        for (size_t i = 0; i < result->size(); i++) {
-          EXPECT_EQ(vec_d->at(2 * i), result->at(i));
+        std::sort(result.begin(), result.end());
+        for (size_t i = 0; i < result.size(); i++) {
+          EXPECT_EQ(vec_d->at(2 * i), result.at(i));
         }
     }
 
@@ -108,18 +108,18 @@ namespace {
         test_algorithm_1 alg(mr);
 
         // parallel execution
-        vecmem::vector<double>* par_result = vecpar::parallel_map(alg, mr, *vec);
-        double* result = vecpar::parallel_reduce(alg, mr, *par_result);
+        double result = vecpar::parallel_reduce(alg, mr,
+                                                vecpar::parallel_map(alg, mr, *vec));
 
-        EXPECT_EQ(*result, expectedReduceResult);
+        EXPECT_EQ(result, expectedReduceResult);
     }
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_MapReduce_Grouped) {
         test_algorithm_1 alg(mr);
 
         // parallel execution
-        double* par_reduced = vecpar::parallel_algorithm(alg, mr, *vec);
-        EXPECT_EQ(*par_reduced, expectedReduceResult);
+        double par_reduced = vecpar::parallel_algorithm(alg, mr, *vec);
+        EXPECT_EQ(par_reduced, expectedReduceResult);
     }
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Extra_Params_MapReduce_Separately) {
@@ -128,10 +128,10 @@ namespace {
         X x{1, 1.0};
 
         // parallel execution
-        vecmem::vector<double>* par_result = vecpar::parallel_map(alg, mr, *vec, x);
-        double* result = vecpar::parallel_reduce(alg, mr, *par_result);
+        double result = vecpar::parallel_reduce(alg, mr,
+                                                vecpar::parallel_map(alg, mr, *vec, x));
 
-        EXPECT_EQ(*result, expectedReduceResult);
+        EXPECT_EQ(result, expectedReduceResult);
     }
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
@@ -140,19 +140,19 @@ namespace {
         X x{1, 1.0};
         // parallel execution
         vecmem::vector<double> par_result(vec->size(), &mr);
-        double* par_reduced = vecpar::parallel_algorithm(alg, mr, *vec, x);
-        EXPECT_EQ(*par_reduced, expectedReduceResult);
+        double par_reduced = vecpar::parallel_algorithm(alg, mr, *vec, x);
+        EXPECT_EQ(par_reduced, expectedReduceResult);
     }
 
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
         test_algorithm_3 first_alg(mr);
         test_algorithm_4 second_alg;
+        
+        double second_result = vecpar::parallel_algorithm(second_alg, mr,
+                                                          vecpar::parallel_algorithm(first_alg, mr, *vec));
 
-        vecmem::vector<double>* first_result = vecpar::parallel_algorithm(first_alg, mr, *vec);
-        double* second_result = vecpar::parallel_algorithm(second_alg, mr, *first_result);
-
-        EXPECT_EQ(*second_result, expectedFilterReduceResult);
+        EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Extra_Param) {
@@ -160,11 +160,11 @@ namespace {
 
       X x{1, 1.0};
       // parallel execution + distructive change on the input!!!
-      vecmem::vector<double> *result = vecpar::parallel_map(alg, mr, *vec_d, x);
-      EXPECT_EQ(result->size(), vec_d->size());
-      for (size_t i = 0; i < result->size(); i++) {
-        EXPECT_EQ(result->at(i), vec_d->at(i));
-        EXPECT_EQ(result->at(i), (vec->at(i) + x.a) * x.b);
+      vecmem::vector<double> result = vecpar::parallel_map(alg, mr, *vec_d, x);
+      EXPECT_EQ(result.size(), vec_d->size());
+      for (size_t i = 0; i < result.size(); i++) {
+        EXPECT_EQ(result.at(i), vec_d->at(i));
+        EXPECT_EQ(result.at(i), (vec->at(i) + x.a) * x.b);
       }
     }
 

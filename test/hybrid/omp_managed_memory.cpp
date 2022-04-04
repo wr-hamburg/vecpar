@@ -73,7 +73,7 @@ namespace {
         test_algorithm_1 alg(mr);
 
         start_time = std::chrono::steady_clock::now();
-        vecmem::vector<double>* result = vecpar::omp::parallel_map(alg, mr, *vec);
+        vecmem::vector<double> result = vecpar::omp::parallel_map(alg, mr, *vec);
         end_time = std::chrono::steady_clock::now();
 
         std::chrono::duration<double> diff = end_time - start_time;
@@ -82,10 +82,10 @@ namespace {
 
     TEST_P(CpuManagedMemoryTest, Parallel_Map_Correctness) {
         test_algorithm_1 alg(mr);
-        vecmem::vector<double>* result = vecpar::omp::parallel_map(alg, mr, *vec);
+        vecmem::vector<double> result = vecpar::omp::parallel_map(alg, mr, *vec);
 
         for (int i = 0; i < vec->size(); i++)
-            EXPECT_EQ(vec->at(i) * 1.0, result->at(i));
+            EXPECT_EQ(vec->at(i) * 1.0, result.at(i));
     }
 
     TEST_P(CpuManagedMemoryTest, Parallel_Reduce_Time) {
@@ -95,7 +95,7 @@ namespace {
         test_algorithm_1 alg(mr);
 
         start_time = std::chrono::steady_clock::now();
-        double* result = vecpar::omp::parallel_reduce(alg, mr, *vec_d);
+        vecpar::omp::parallel_reduce(alg, mr, *vec_d);
         end_time = std::chrono::steady_clock::now();
 
         std::chrono::duration<double> diff = end_time - start_time;
@@ -104,8 +104,8 @@ namespace {
 
     TEST_P(CpuManagedMemoryTest, Parallel_Reduce_Correctness) {
         test_algorithm_1 alg(mr);
-        double* result = vecpar::omp::parallel_reduce(alg, mr, *vec_d);
-        EXPECT_EQ(*result, expectedReduceResult);
+        double result = vecpar::omp::parallel_reduce(alg, mr, *vec_d);
+        EXPECT_EQ(result, expectedReduceResult);
     }
 
     TEST_P(CpuManagedMemoryTest, Parallel_Filter_Time) {
@@ -115,7 +115,7 @@ namespace {
         test_algorithm_3 alg(mr);
 
         start_time = std::chrono::steady_clock::now();
-        vecmem::vector<double>* result = vecpar::omp::parallel_filter(alg, mr, *vec_d);
+        vecmem::vector<double> result = vecpar::omp::parallel_filter(alg, mr, *vec_d);
         end_time = std::chrono::steady_clock::now();
 
         std::chrono::duration<double> diff = end_time - start_time;
@@ -125,15 +125,15 @@ namespace {
     TEST_P(CpuManagedMemoryTest, Parallel_Filter_Correctness) {
         test_algorithm_3 alg(mr);
 
-        vecmem::vector<double>* result = vecpar::omp::parallel_filter(alg, mr, *vec_d);
+        vecmem::vector<double> result = vecpar::omp::parallel_filter(alg, mr, *vec_d);
 
         int size = vec_d->size() % 2 == 0 ? int(vec_d->size()/2) : int(vec_d->size()/2) + 1;
-        EXPECT_EQ(result->size(), size);
+        EXPECT_EQ(result.size(), size);
 
         // the order can be different
-        std::sort(result->begin(), result->end());
-        for (int i = 0; i < result->size(); i++) {
-            EXPECT_EQ(vec_d->at(2 * i), result->at(i));
+        std::sort(result.begin(), result.end());
+        for (int i = 0; i < result.size(); i++) {
+            EXPECT_EQ(vec_d->at(2 * i), result.at(i));
         }
     }
 
@@ -170,8 +170,8 @@ namespace {
 
         // parallel execution
         vecmem::vector<double> par_result(vec->size(), &mr);
-        double* par_reduced = vecpar::omp::parallel_algorithm(alg, mr, *vec);
-        EXPECT_EQ(*par_reduced, expectedReduceResult);
+        double par_reduced = vecpar::omp::parallel_algorithm(alg, mr, *vec);
+        EXPECT_EQ(par_reduced, expectedReduceResult);
     }
 
     TEST_P(CpuManagedMemoryTest, Serial_MapReduce_Extra_Params) {
@@ -210,8 +210,8 @@ namespace {
         X x{1, 1.0};
         // parallel execution
         vecmem::vector<double> par_result(vec->size(), &mr);
-        double* par_reduced = vecpar::omp::parallel_algorithm(alg, mr, *vec, x);
-        EXPECT_EQ(*par_reduced, expectedReduceResult);
+        double par_reduced = vecpar::omp::parallel_algorithm(alg, mr, *vec, x);
+        EXPECT_EQ(par_reduced, expectedReduceResult);
     }
 
     TEST_P(CpuManagedMemoryTest, Serial_MapFilter_MapReduce_Chained) {
@@ -228,10 +228,10 @@ namespace {
         test_algorithm_3 first_alg(mr);
         test_algorithm_4 second_alg;
 
-        vecmem::vector<double>* first_result = vecpar::omp::parallel_algorithm(first_alg, mr, *vec);
-        double* second_result = vecpar::omp::parallel_algorithm(second_alg, mr, *first_result);
+        vecmem::vector<double> first_result = vecpar::omp::parallel_algorithm(first_alg, mr, *vec);
+        double second_result = vecpar::omp::parallel_algorithm(second_alg, mr, first_result);
 
-        EXPECT_EQ(*second_result, expectedFilterReduceResult);
+        EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
     INSTANTIATE_TEST_SUITE_P(Trivial_ManagedMemory, CpuManagedMemoryTest, testing::ValuesIn(N));

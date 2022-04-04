@@ -12,7 +12,7 @@ namespace vecpar::cuda {
             class R = typename Algorithm::result_type,
                     typename T, typename... Arguments,
                     typename std::enable_if<!std::is_same<T, R>::value, void>::type* = nullptr>
-    vecmem::vector<R>* parallel_map(Algorithm algorithm,
+    vecmem::vector<R>& parallel_map(Algorithm algorithm,
                                     vecmem::cuda::managed_memory_resource& mr,
                                     vecmem::vector<T>& data,
                                     Arguments... args) {
@@ -22,32 +22,29 @@ namespace vecpar::cuda {
 
         internal::parallel_map(data.size(), algorithm, map_view,
                                vecmem::get_data(data), args...);
-        return map_result;
+        return *map_result;
     }
 
     template<typename Algorithm,
             class R = typename Algorithm::result_type,
             typename T, typename... Arguments,
             typename std::enable_if<std::is_same<T, R>::value, void>::type* = nullptr>
-    vecmem::vector<R>* parallel_map(Algorithm algorithm,
+    vecmem::vector<R>& parallel_map(Algorithm algorithm,
                                     vecmem::cuda::managed_memory_resource& mr,
                                     vecmem::vector<T>& data,
                                     Arguments... args) {
-
-      //  vecmem::vector<R>* map_result = new vecmem::vector<R>(data.size(), &mr);
-        //auto map_view = vecmem::get_data(*map_result);
 
         auto map_view = vecmem::get_data(data);
         internal::parallel_map(data.size(),
                                algorithm,
                                map_view,
                                args...);
-        return new vecmem::vector<T>(data, &mr);
+        return data;
     }
 
 
     template<typename Algorithm, typename R>
-    R* parallel_reduce(Algorithm algorithm,
+    R& parallel_reduce(Algorithm algorithm,
                        __attribute__((unused))vecmem::cuda::managed_memory_resource& mr,
                        vecmem::vector<R>& data) {
 
@@ -60,11 +57,11 @@ namespace vecpar::cuda {
                                   d_result,
                                   vecmem::get_data(data));
 
-        return d_result;
+        return *d_result;
     }
 
     template<typename Algorithm, typename T>
-    vecmem::vector<T>* parallel_filter(Algorithm algorithm,
+    vecmem::vector<T>& parallel_filter(Algorithm algorithm,
                                        vecmem::cuda::managed_memory_resource& mr,
                                        vecmem::vector<T>& data) {
 
@@ -81,30 +78,27 @@ namespace vecpar::cuda {
                                   result_view,
                                   vecmem::get_data(data));
         result->resize(*idx);
-        return result;
+        return *result;
     }
 
     template<class Algorithm, typename R, typename T, typename... Arguments>
-    R* parallel_map_reduce(Algorithm algorithm,
+    R& parallel_map_reduce(Algorithm algorithm,
                            vecmem::cuda::managed_memory_resource& mr,
                            vecmem::vector<T>& data,
                            Arguments... args)  {
 
-        vecmem::vector<R>* map_result = parallel_map(algorithm, mr, data, args...);
-        R* d_result = parallel_reduce(algorithm, mr, *map_result);
-        return d_result;
+        return parallel_reduce(algorithm, mr,
+                               parallel_map(algorithm, mr, data, args...));
     }
 
     template<class Algorithm, typename R, typename T, typename... Arguments>
-    vecmem::vector<R>* parallel_map_filter(Algorithm algorithm,
+    vecmem::vector<R>& parallel_map_filter(Algorithm algorithm,
                                            vecmem::cuda::managed_memory_resource& mr,
                                            vecmem::vector<T>& data,
                                            Arguments... args)  {
 
-        vecmem::vector<R>* map_result = parallel_map(algorithm, mr, data, args...);
-        vecmem::vector<R>* result = parallel_filter(algorithm, mr, *map_result);
-
-        return result;
+        return parallel_filter(algorithm, mr,
+                               parallel_map(algorithm, mr, data, args...));
     }
 
 }
