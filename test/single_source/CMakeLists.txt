@@ -6,7 +6,7 @@ if (${OpenMP_FOUND})
         ${CMAKE_CURRENT_SOURCE_DIR}/common)
 
     target_compile_options(tests_compiled_for_cpu PUBLIC
-        $<$<COMPILE_LANGUAGE:CXX>:-std=c++20>
+        $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -Wall -Wextra -Wpedantic>
         $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE>)
 
     target_link_libraries(tests_compiled_for_cpu GTest::gtest_main
@@ -22,11 +22,10 @@ if (VECPAR_BUILD_WITH_CLANG)
         ${CMAKE_CURRENT_SOURCE_DIR}/common)
 
     target_compile_options(tests_compiled_for_gpu PUBLIC
-        $<$<COMPILE_LANGUAGE:CXX>:-std=c++20>
+        $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -Wall -Wextra -Wpedantic>
         $<$<COMPILE_LANGUAGE:CXX>:-x cuda --offload-arch=sm_86>
         $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE>)
 
     target_link_libraries(tests_compiled_for_gpu GTest::gtest_main
         vecpar_all)
 endif()
-#-Wall -Wextra -Wpedantic

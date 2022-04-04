@@ -49,7 +49,7 @@ namespace vecpar::cuda {
             typename... Arguments,
             typename std::enable_if<std::is_same<T, R>::value, void>::type* = nullptr>
     vecmem::vector<R>& parallel_map(Algorithm algorithm,
-                                    vecmem::host_memory_resource& mr,
+                                    __attribute__((unused)) vecmem::host_memory_resource& mr,
                                     vecmem::vector<T>& data,
                                     Arguments... args) {
 
