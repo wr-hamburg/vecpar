@@ -15,7 +15,22 @@ option(VECPAR_BUILD_TESTS "Build automated tests" ON)
 ### dependencies for all the backends ###
 #find_package(LLVM REQUIRED)
 #find_package(Clang REQUIRED)
-find_package(vecmem 0.10.0 REQUIRED)
+
+# Set up VecMem.
+option(VECPAR_SETUP_VECMEM
+        "Set up the VecMem target(s) explicitly" TRUE )
+option(VECPAR_USE_SYSTEM_VECMEM
+        "Pick up an existing installation of VecMem from the build environment"
+        TRUE )
+
+if(VECPAR_SETUP_VECMEM )
+    if(VECPAR_USE_SYSTEM_VECMEM )
+        find_package( vecmem 0.10.0 REQUIRED )
+    else()
+        # BUG: this doesn't work due to the compiler flags "-x cuda" required by certain tests
+       # add_subdirectory( extern/vecmem )
+    endif()
+endif()
 
 ### dependencies for OMP backend ###
 if (VECPAR_BUILD_OMP_BACKEND)

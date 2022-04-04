@@ -12,18 +12,18 @@ set(VECPAR_BUILD_TESTS @VECPAR_BUILD_TESTS@)
 
 include( CMakeFindDependencyMacro )
 
-find_dependency(vecmem QUIET)
+find_dependency(vecmem)
 
 if (VECPAR_BUILD_OMP_BACKEND)
-    find_dependency(OpenMP QUIET)
+    find_dependency(OpenMP)
 endif()
 
 if (VECPAR_BUILD_CUDA_BACKEND)
-    find_dependency(CUDAToolkit QUIET)
+    find_dependency(CUDAToolkit)
 endif()
 
 if (VECPAR_BUILD_TESTS)
-    find_dependency(GTest QUIET)
+    find_dependency(GTest)
 endif()
 
 # Print a standard information message about the package being found.
