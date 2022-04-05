@@ -5,9 +5,8 @@
 
 namespace vecpar::omp {
 
-static inline config getDefaultConfig(__attribute__((unused)) int size) {
-  return {1, 16,
-          0}; // TODO: get from user or retrieve based on hardware; use size
+static inline config getDefaultConfig() {
+  return vecpar::config(); // let the OMP runtime decide based on hardware
 }
 }
 #endif //VECPAR_OMP_CONFIG_HPP

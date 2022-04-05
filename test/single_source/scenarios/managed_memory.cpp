@@ -159,7 +159,7 @@ namespace {
       test_algorithm_5 alg;
 
       X x{1, 1.0};
-      // parallel execution + distructive change on the input!!!
+      // parallel execution + destructive change on the input!!!
       vecmem::vector<double> result = vecpar::parallel_map(alg, mr, *vec_d, x);
       EXPECT_EQ(result.size(), vec_d->size());
       for (size_t i = 0; i < result.size(); i++) {

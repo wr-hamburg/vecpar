@@ -5,21 +5,25 @@
 #include "config.hpp"
 
 namespace internal {
-    template<typename Function, typename... Arguments>
-    void offload_map(vecpar::config config, int size, Function f, Arguments... args) {
-    //    int threadsNum;
-        #pragma omp parallel for num_threads(config.gridSize * config.blockSize)
-        for (int i = 0; i < size; i++) {
-            f(i, args...);
-     //       threadsNum = omp_get_num_threads();
-        }
-    //    printf("Using %d OpenMP threads \n",threadsNum);
-    }
 
     template<typename Function, typename... Arguments>
-    void offload_map(int size, Function f, Arguments... args) {
-        //  printf("Num Threads in map: %d\n", c.gridSize * c.blockSize);
-        offload_map(vecpar::omp::getDefaultConfig(size), size, f, args...);
+    void offload_map(vecpar::config config, int size, Function f, Arguments... args) {
+        int threadsNum;
+
+        if (config.isEmpty()) {
+            #pragma omp parallel for
+            for (int i = 0; i < size; i++) {
+                f(i, args...);
+                DEBUG_ACTION(threadsNum = omp_get_num_threads();)
+            }
+        } else {
+            #pragma omp parallel for num_threads(config.m_gridSize * config.m_blockSize)
+            for (int i = 0; i < size; i++) {
+                f(i, args...);
+                 DEBUG_ACTION(threadsNum = omp_get_num_threads();)
+            }
+        }
+        DEBUG_ACTION(printf("Using %d OpenMP threads \n", threadsNum);)
     }
 
     /// based on article:

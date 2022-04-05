@@ -44,7 +44,7 @@ public:
 
         vecpar::config c = vecpar::cuda::getDefaultConfig(data.size());
         auto view = vecmem::get_data(data);
-        kernel_alg_2<<<c.gridSize, c.blockSize>>>(view, d_extra, d_result);
+        kernel_alg_2<<<c.m_gridSize, c.m_blockSize>>>(view, d_extra, d_result);
         CHECK_ERROR(cudaGetLastError());
         CHECK_ERROR(cudaDeviceSynchronize());
 

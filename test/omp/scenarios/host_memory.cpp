@@ -326,11 +326,22 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
+    TEST_P(CpuHostMemoryTest, Parallel_MapFilter_MapReduce_Chained_With_Config) {
+        test_algorithm_3 first_alg(mr);
+        test_algorithm_4 second_alg;
+
+        vecpar::config c{2, 5};
+        vecmem::vector<double> first_result = vecpar::omp::parallel_algorithm(first_alg, mr, c, *vec);
+        double second_result = vecpar::omp::parallel_algorithm(second_alg, mr, {1, 10}, first_result);
+
+        EXPECT_EQ(second_result, expectedFilterReduceResult);
+    }
+
     TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
       test_algorithm_5 alg;
 
       X x{1, 1.0};
-      // parallel execution + distructive change on the input!!!
+      // parallel execution + destructive change on the input!!!
       vecmem::vector<double> result =
           vecpar::omp::parallel_map(alg, mr, *vec_d, x);
       EXPECT_EQ(result.size(), vec_d->size());

@@ -184,11 +184,22 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
+    TEST_P(GpuManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained_With_Config) {
+        test_algorithm_3 first_alg(mr);
+        test_algorithm_4 second_alg;
+
+        vecpar::config c{static_cast<int>(vec->size()/64 + 1), 64};
+        double second_result = vecpar::cuda::parallel_algorithm(second_alg, mr, c,
+                                                                vecpar::cuda::parallel_algorithm(first_alg, mr, c, *vec));
+
+        EXPECT_EQ(second_result, expectedFilterReduceResult);
+    }
+
     TEST_P(GpuManagedMemoryTest, Parallel_Map_Extra_Param) {
       test_algorithm_5 alg;
 
       X x{1, 1.0};
-      // parallel execution + distructive change on the input!!!
+      // parallel execution + destructive change on the input!!!
       vecmem::vector<double> result =
           vecpar::cuda::parallel_map(alg, mr, *vec_d, x);
       EXPECT_EQ(result.size(), vec_d->size());
