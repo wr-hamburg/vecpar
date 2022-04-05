@@ -50,10 +50,11 @@ if (VECPAR_BUILD_TESTS)
 #    message(STATUS "Found GTest")
 endif()
 
-if (${CUDAToolkit_FOUND} AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
-    set(VECPAR_BUILD_WITH_CLANG True)
-else()
-    set(VECPAR_BUILD_WITH_CLANG False)
+set(VECPAR_BUILD_WITH_CLANG False)
+if (CUDAToolkit_FOUND)
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        set(VECPAR_BUILD_WITH_CLANG True)
+    endif()
 endif()
 
 ### include sources ###
