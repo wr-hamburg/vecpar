@@ -13,6 +13,7 @@
 
 #include "vecpar/core/algorithms/parallelizable_map_filter.hpp"
 #include "vecpar/core/algorithms/parallelizable_map_reduce.hpp"
+#include "vecpar/core/definitions/config.hpp"
 
 namespace vecpar {
 
@@ -23,13 +24,29 @@ namespace vecpar {
             typename... Arguments>
     vecmem::vector<R>& parallel_map(Algorithm& algorithm,
                     MemoryResource& mr,
+                    vecpar::config config,
                     vecmem::vector<T>& data,
                     Arguments... args) {
 #if defined(__CUDACC__) && defined(__clang__)
+        return vecpar::cuda::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, config, data, args...);
+#elif _OPENMP
+      return vecpar::omp::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, config, data, args...);
+#endif
+    }
+
+    template<class Algorithm,
+            class MemoryResource,
+            typename R = typename Algorithm::result_type,
+            typename T,
+            typename... Arguments>
+    vecmem::vector<R>& parallel_map(Algorithm& algorithm,
+                                    MemoryResource& mr,
+                                    vecmem::vector<T>& data,
+                                    Arguments... args) {
+#if defined(__CUDACC__) && defined(__clang__)
         return vecpar::cuda::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
 #elif _OPENMP
-      return vecpar::omp::parallel_map<Algorithm, R, T, Arguments...>(
-          algorithm, mr, data, args...);
+        return vecpar::omp::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
 #endif
     }
 
@@ -66,13 +83,31 @@ namespace vecpar {
             typename... Arguments>
     R& parallel_map_reduce(Algorithm& algorithm,
                           MemoryResource& mr,
+                          vecpar::config config,
                           vecmem::vector<T>& data,
                           Arguments... args) {
 #if defined(__CUDACC__) && defined(__clang__)
-        return vecpar::cuda::parallel_map_reduce<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
+        return vecpar::cuda::parallel_map_reduce<Algorithm, R, T, Arguments...>(algorithm, mr, config, data, args...);
 #elif _OPENMP
       return vecpar::omp::parallel_map_reduce<Algorithm, R, T, Arguments...>(
-          algorithm, mr, data, args...);
+          algorithm, mr, config, data, args...);
+#endif
+    }
+
+    template<class Algorithm,
+            class MemoryResource,
+            typename R = typename Algorithm::result_type,
+            typename T,
+            typename... Arguments>
+    R& parallel_map_reduce(Algorithm& algorithm,
+                           MemoryResource& mr,
+                           vecmem::vector<T>& data,
+                           Arguments... args) {
+#if defined(__CUDACC__) && defined(__clang__)
+        return vecpar::cuda::parallel_map_reduce<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
+#elif _OPENMP
+        return vecpar::omp::parallel_map_reduce<Algorithm, R, T, Arguments...>(
+                algorithm, mr, data, args...);
 #endif
     }
 
@@ -83,13 +118,31 @@ namespace vecpar {
             typename... Arguments>
     vecmem::vector<R>& parallel_map_filter(Algorithm& algorithm,
                                           MemoryResource& mr,
+                                          vecpar::config config,
                                           vecmem::vector<T>& data,
                                           Arguments... args) {
 #if defined(__CUDACC__) && defined(__clang__)
-        return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
+        return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(algorithm, mr, config, data, args...);
 #elif _OPENMP
       return vecpar::omp::parallel_map_filter<Algorithm, R, T, Arguments...>(
-          algorithm, mr, data, args...);
+          algorithm, mr, config, data, args...);
+#endif
+    }
+
+    template<class Algorithm,
+            class MemoryResource,
+            class R = typename Algorithm::result_type,
+            typename T,
+            typename... Arguments>
+    vecmem::vector<R>& parallel_map_filter(Algorithm& algorithm,
+                                           MemoryResource& mr,
+                                           vecmem::vector<T>& data,
+                                           Arguments... args) {
+#if defined(__CUDACC__) && defined(__clang__)
+        return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
+#elif _OPENMP
+        return vecpar::omp::parallel_map_filter<Algorithm, R, T, Arguments...>(
+                algorithm, mr, data, args...);
 #endif
     }
 
@@ -100,8 +153,22 @@ namespace vecpar {
             typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
     vecmem::vector<R>& parallel_algorithm(Algorithm algorithm,
                                          MemoryResource& mr,
+                                         vecpar::config config,
                                          vecmem::vector<T>& data,
                                          Arguments... args) {
+
+        return parallel_map_filter(algorithm, mr, config, data, args...);
+    }
+
+    template<class MemoryResource,
+            class Algorithm,
+            class R = typename Algorithm::result_type,
+            class T, typename... Arguments,
+            typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
+    vecmem::vector<R>& parallel_algorithm(Algorithm algorithm,
+                                          MemoryResource& mr,
+                                          vecmem::vector<T>& data,
+                                          Arguments... args) {
 
         return parallel_map_filter(algorithm, mr, data, args...);
     }
@@ -113,8 +180,22 @@ namespace vecpar {
             typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
     R& parallel_algorithm(Algorithm algorithm,
                          MemoryResource& mr,
+                         vecpar::config config,
                          vecmem::vector<T>& data,
                          Arguments... args) {
+
+        return parallel_map_reduce(algorithm, mr, config, data, args...);
+    }
+
+    template<class MemoryResource,
+            class Algorithm,
+            class R = typename Algorithm::result_type,
+            class T, typename... Arguments,
+            typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
+    R& parallel_algorithm(Algorithm algorithm,
+                          MemoryResource& mr,
+                          vecmem::vector<T>& data,
+                          Arguments... args) {
 
         return parallel_map_reduce(algorithm, mr, data, args...);
     }
