@@ -6,7 +6,7 @@
 
 namespace vecpar::cuda {
 
-static vecpar::config getDefaultConfig(size_t size) {
+static inline vecpar::config getDefaultConfig(size_t size) {
   int nThreadsPerBlock = 256;
 
   // If the arrays are not even this large, then reduce the value to the
@@ -19,7 +19,8 @@ static vecpar::config getDefaultConfig(size_t size) {
   return vecpar::config{nBlocks, nThreadsPerBlock, 0};
 }
 
-template <typename Ri> static vecpar::config getReduceConfig(size_t size) {
+template <typename Ri>
+static inline vecpar::config getReduceConfig(size_t size) {
   int nThreadsPerBlock = 256; // must be power of 2
 
   if (static_cast<int>(size) < nThreadsPerBlock) {
