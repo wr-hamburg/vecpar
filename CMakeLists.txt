@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.19)
 
 project(vecpar VERSION 0.0.1 DESCRIPTION
         "A header-only C++ library that provides parallelization support on top of vecmem library")
