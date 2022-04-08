@@ -1,7 +1,7 @@
 #ifndef VECPAR_MAIN_HPP
 #define VECPAR_MAIN_HPP
 
-#if defined(__CUDACC__) && defined(__clang__)
+#if defined(__CUDA__) && defined(__clang__)
         #include "vecpar/cuda/cuda_parallelization.hpp"
 #endif
 
@@ -27,7 +27,7 @@ namespace vecpar {
                     vecpar::config config,
                     vecmem::vector<T>& data,
                     Arguments... args) {
-#if defined(__CUDACC__) && defined(__clang__)
+#if defined(__CUDA__) && defined(__clang__)
         return vecpar::cuda::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, config, data, args...);
 #elif _OPENMP
       return vecpar::omp::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, config, data, args...);
@@ -43,7 +43,7 @@ namespace vecpar {
                                     MemoryResource& mr,
                                     vecmem::vector<T>& data,
                                     Arguments... args) {
-#if defined(__CUDACC__) && defined(__clang__)
+#if defined(__CUDA__) && defined(__clang__)
         return vecpar::cuda::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
 #elif _OPENMP
         return vecpar::omp::parallel_map<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
@@ -56,7 +56,7 @@ namespace vecpar {
     R& parallel_reduce(Algorithm& algorithm,
                        MemoryResource& mr,
                        vecmem::vector<R>& data) {
-#if defined(__CUDACC__) && defined(__clang__)
+#if defined(__CUDA__) && defined(__clang__)
         return vecpar::cuda::parallel_reduce<Algorithm, R>(algorithm, mr, data);
 #elif _OPENMP
       return vecpar::omp::parallel_reduce<Algorithm, R>(algorithm, mr, data);
@@ -69,7 +69,7 @@ namespace vecpar {
     vecmem::vector<T>& parallel_filter(Algorithm& algorithm,
                                         MemoryResource& mr,
                                         vecmem::vector<T>& data){
-#if defined(__CUDACC__) && defined(__clang__)
+#if defined(__CUDA__) && defined(__clang__)
         return vecpar::cuda::parallel_filter<Algorithm, T>(algorithm, mr, data);
 #elif _OPENMP
       return vecpar::omp::parallel_filter<Algorithm, T>(algorithm, mr, data);
@@ -86,7 +86,7 @@ namespace vecpar {
                           vecpar::config config,
                           vecmem::vector<T>& data,
                           Arguments... args) {
-#if defined(__CUDACC__) && defined(__clang__)
+#if defined(__CUDA__) && defined(__clang__)
         return vecpar::cuda::parallel_map_reduce<Algorithm, R, T, Arguments...>(algorithm, mr, config, data, args...);
 #elif _OPENMP
       return vecpar::omp::parallel_map_reduce<Algorithm, R, T, Arguments...>(
@@ -103,7 +103,7 @@ namespace vecpar {
                            MemoryResource& mr,
                            vecmem::vector<T>& data,
                            Arguments... args) {
-#if defined(__CUDACC__) && defined(__clang__)
+#if defined(__CUDA__) && defined(__clang__)
         return vecpar::cuda::parallel_map_reduce<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
 #elif _OPENMP
         return vecpar::omp::parallel_map_reduce<Algorithm, R, T, Arguments...>(
@@ -121,7 +121,7 @@ namespace vecpar {
                                           vecpar::config config,
                                           vecmem::vector<T>& data,
                                           Arguments... args) {
-#if defined(__CUDACC__) && defined(__clang__)
+#if defined(__CUDA__) && defined(__clang__)
         return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(algorithm, mr, config, data, args...);
 #elif _OPENMP
       return vecpar::omp::parallel_map_filter<Algorithm, R, T, Arguments...>(
@@ -138,7 +138,7 @@ namespace vecpar {
                                            MemoryResource& mr,
                                            vecmem::vector<T>& data,
                                            Arguments... args) {
-#if defined(__CUDACC__) && defined(__clang__)
+#if defined(__CUDA__) && defined(__clang__)
         return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(algorithm, mr, data, args...);
 #elif _OPENMP
         return vecpar::omp::parallel_map_filter<Algorithm, R, T, Arguments...>(

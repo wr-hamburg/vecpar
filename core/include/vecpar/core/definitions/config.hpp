@@ -1,5 +1,6 @@
 #ifndef VECPAR_CONFIG_HPP
 #define VECPAR_CONFIG_HPP
+#include <stddef.h>
 
 namespace vecpar {
 

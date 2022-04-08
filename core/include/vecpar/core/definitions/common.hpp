@@ -1,7 +1,7 @@
 #ifndef VECPAR_COMMON_HPP
 #define VECPAR_COMMON_HPP
 
-#ifdef __CUDACC__
+#ifdef __CUDA__
 #define TARGET __host__ __device__
 #else
 #define TARGET
