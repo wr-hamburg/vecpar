@@ -62,8 +62,9 @@ namespace vecpar::cuda {
             class Algorithm,
             class R = typename Algorithm::result_type,
             class T, typename... Arguments,
-            typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
-    vecmem::vector<R>& parallel_algorithm(Algorithm algorithm,
+            typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>, Algorithm>::value ||
+                                      std::is_base_of<vecpar::algorithm::parallelizable_mmap_filter<T, Arguments...>, Algorithm>::value, bool> = true>
+   vecmem::vector<R>& parallel_algorithm(Algorithm algorithm,
                                           MemoryResource& mr,
                                           vecpar::config config,
                                           vecmem::vector<T>& data,
@@ -76,7 +77,8 @@ namespace vecpar::cuda {
             class Algorithm,
             class R = typename Algorithm::result_type,
             class T, typename... Arguments,
-            typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
+            typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>, Algorithm>::value ||
+                                      std::is_base_of<vecpar::algorithm::parallelizable_mmap_filter<T, Arguments...>, Algorithm>::value, bool> = true>
     vecmem::vector<R>& parallel_algorithm(Algorithm algorithm,
                                           MemoryResource& mr,
                                           vecmem::vector<T>& data,
@@ -89,7 +91,8 @@ namespace vecpar::cuda {
             class Algorithm,
             class R = typename Algorithm::result_type,
             class T, typename... Arguments,
-            typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
+            typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>, Algorithm>::value ||
+                                      std::is_base_of<vecpar::algorithm::parallelizable_mmap_reduce<T, Arguments...>, Algorithm>::value, bool> = true>
     R& parallel_algorithm(Algorithm algorithm,
                           MemoryResource& mr,
                           vecpar::config config,
@@ -103,7 +106,8 @@ namespace vecpar::cuda {
             class Algorithm,
             class R = typename Algorithm::result_type,
             class T, typename... Arguments,
-            typename std::enable_if<std::is_base_of<vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>, Algorithm>::value>::type* = nullptr>
+            typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>, Algorithm>::value ||
+                                      std::is_base_of<vecpar::algorithm::parallelizable_mmap_reduce<T, Arguments...>, Algorithm>::value, bool> = true>
     R& parallel_algorithm(Algorithm algorithm,
                           MemoryResource& mr,
                           vecmem::vector<T>& data,
