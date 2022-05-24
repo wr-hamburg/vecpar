@@ -145,14 +145,6 @@ namespace vecpar::cuda {
         //copy back results
         copy(result_buffer, *result, vecmem::copy::type::device_to_host);
 
-        if (data.size() == 1000) {
-            printf("For 1000 before resize with %d\n", *idx);
-            for (int i = 0; i < result->size(); i++) {
-                printf("%f ", result->at(i));
-                if (i % 5 == 0)
-                    printf("\n");
-            }
-        }
         result->resize(*idx);
         return *result;
     }
