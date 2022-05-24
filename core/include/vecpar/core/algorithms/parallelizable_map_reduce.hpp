@@ -16,11 +16,9 @@ namespace vecpar::algorithm {
 
     };
 
-    /// partial specialization
     template<typename TT, typename... Arguments>
-    struct parallelizable_map_reduce<TT, TT, Arguments...>
-                            : public vecpar::detail::parallel_mmap<TT, Arguments...>,
-                              public vecpar::detail::parallel_reduce<TT> {
+    struct parallelizable_mmap_reduce : public vecpar::detail::parallel_mmap<TT, Arguments...>,
+                                        public vecpar::detail::parallel_reduce<TT> {
         using result_type = TT;
 
         TARGET virtual TT& map(TT& input_output_i, Arguments... args) = 0;

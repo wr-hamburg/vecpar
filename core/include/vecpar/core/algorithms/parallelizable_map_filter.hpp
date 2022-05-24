@@ -15,9 +15,8 @@ namespace vecpar::algorithm {
         TARGET virtual bool filter(R& partial_result) = 0;
     };
 
-    /// partial specialization
     template<typename TT, typename... Arguments>
-    struct parallelizable_map_filter<TT, TT, Arguments...>
+    struct parallelizable_mmap_filter
             : public vecpar::detail::parallel_mmap<TT, TT, Arguments...>,
               public vecpar::detail::parallel_filter<TT> {
         using result_type = TT;
