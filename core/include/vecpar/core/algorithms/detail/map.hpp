@@ -3,6 +3,7 @@
 
 #include "vecpar/core/definitions/common.hpp"
 
+//TODO: Templated on vecmem::vector or vecmem::jagged_vector
 namespace vecpar::detail {
 
     /**

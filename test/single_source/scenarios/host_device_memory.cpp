@@ -16,10 +16,10 @@
 
 namespace {
 
-    class SingleSourceManagedMemoryTest : public TimeTest,
+    class SingleSourceHostDeviceMemoryTest : public TimeTest,
                                  public testing::WithParamInterface<int>{
     public:
-        SingleSourceManagedMemoryTest() {
+        SingleSourceHostDeviceMemoryTest() {
             vec = new vecmem::vector<int>(GetParam(), &mr);
             vec_d = new vecmem::vector<double>(GetParam(), &mr);
             for (size_t i = 0; i < vec->size(); i++) {
@@ -32,14 +32,14 @@ namespace {
         }
 
     protected:
-        vecmem::cuda::managed_memory_resource mr;
+        vecmem::host_memory_resource mr;
         vecmem::vector<int> *vec;
         vecmem::vector<double> *vec_d;
         double expectedReduceResult = 0;
         double expectedFilterReduceResult = 0;
     };
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Time) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Map_Time) {
         std::chrono::time_point<std::chrono::steady_clock> start_time;
         std::chrono::time_point<std::chrono::steady_clock> end_time;
 
@@ -53,7 +53,7 @@ namespace {
         printf("Parallel map time  = %f s\n", diff.count());
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Correctness) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Map_Correctness) {
         test_algorithm_1 alg(mr);
         vecmem::vector<double> result = vecpar::parallel_map(alg, mr, *vec);
 
@@ -61,7 +61,7 @@ namespace {
           EXPECT_EQ(vec->at(i) * 1.0, result.at(i));
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Reduce_Time) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Reduce_Time) {
         std::chrono::time_point<std::chrono::steady_clock> start_time;
         std::chrono::time_point<std::chrono::steady_clock> end_time;
 
@@ -75,7 +75,7 @@ namespace {
         printf("Parallel reduce <double> time  = %f s\n", diff.count());
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Filter_Time) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Filter_Time) {
         std::chrono::time_point<std::chrono::steady_clock> start_time;
         std::chrono::time_point<std::chrono::steady_clock> end_time;
 
@@ -89,7 +89,7 @@ namespace {
         printf("Parallel filter time  = %f s\n", diff.count());
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Filter_Correctness) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Filter_Correctness) {
         test_algorithm_3 alg(mr);
 
         vecmem::vector<double> result = vecpar::parallel_filter(alg, mr, *vec_d);
@@ -104,7 +104,7 @@ namespace {
         }
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_MapReduce_Separately) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_MapReduce_Separately) {
         test_algorithm_1 alg(mr);
 
         // parallel execution
@@ -114,7 +114,7 @@ namespace {
         EXPECT_EQ(result, expectedReduceResult);
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_MapReduce_Grouped) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_MapReduce_Grouped) {
         test_algorithm_1 alg(mr);
 
         // parallel execution
@@ -122,7 +122,7 @@ namespace {
         EXPECT_EQ(par_reduced, expectedReduceResult);
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Extra_Params_MapReduce_Separately) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Extra_Params_MapReduce_Separately) {
         test_algorithm_2 alg(mr);
 
         X x{1, 1.0};
@@ -134,7 +134,7 @@ namespace {
         EXPECT_EQ(result, expectedReduceResult);
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
         test_algorithm_2 alg(mr);
 
         X x{1, 1.0};
@@ -145,7 +145,7 @@ namespace {
     }
 
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
         test_algorithm_3 first_alg(mr);
         test_algorithm_4 second_alg;
         
@@ -155,13 +155,13 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Chained) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained) {
         test_algorithm_3 first_alg(mr);
         test_algorithm_4 second_alg;
 
-        //vecpar::config c = {1, static_cast<int>(vec->size())};
+    //    vecpar::config c = {1, static_cast<int>(vec->size())};
 
-        vecpar::chain_orchestrator<vecmem::cuda::managed_memory_resource,
+        vecpar::chain_orchestrator<vecmem::host_memory_resource,
                                     double,
                                     vecmem::vector<int>> chain(mr);
 
@@ -172,7 +172,7 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Extra_Param) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Map_Extra_Param) {
       test_algorithm_5 alg;
 
       X x{1, 1.0};
@@ -185,6 +185,6 @@ namespace {
       }
     }
 
-    INSTANTIATE_TEST_SUITE_P(Trivial_ManagedMemory, SingleSourceManagedMemoryTest, testing::ValuesIn(N));
+    INSTANTIATE_TEST_SUITE_P(Trivial_HostDeviceMemory, SingleSourceHostDeviceMemoryTest, testing::ValuesIn(N));
 }
 

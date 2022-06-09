@@ -8,6 +8,7 @@ namespace vecpar::algorithm {
     template<typename R>
     struct parallelizable_reduce : public vecpar::detail::parallel_reduce<R> {
         using result_type = R;
+        using output_type_t = R;
 
         TARGET virtual R* reduce(R* result, R& partial_result) = 0;
 

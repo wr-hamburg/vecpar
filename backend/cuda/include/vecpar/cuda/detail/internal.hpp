@@ -5,9 +5,11 @@
 #include <vecmem/containers/data/vector_view.hpp>
 
 #include "vecpar/core/definitions/config.hpp"
-
+#include "vecpar/core/definitions/common.hpp"
 #include "vecpar/cuda/detail/cuda_utils.hpp"
 #include "vecpar/cuda/detail/config.hpp"
+#include "vecpar/cuda/detail/kernels.hpp"
+
 
 namespace internal {
 
@@ -15,6 +17,11 @@ namespace internal {
     void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                       vecmem::data::vector_view<R> &result,
                       vecmem::data::vector_view<T> data, Arguments... args) {
+
+        // make sure that an empty config ends up to be used
+        if (c.isEmpty()) {
+            c = vecpar::cuda::getDefaultConfig(size);
+        }
 
         DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                             c.m_gridSize, c.m_blockSize, c.m_memorySize);)
@@ -37,6 +44,11 @@ namespace internal {
     void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                       vecmem::data::vector_view<TT> &input_output,
                       Arguments... args) {
+
+        // make sure that an empty config ends up to be used
+        if (c.isEmpty()) {
+            c = vecpar::cuda::getDefaultConfig(size);
+        }
 
         DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                             c.m_gridSize, c.m_blockSize, c.m_memorySize);)
@@ -82,6 +94,11 @@ namespace internal {
         int *lock; // mutex.
         cudaMallocManaged((void **) &lock, sizeof(int));
         *lock = 0;
+
+        // make sure that an empty config ends up to be used
+        if (c.isEmpty()) {
+            c = vecpar::cuda::getReduceConfig<R>(size);
+        }
 
         DEBUG_ACTION(printf("[REDUCE] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                             c.m_gridSize, c.m_blockSize, c.m_memorySize);)
@@ -143,6 +160,11 @@ namespace internal {
         int *lock; // mutex.
         cudaMallocManaged((void **) &lock, sizeof(int));
         *lock = 0;
+
+        // make sure that an empty config ends up to be used
+        if (c.isEmpty()) {
+            c = vecpar::cuda::getReduceConfig<R>(size);
+        }
 
         DEBUG_ACTION(printf("[FILTER] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                             c.m_gridSize, c.m_blockSize, c.m_memorySize);)

@@ -161,8 +161,8 @@ namespace {
         test_algorithm_3 first_alg(mr);
         test_algorithm_4 second_alg;
 
-        vecmem::vector<double> first_result = vecpar::cuda::parallel_algorithm(first_alg, mr, *vec);
-        double second_result = vecpar::cuda::parallel_algorithm(second_alg, mr, first_result);
+        double second_result = vecpar::cuda::parallel_algorithm(second_alg, mr,
+                                                                vecpar::cuda::parallel_algorithm(first_alg, mr, *vec));
 
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
