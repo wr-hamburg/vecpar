@@ -1,0 +1,3 @@
+[submodule "extern/composition"]
+	path = extern/composition
+	url = git@github.com:nestoroprysk/FunctionComposition.git
