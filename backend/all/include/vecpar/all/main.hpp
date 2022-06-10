@@ -13,7 +13,7 @@ namespace vecpar {
 
      template<class MemoryResource,
             class Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             class T, typename... Arguments,
             typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map<R, T, Arguments...>, Algorithm>::value ||
                                       std::is_base_of<vecpar::algorithm::parallelizable_mmap<T, Arguments...>, Algorithm>::value, bool> = true>
@@ -28,7 +28,7 @@ namespace vecpar {
 
     template<class MemoryResource,
             class Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             class T, typename... Arguments,
             typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map<R, T, Arguments...>, Algorithm>::value ||
                                       std::is_base_of<vecpar::algorithm::parallelizable_mmap<T, Arguments...>, Algorithm>::value, bool> = true>
@@ -64,7 +64,7 @@ namespace vecpar {
 
     template<class MemoryResource,
             class Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             class T, typename... Arguments,
             typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>, Algorithm>::value ||
                                       std::is_base_of<vecpar::algorithm::parallelizable_mmap_filter<T, Arguments...>, Algorithm>::value, bool> = true>
@@ -79,7 +79,7 @@ namespace vecpar {
 
     template<class MemoryResource,
             class Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             class T, typename... Arguments,
             typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>, Algorithm>::value ||
                                       std::is_base_of<vecpar::algorithm::parallelizable_mmap_filter<T, Arguments...>, Algorithm>::value, bool> = true>
@@ -93,7 +93,7 @@ namespace vecpar {
 
     template<class MemoryResource,
             class Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             class T, typename... Arguments,
             typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>, Algorithm>::value ||
                                       std::is_base_of<vecpar::algorithm::parallelizable_mmap_reduce<T, Arguments...>, Algorithm>::value, bool> = true>
@@ -108,7 +108,7 @@ namespace vecpar {
 
     template<class MemoryResource,
             class Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             class T, typename... Arguments,
             typename std::enable_if_t<std::is_base_of<vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>, Algorithm>::value ||
                                       std::is_base_of<vecpar::algorithm::parallelizable_mmap_reduce<T, Arguments...>, Algorithm>::value, bool> = true>

@@ -15,7 +15,7 @@ namespace vecpar::cuda {
     static vecmem::cuda::copy copy;
 
     template<typename Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             typename T,
             typename... Arguments,
             typename std::enable_if<!std::is_same<T, R>::value, void>::type* = nullptr>
@@ -46,7 +46,7 @@ namespace vecpar::cuda {
     }
 
     template<typename Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             typename T,
             typename... Arguments,
             typename std::enable_if<!std::is_same<T, R>::value, void>::type* = nullptr>
@@ -59,7 +59,7 @@ namespace vecpar::cuda {
 
 
     template<typename Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             typename T,
             typename... Arguments,
             typename std::enable_if<std::is_same<T, R>::value, void>::type* = nullptr>
@@ -85,7 +85,7 @@ namespace vecpar::cuda {
     }
 
     template<typename Algorithm,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             typename T,
             typename... Arguments,
             typename std::enable_if<std::is_same<T, R>::value, void>::type* = nullptr>

@@ -185,6 +185,6 @@ namespace {
       }
     }
 
-    INSTANTIATE_TEST_SUITE_P(Trivial_ManagedMemory, SingleSourceManagedMemoryTest, testing::ValuesIn(N));
+    INSTANTIATE_TEST_SUITE_P(ManagedMemory, SingleSourceManagedMemoryTest, testing::ValuesIn(N));
 }
 

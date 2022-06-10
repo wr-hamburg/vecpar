@@ -58,7 +58,7 @@ namespace internal {
             vecmem::device_vector<TT> dv_data(input_output);
             //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
             algorithm.map(dv_data[idx], a...);
-            //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
+            //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
         },
         args...);
 

@@ -9,7 +9,8 @@ namespace vecpar::algorithm {
     template<typename R, typename T, typename... Arguments>
     struct parallelizable_map_reduce : public vecpar::detail::parallel_map<R, T, Arguments...>,
                                        public vecpar::detail::parallel_reduce<R> {
-        using result_type = R;
+        using result_t = R;
+        using input_t = T;
         using input_type = vecmem::vector<T>;
         using output_type_t = R;
 
@@ -21,7 +22,8 @@ namespace vecpar::algorithm {
     template<typename TT, typename... Arguments>
     struct parallelizable_mmap_reduce : public vecpar::detail::parallel_mmap<TT, Arguments...>,
                                         public vecpar::detail::parallel_reduce<TT> {
-        using result_type = TT;
+        using result_t = TT;
+        using input_t = TT;
         using input_type = vecmem::vector<TT>;
         using output_type_t = TT;
 

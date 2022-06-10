@@ -172,6 +172,35 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained_mmaps) {
+        test_algorithm_5 first_alg;
+        X x{1, 1.0};
+       // test_algorithm_4 second_alg;
+
+        //    vecpar::config c = {1, static_cast<int>(vec->size())};
+
+        vecpar::chain_orchestrator<vecmem::host_memory_resource,
+                vecmem::vector<double>,
+                vecmem::vector<double>, X> chain(mr);
+
+        vecmem::vector<double> second_result = chain//.with_config(c)
+                    .with_algorithms(first_alg)
+                    .execute(*vec_d, x);
+
+        for (size_t i = 0; i < second_result.size(); i++)
+            EXPECT_EQ(second_result[i], vec_d->at(i));
+    }
+
+    // destructive tests (will change vec_d)
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_MMap_Correctness) {
+        test_algorithm_5 alg;
+        X x{1, 1.0};
+        vecmem::vector<double> result = vecpar::parallel_algorithm(alg, mr, *vec_d, x);
+
+        for (size_t i = 0; i < vec_d->size(); i++)
+            EXPECT_EQ(vec_d->at(i), result.at(i));
+    }
+
     TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Map_Extra_Param) {
       test_algorithm_5 alg;
 
@@ -185,6 +214,6 @@ namespace {
       }
     }
 
-    INSTANTIATE_TEST_SUITE_P(Trivial_HostDeviceMemory, SingleSourceHostDeviceMemoryTest, testing::ValuesIn(N));
+    INSTANTIATE_TEST_SUITE_P(HostDeviceMemory, SingleSourceHostDeviceMemoryTest, testing::ValuesIn(N));
 }
 

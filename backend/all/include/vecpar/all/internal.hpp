@@ -15,7 +15,7 @@ namespace vecpar {
 
     template<class Algorithm,
             class MemoryResource,
-            typename R = typename Algorithm::result_type,
+            typename R = typename Algorithm::result_t,
             typename T,
             typename... Arguments>
     vecmem::vector<R> &parallel_map(Algorithm &algorithm,
@@ -32,7 +32,7 @@ namespace vecpar {
 
     template<class Algorithm,
             class MemoryResource,
-            typename R = typename Algorithm::result_type,
+            typename R = typename Algorithm::result_t,
             typename T,
             typename... Arguments>
     vecmem::vector<R> &parallel_map(Algorithm &algorithm,
@@ -74,7 +74,7 @@ namespace vecpar {
 
     template<class Algorithm,
             class MemoryResource,
-            typename R = typename Algorithm::result_type,
+            typename R = typename Algorithm::result_t,
             typename T,
             typename... Arguments>
     R &parallel_map_reduce(Algorithm &algorithm,
@@ -92,7 +92,7 @@ namespace vecpar {
 
     template<class Algorithm,
             class MemoryResource,
-            typename R = typename Algorithm::result_type,
+            typename R = typename Algorithm::result_t,
             typename T,
             typename... Arguments>
     R &parallel_map_reduce(Algorithm &algorithm,
@@ -109,7 +109,7 @@ namespace vecpar {
 
     template<class Algorithm,
             class MemoryResource,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             typename T,
             typename... Arguments>
     vecmem::vector<R> &parallel_map_filter(Algorithm &algorithm,
@@ -127,7 +127,7 @@ namespace vecpar {
 
     template<class Algorithm,
             class MemoryResource,
-            class R = typename Algorithm::result_type,
+            class R = typename Algorithm::result_t,
             typename T,
             typename... Arguments>
     vecmem::vector<R> &parallel_map_filter(Algorithm &algorithm,
