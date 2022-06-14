@@ -13,6 +13,7 @@
 #include "../../common/algorithm/test_algorithm_5.hpp"
 
 #include "vecpar/all/main.hpp"
+#include "vecpar/all/chain.hpp"
 
 namespace {
 
@@ -161,7 +162,7 @@ namespace {
 
     //    vecpar::config c = {1, static_cast<int>(vec->size())};
 
-        vecpar::chain_orchestrator<vecmem::host_memory_resource,
+        vecpar::chain<vecmem::host_memory_resource,
                                     double,
                                     vecmem::vector<int>> chain(mr);
 
@@ -172,23 +173,31 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
-    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained_mmaps) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained_mmap) {
         test_algorithm_5 first_alg;
         X x{1, 1.0};
-       // test_algorithm_4 second_alg;
-
         //    vecpar::config c = {1, static_cast<int>(vec->size())};
 
-        vecpar::chain_orchestrator<vecmem::host_memory_resource,
+        vecpar::chain<vecmem::host_memory_resource,
                 vecmem::vector<double>,
                 vecmem::vector<double>, X> chain(mr);
 
-        vecmem::vector<double> second_result = chain//.with_config(c)
+        vecmem::vector<double> second_result =
+                chain//.with_config(c)
                     .with_algorithms(first_alg)
                     .execute(*vec_d, x);
 
-        for (size_t i = 0; i < second_result.size(); i++)
+        //TODO: unify behavior??
+        for (size_t i = 0; i < second_result.size(); i++) {
+            /// the host-device efficient flow for CUDA does not change the input
+            /// while the others work as mutable map
+#if defined(__CUDA__) && defined(__clang__)
+            EXPECT_EQ(second_result[i], vec_d->at(i) + 1.0);
+#else
             EXPECT_EQ(second_result[i], vec_d->at(i));
+#endif
+        }
+
     }
 
     // destructive tests (will change vec_d)

@@ -3,15 +3,20 @@
 
 #include <vecmem/containers/device_vector.hpp>
 #include <vecmem/containers/data/vector_view.hpp>
+#include <vecmem/utils/cuda/copy.hpp>
+#include <vecmem/memory/cuda/device_memory_resource.hpp>
 
 #include "vecpar/core/definitions/config.hpp"
 #include "vecpar/core/definitions/common.hpp"
-#include "vecpar/cuda/detail/cuda_utils.hpp"
-#include "vecpar/cuda/detail/config.hpp"
-#include "vecpar/cuda/detail/kernels.hpp"
+#include "vecpar/cuda/detail/common/cuda_utils.hpp"
+#include "vecpar/cuda/detail/common/config.hpp"
+#include "vecpar/cuda/detail/common/kernels.hpp"
 
 
 namespace internal {
+
+    static vecmem::cuda::device_memory_resource d_mem;
+    static vecmem::cuda::copy copy;
 
     template<typename Algorithm, typename R, typename T, typename... Arguments>
     void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,

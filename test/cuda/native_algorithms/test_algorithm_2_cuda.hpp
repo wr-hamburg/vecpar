@@ -10,8 +10,8 @@
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
 
 #include "vecpar/core/definitions/config.hpp"
-#include "vecpar/cuda/detail/config.hpp"
-#include "vecpar/cuda/detail/cuda_utils.hpp"
+#include "vecpar/cuda/detail/common/config.hpp"
+#include "vecpar/cuda/detail/common/cuda_utils.hpp"
 
 #include "../../common/data_types.hpp"
 #include "../../common/algorithm/algorithm.hpp"

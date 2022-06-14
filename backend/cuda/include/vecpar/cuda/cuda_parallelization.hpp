@@ -11,11 +11,11 @@
 #include "vecpar/core/algorithms/parallelizable_map_reduce.hpp"
 #include "vecpar/core/algorithms/parallelizable_map_filter.hpp"
 
-#include "vecpar/cuda/detail/kernels.hpp"
-#include "vecpar/cuda/detail/host_memory.hpp"
-#include "vecpar/cuda/detail/managed_memory.hpp"
-#include "vecpar/cuda/detail/cuda_utils.hpp"
-#include "vecpar/cuda/detail/config.hpp"
+#include "vecpar/cuda/detail/common/kernels.hpp"
+#include "vecpar/cuda/detail/vecmem/host_memory.hpp"
+#include "vecpar/cuda/detail/vecmem/managed_memory.hpp"
+#include "vecpar/cuda/detail/common/cuda_utils.hpp"
+#include "vecpar/cuda/detail/common/config.hpp"
 
 namespace vecpar::cuda {
 

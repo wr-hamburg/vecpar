@@ -13,6 +13,7 @@
 #include "../../common/algorithm/test_algorithm_5.hpp"
 
 #include "vecpar/all/main.hpp"
+#include "vecpar/all/chain.hpp"
 
 namespace {
 
@@ -144,7 +145,6 @@ namespace {
         EXPECT_EQ(par_reduced, expectedReduceResult);
     }
 
-
     TEST_P(SingleSourceManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
         test_algorithm_3 first_alg(mr);
         test_algorithm_4 second_alg;
@@ -155,21 +155,41 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
+
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Chained) {
         test_algorithm_3 first_alg(mr);
         test_algorithm_4 second_alg;
 
-        //vecpar::config c = {1, static_cast<int>(vec->size())};
+        vecpar::config c = {1, static_cast<int>(vec->size())};
 
-        vecpar::chain_orchestrator<vecmem::cuda::managed_memory_resource,
-                                    double,
-                                    vecmem::vector<int>> chain(mr);
+        vecpar::chain<vecmem::cuda::managed_memory_resource,
+                        double,
+                        vecmem::vector<int>> chain(mr);
 
-        double second_result = chain//.with_config(c)
+        double second_result = chain.with_config(c)
                                     .with_algorithms(first_alg, second_alg)
                                     .execute(*vec);
 
         EXPECT_EQ(second_result, expectedFilterReduceResult);
+    }
+
+    TEST_P(SingleSourceManagedMemoryTest, Parallel_Chained_mmap) {
+        test_algorithm_5 first_alg;
+        X x{1, 1.0};
+        //    vecpar::config c = {1, static_cast<int>(vec->size())};
+
+        vecpar::chain<vecmem::cuda::managed_memory_resource,
+                vecmem::vector<double>,
+                vecmem::vector<double>, X> chain(mr);
+
+        vecmem::vector<double> second_result =
+                chain//.with_config(c)
+                        .with_algorithms(first_alg)
+                        .execute(*vec_d, x);
+
+        /// the test actually changed the value of vec_d (mmap)
+        for (size_t i = 0; i < second_result.size(); i++)
+            EXPECT_EQ(second_result[i], vec_d->at(i));
     }
 
     TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Extra_Param) {

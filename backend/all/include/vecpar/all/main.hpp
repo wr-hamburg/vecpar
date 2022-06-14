@@ -121,6 +121,4 @@ namespace vecpar {
     }
 }
 
-#include "chain_orchestrator.hpp"
-
 #endif //VECPAR_MAIN_HPP

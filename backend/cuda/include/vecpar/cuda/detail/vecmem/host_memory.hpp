@@ -5,14 +5,11 @@
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
-#include <vecmem/utils/cuda/copy.hpp>
+#include "host_memory.hpp"
 
 #include "internal.hpp"
 
 namespace vecpar::cuda {
-
-    static vecmem::cuda::device_memory_resource d_mem;
-    static vecmem::cuda::copy copy;
 
     template<typename Algorithm,
             class R = typename Algorithm::result_t,
@@ -26,12 +23,12 @@ namespace vecpar::cuda {
                                     Arguments... args) {
 
         // copy input data from host to device
-        auto data_buffer = copy.to(vecmem::get_data(data), d_mem, vecmem::copy::type::host_to_device);
+        auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem, vecmem::copy::type::host_to_device);
         auto data_view = vecmem::get_data(data_buffer);
 
         // allocate map result on host and copy to device
         vecmem::vector<R>* map_result = new vecmem::vector<R>(data.size(), &mr);
-        auto result_buffer = copy.to(vecmem::get_data(*map_result), d_mem, vecmem::copy::type::host_to_device);
+        auto result_buffer = internal::copy.to(vecmem::get_data(*map_result), internal::d_mem, vecmem::copy::type::host_to_device);
         auto result_view = vecmem::get_data(result_buffer);
 
         internal::parallel_map(config,
@@ -41,7 +38,7 @@ namespace vecpar::cuda {
                                data_view,
                                args...);
 
-        copy(result_buffer, *map_result, vecmem::copy::type::device_to_host);
+        internal::copy(result_buffer, *map_result, vecmem::copy::type::device_to_host);
         return *map_result;
     }
 
@@ -70,7 +67,7 @@ namespace vecpar::cuda {
                                     Arguments... args) {
 
         // copy input data from host to device
-        auto data_buffer = copy.to(vecmem::get_data(data), d_mem, vecmem::copy::type::host_to_device);
+        auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem, vecmem::copy::type::host_to_device);
         auto data_view = vecmem::get_data(data_buffer);
 
         internal::parallel_map(config,
@@ -79,7 +76,7 @@ namespace vecpar::cuda {
                                data_view,
                                args...);
 
-        copy(data_buffer, data, vecmem::copy::type::device_to_host);
+        internal::copy(data_buffer, data, vecmem::copy::type::device_to_host);
         return data;
         //return new vecmem::vector<R>(data, &mr);
     }
@@ -102,7 +99,7 @@ namespace vecpar::cuda {
                        vecmem::vector<R>& data) {
 
         // copy input data from host to device
-        auto data_buffer = copy.to(vecmem::get_data(data), d_mem, vecmem::copy::type::host_to_device);
+        auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem, vecmem::copy::type::host_to_device);
         auto data_view = vecmem::get_data(data_buffer);
 
         // TODO: return a pointer to host from here
@@ -123,12 +120,12 @@ namespace vecpar::cuda {
                                        vecmem::vector<R>& data) {
 
         // copy input data from host to device
-        auto data_buffer = copy.to(vecmem::get_data(data), d_mem, vecmem::copy::type::host_to_device);
+        auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem, vecmem::copy::type::host_to_device);
         auto data_view = vecmem::get_data(data_buffer);
 
         // allocate result on host and device
         vecmem::vector<R>* result = new vecmem::vector<R>(data.size(), &mr);
-        auto result_buffer = copy.to(vecmem::get_data(*result), d_mem,
+        auto result_buffer = internal::copy.to(vecmem::get_data(*result), internal::d_mem,
                                      vecmem::copy::type::host_to_device);
         auto result_view = vecmem::get_data(result_buffer);
 
@@ -143,7 +140,7 @@ namespace vecpar::cuda {
                                   data_view);
 
         //copy back results
-        copy(result_buffer, *result, vecmem::copy::type::device_to_host);
+        internal::copy(result_buffer, *result, vecmem::copy::type::device_to_host);
 
         result->resize(*idx);
         return *result;
@@ -160,12 +157,12 @@ namespace vecpar::cuda {
                            vecmem::vector<T>& data,
                            Arguments... args)  {
         // copy input data from host to device
-        auto data_buffer = copy.to(vecmem::get_data(data), d_mem, vecmem::copy::type::host_to_device);
+        auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem, vecmem::copy::type::host_to_device);
         auto data_view = vecmem::get_data(data_buffer);
 
         // allocate temp map result on host and copy to device
         vecmem::vector<R> map_result(data.size(), &mr);
-        auto result_buffer = copy.to(vecmem::get_data(map_result), d_mem, vecmem::copy::type::host_to_device);
+        auto result_buffer = internal::copy.to(vecmem::get_data(map_result), internal::d_mem, vecmem::copy::type::host_to_device);
         auto result_view = vecmem::get_data(result_buffer);
 
         internal::parallel_map(config,
@@ -211,7 +208,7 @@ namespace vecpar::cuda {
                            vecmem::vector<T>& data,
                            Arguments... args)  {
         // copy input data from host to device
-        auto data_buffer = copy.to(vecmem::get_data(data), d_mem, vecmem::copy::type::host_to_device);
+        auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem, vecmem::copy::type::host_to_device);
         auto data_view = vecmem::get_data(data_buffer);
 
         // allocate temp map result on host and copy to device
@@ -262,13 +259,13 @@ namespace vecpar::cuda {
                                            Arguments... args)  {
       size_t size = data.size();
       // copy input data from host to device
-      auto data_buffer = copy.to(vecmem::get_data(data), d_mem,
+      auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
                                  vecmem::copy::type::host_to_device);
       auto data_view = vecmem::get_data(data_buffer);
 
       // allocate temp map result on host and copy to device
       vecmem::vector<R> map_result(size, &mr);
-      auto map_result_buffer = copy.to(vecmem::get_data(map_result), d_mem,
+      auto map_result_buffer = internal::copy.to(vecmem::get_data(map_result), internal::d_mem,
                                        vecmem::copy::type::host_to_device);
       auto map_result_view = vecmem::get_data(map_result_buffer);
 
@@ -281,7 +278,7 @@ namespace vecpar::cuda {
 
       // allocate result on host and device
       vecmem::vector<R> *result = new vecmem::vector<R>(size, &mr);
-      auto result_buffer = copy.to(vecmem::get_data(*result), d_mem,
+      auto result_buffer = internal::copy.to(vecmem::get_data(*result), internal::d_mem,
                                    vecmem::copy::type::host_to_device);
       auto result_view = vecmem::get_data(result_buffer);
 
@@ -295,7 +292,7 @@ namespace vecpar::cuda {
                                 map_result_view);
 
       // copy back results
-      copy(result_buffer, *result, vecmem::copy::type::device_to_host);
+      internal::copy(result_buffer, *result, vecmem::copy::type::device_to_host);
       result->resize(*idx);
       return *result;
     }
@@ -324,7 +321,7 @@ namespace vecpar::cuda {
                                            Arguments... args)  {
       size_t size = data.size();
       // copy input data from host to device
-      auto data_buffer = copy.to(vecmem::get_data(data), d_mem,
+      auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
                                  vecmem::copy::type::host_to_device);
       auto data_view = vecmem::get_data(data_buffer);
 
@@ -341,7 +338,7 @@ namespace vecpar::cuda {
 
         // allocate result on host and device
         vecmem::vector<R>* result = new vecmem::vector<R>(size, &mr);
-        auto result_buffer = copy.to(vecmem::get_data(*result), d_mem,
+        auto result_buffer = internal::copy.to(vecmem::get_data(*result), internal::d_mem,
                                      vecmem::copy::type::host_to_device);
         auto result_view = vecmem::get_data(result_buffer);
 
@@ -355,7 +352,7 @@ namespace vecpar::cuda {
                                   data_view);
 
         //copy back results
-        copy(result_buffer, *result, vecmem::copy::type::device_to_host);
+        internal::copy(result_buffer, *result, vecmem::copy::type::device_to_host);
         result->resize(*idx);
         return *result;
     }

@@ -1,15 +1,15 @@
 #ifndef VECPAR_INTERNAL_HPP
 #define VECPAR_INTERNAL_HPP
 
+#include <vecmem/containers/vector.hpp>
+
 #if defined(__CUDA__) && defined(__clang__)
-#include "vecpar/cuda/cuda_parallelization.hpp"
+    #include "vecpar/cuda/cuda_parallelization.hpp"
 #endif
 
 #if defined(_OPENMP)
-#include "vecpar/omp/omp_parallelization.hpp"
+    #include "vecpar/omp/omp_parallelization.hpp"
 #endif
-
-#include <vecmem/containers/vector.hpp>
 
 namespace vecpar {
 
