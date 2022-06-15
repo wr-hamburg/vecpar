@@ -33,6 +33,9 @@ namespace vecpar {
         }
 
         vecmem::vector<R> execute(vecmem::vector<T> &coll, OtherInput... rest) {
+
+            DEBUG_ACTION(printf("[GPU CHAIN EXECUTOR]\n");)
+
             /// cannot invoke chain execution without providing algorithms
             assertm(algorithms_set, MISSING_ALGORITHMS);
 
@@ -42,6 +45,9 @@ namespace vecpar {
             /// copy result from device to host
             R* result = (R*) malloc(d_result.size * sizeof (R));
             CHECK_ERROR(cudaMemcpy(result, d_result.ptr, d_result.size * sizeof(R), cudaMemcpyDeviceToHost));
+
+            /// release the device memory
+            CHECK_ERROR(cudaFree(d_result.ptr))
 
             /// convert to vecmem::vector<R>
             vecmem::vector<R> desired_result(d_result.size, &m_mr);
@@ -123,6 +129,8 @@ namespace vecpar {
         }
 
         R execute(vecmem::vector<T> &coll, OtherInput... rest) {
+            DEBUG_ACTION(printf("[GPU CHAIN EXECUTOR]\n");)
+
             /// cannot invoke chain execution without providing algorithms
             assertm(algorithms_set, MISSING_ALGORITHMS);
 
@@ -132,6 +140,7 @@ namespace vecpar {
             /// copy result from device to host
             R* result = (R*) malloc (sizeof(R));
             CHECK_ERROR(cudaMemcpy(result, d_result.ptr, sizeof(R), cudaMemcpyDeviceToHost));
+            CHECK_ERROR(cudaFree(d_result.ptr))
 
             return *result;
         }

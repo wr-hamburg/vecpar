@@ -34,6 +34,9 @@ namespace vecpar {
         }
 
         R execute(H& coll, OtherInput... rest) {
+
+            DEBUG_ACTION(printf("[DEFAULT CHAIN EXECUTOR]\n");)
+
             /// cannot invoke chain execution without providing algorithms
             assertm(algorithms_set, MISSING_ALGORITHMS);
 

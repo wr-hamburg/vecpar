@@ -33,7 +33,7 @@ namespace vecpar::cuda_raw {
         cuda_data<R> result_filter{result, 0};
 
         int* idx; // global index
-        cudaMallocManaged((void**)&idx, sizeof(int));
+        CHECK_ERROR(cudaMallocManaged((void**)&idx, sizeof(int)))
         *idx = 0;
         cuda_raw::parallel_filter<Algorithm, R>(algorithm,
                                   config,
@@ -42,6 +42,11 @@ namespace vecpar::cuda_raw {
                                   map_result);
 
         result_filter.size = *idx;
+
+        // release the memory allocated
+        CHECK_ERROR(cudaFree(idx))
+        CHECK_ERROR(cudaFree(data.ptr))
+
         return result_filter;
     }
 
@@ -69,6 +74,8 @@ namespace vecpar::cuda_raw {
                                   config,
                                   result,
                                   map_result);
+        // release allocate memory
+        CHECK_ERROR(cudaFree(data.ptr))
 
         return result;
     }

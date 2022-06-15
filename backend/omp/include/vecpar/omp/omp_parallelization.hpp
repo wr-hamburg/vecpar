@@ -6,6 +6,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <vecmem/memory/memory_resource.hpp>
+
 #include "vecpar/core/definitions/config.hpp"
 #include "vecpar/core/algorithms/detail/map.hpp"
 #include "vecpar/core/algorithms/parallelizable_map.hpp"

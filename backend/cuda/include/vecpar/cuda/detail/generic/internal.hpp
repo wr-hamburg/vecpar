@@ -88,7 +88,7 @@ namespace vecpar::cuda_raw {
         size_t size = partial_result.size;
 
         int *lock; // mutex.
-        cudaMallocManaged((void **) &lock, sizeof(int));
+        CHECK_ERROR(cudaMallocManaged((void **) &lock, sizeof(int)))
         *lock = 0;
 
         // make sure that an empty config ends up to be used
@@ -136,6 +136,9 @@ namespace vecpar::cuda_raw {
 
         CHECK_ERROR(cudaGetLastError())
         CHECK_ERROR(cudaDeviceSynchronize())
+
+        // release the memory allocated for the lock
+        CHECK_ERROR(cudaFree(lock))
     }
 
     template<typename Algorithm, typename R>
@@ -148,7 +151,7 @@ namespace vecpar::cuda_raw {
         size_t size = partial_result.size;
 
         int *lock; // mutex.
-        cudaMallocManaged((void **) &lock, sizeof(int));
+        CHECK_ERROR(cudaMallocManaged((void **) &lock, sizeof(int)))
         *lock = 0;
 
         // make sure that an empty config ends up to be used
@@ -211,6 +214,9 @@ namespace vecpar::cuda_raw {
 
         CHECK_ERROR(cudaGetLastError())
         CHECK_ERROR(cudaDeviceSynchronize())
+
+        // release the memory allocated for the lock
+        CHECK_ERROR(cudaFree(lock))
     }
 }
 #endif //VECPAR_RAW_INTERNAL_HPP

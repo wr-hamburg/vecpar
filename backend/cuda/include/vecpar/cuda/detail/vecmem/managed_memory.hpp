@@ -97,7 +97,7 @@ namespace vecpar::cuda {
         auto result_view = vecmem::get_data(*result);
 
         int* idx; // global index
-        cudaMallocManaged((void**)&idx, sizeof (int));
+        CHECK_ERROR(cudaMallocManaged((void**)&idx, sizeof (int)))
         *idx = 0;
 
         internal::parallel_filter(data.size(),
@@ -106,6 +106,10 @@ namespace vecpar::cuda {
                                   result_view,
                                   vecmem::get_data(data));
         result->resize(*idx);
+
+        // release the memory allocated for the index
+        CHECK_ERROR(cudaFree(idx))
+
         return *result;
     }
 

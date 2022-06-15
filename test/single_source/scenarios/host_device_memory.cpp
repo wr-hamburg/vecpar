@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include <vecmem/memory/cuda/managed_memory_resource.hpp>
 #include <vecmem/containers/vector.hpp>
 
 #include "../../common/infrastructure/TimeTest.hpp"
@@ -30,6 +29,11 @@ namespace {
               expectedFilterReduceResult += (i % 2 == 0) ? (i * 1.0) * 2 : 0;
             }
             printf("*******************************\n");
+        }
+
+        virtual ~SingleSourceHostDeviceMemoryTest() {
+            free(vec);
+            free(vec_d);
         }
 
     protected:
@@ -156,7 +160,7 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
-    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained_two) {
         test_algorithm_3 first_alg(mr);
         test_algorithm_4 second_alg;
 
@@ -173,7 +177,7 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
-    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained_mmap) {
+    TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained_one) {
         test_algorithm_5 first_alg;
         X x{1, 1.0};
         //    vecpar::config c = {1, static_cast<int>(vec->size())};

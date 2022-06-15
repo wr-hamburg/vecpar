@@ -1,6 +1,8 @@
 #ifndef VECPAR_ALG5_HPP
 #define VECPAR_ALG5_HPP
 
+#include <vecmem/memory/memory_resource.hpp>
+
 #include "vecpar/core/algorithms/parallelizable_map.hpp"
 #include "vecpar/core/definitions/config.hpp"
 

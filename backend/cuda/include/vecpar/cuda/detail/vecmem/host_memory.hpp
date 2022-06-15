@@ -5,7 +5,7 @@
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
-#include "host_memory.hpp"
+#include "vecpar/cuda/detail/common/cuda_utils.hpp"
 
 #include "internal.hpp"
 
@@ -78,7 +78,6 @@ namespace vecpar::cuda {
 
         internal::copy(data_buffer, data, vecmem::copy::type::device_to_host);
         return data;
-        //return new vecmem::vector<R>(data, &mr);
     }
 
     template<typename Algorithm,
@@ -130,7 +129,7 @@ namespace vecpar::cuda {
         auto result_view = vecmem::get_data(result_buffer);
 
         int* idx; // global index
-        cudaMallocManaged((void**)&idx, sizeof(int));
+        CHECK_ERROR(cudaMallocManaged((void**)&idx, sizeof(int)))
         *idx = 0;
 
         internal::parallel_filter(data.size(),
@@ -141,8 +140,11 @@ namespace vecpar::cuda {
 
         //copy back results
         internal::copy(result_buffer, *result, vecmem::copy::type::device_to_host);
-
         result->resize(*idx);
+
+        // release the memory allocated for the index
+        CHECK_ERROR(cudaFree(idx))
+
         return *result;
     }
 
@@ -172,17 +174,21 @@ namespace vecpar::cuda {
                                data_view,
                                args...);
 
-        // TODO: allocate in host & device memory; return pointer to host
+        R* result = (R*) malloc(sizeof (R));
         R* d_result;
-        cudaMallocManaged(&d_result, sizeof(R));
-        memset(d_result, 0, sizeof(R));
+
+        CHECK_ERROR(cudaMalloc((void**)&d_result, sizeof(R)))
+        CHECK_ERROR(cudaMemset(d_result, 0, sizeof(R)))
 
         internal::parallel_reduce(data.size(),
                                   algorithm,
                                   d_result,
                                   result_view);
 
-        return *d_result;
+        CHECK_ERROR(cudaMemcpy(result, d_result, sizeof(R), cudaMemcpyDeviceToHost))
+        CHECK_ERROR(cudaFree(d_result))
+
+        return *result;
     }
 
     template<class Algorithm,
@@ -222,17 +228,21 @@ namespace vecpar::cuda {
                                data_view,
                                args...);
 
-        // TODO: allocate in host & device memory; return pointer to host
+        R* result = (R*) malloc(sizeof (R));
         R* d_result;
-        cudaMallocManaged(&d_result, sizeof(R));
-        memset(d_result, 0, sizeof(R));
+
+        CHECK_ERROR(cudaMalloc((void**)&d_result, sizeof(R)))
+        CHECK_ERROR(cudaMemset(d_result, 0, sizeof(R)))
 
         internal::parallel_reduce(data.size(),
                                   algorithm,
                                   d_result,
                                   data_view);
 
-        return *d_result;
+        CHECK_ERROR(cudaMemcpy(result, d_result, sizeof(R), cudaMemcpyDeviceToHost))
+        CHECK_ERROR(cudaFree(d_result))
+
+        return *result;
     }
 
     template<class Algorithm,
@@ -283,7 +293,7 @@ namespace vecpar::cuda {
       auto result_view = vecmem::get_data(result_buffer);
 
       int *idx; // global index
-      cudaMallocManaged((void **)&idx, sizeof(int));
+      CHECK_ERROR(cudaMallocManaged((void **)&idx, sizeof(int)))
       *idx = 0;
       internal::parallel_filter(size,
                                 algorithm,
@@ -294,6 +304,10 @@ namespace vecpar::cuda {
       // copy back results
       internal::copy(result_buffer, *result, vecmem::copy::type::device_to_host);
       result->resize(*idx);
+
+      // release the memory allocated for the index
+      CHECK_ERROR(cudaFree(idx))
+
       return *result;
     }
 
@@ -343,7 +357,7 @@ namespace vecpar::cuda {
         auto result_view = vecmem::get_data(result_buffer);
 
         int* idx; // global index
-        cudaMallocManaged((void**)&idx, sizeof(int));
+        CHECK_ERROR(cudaMallocManaged((void**)&idx, sizeof(int)))
         *idx = 0;
         internal::parallel_filter(size,
                                   algorithm,
@@ -354,6 +368,9 @@ namespace vecpar::cuda {
         //copy back results
         internal::copy(result_buffer, *result, vecmem::copy::type::device_to_host);
         result->resize(*idx);
+
+        // release the memory allocated for the index
+        CHECK_ERROR(cudaFree(idx))
         return *result;
     }
 

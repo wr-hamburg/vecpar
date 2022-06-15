@@ -1,6 +1,8 @@
 #ifndef VECPAR_ALG4_HPP
 #define VECPAR_ALG4_HPP
 
+#include <vecmem/memory/memory_resource.hpp>
+
 #include "vecpar/core/algorithms/parallelizable_map_reduce.hpp"
 #include "vecpar/core/definitions/config.hpp"
 

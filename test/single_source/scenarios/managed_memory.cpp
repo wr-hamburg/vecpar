@@ -32,6 +32,11 @@ namespace {
             printf("*******************************\n");
         }
 
+        virtual ~SingleSourceManagedMemoryTest() {
+            free(vec);
+            free(vec_d);
+        }
+
     protected:
         vecmem::cuda::managed_memory_resource mr;
         vecmem::vector<int> *vec;
