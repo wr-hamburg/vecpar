@@ -59,8 +59,6 @@ namespace vecpar {
     private:
 
         template<class Algorithm,
-                class Input = typename Algorithm::input_type,
-                class Output = typename Algorithm::output_type_t,
                 class input_t = typename Algorithm::input_t,
                 class result_t = typename Algorithm::result_t>
 
@@ -88,8 +86,6 @@ namespace vecpar {
 
 
         template<class Algorithm,
-                class Input = typename Algorithm::input_type,
-                class Output = typename Algorithm::output_type_t,
                 class input_t = typename Algorithm::input_t,
                 class result_t = typename Algorithm::result_t>
 
@@ -105,8 +101,7 @@ namespace vecpar {
         std::function<cuda_data<R>(vecmem::vector<T>&, OtherInput...)> composition;
         bool algorithms_set = false;
     };
-
-
+    
     ///  Specialization for host_memory & result as an object R
     template<typename R, typename T, typename... OtherInput>
     class chain<vecmem::host_memory_resource,
@@ -148,8 +143,6 @@ namespace vecpar {
     private:
 
         template<class Algorithm,
-                class Input = typename Algorithm::input_type,
-                class Output = typename Algorithm::output_type_t,
                 class input_t = typename Algorithm::input_t,
                 class result_t = typename Algorithm::result_t>
 
@@ -176,8 +169,6 @@ namespace vecpar {
         }
 
         template<class Algorithm,
-                class Input = typename Algorithm::input_type,
-                class Output = typename Algorithm::output_type_t,
                 class input_t = typename Algorithm::input_t,
                 class result_t = typename Algorithm::result_t>
 
