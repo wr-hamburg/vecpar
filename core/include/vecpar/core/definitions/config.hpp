@@ -4,28 +4,24 @@
 
 namespace vecpar {
 
-    class config {
+class config {
 
-    public:
-        config() = default;
+public:
+  config() = default;
 
-        config(int grid_size, int block_size) :
-                m_gridSize(grid_size),
-                m_blockSize(block_size) {}
+  config(int grid_size, int block_size)
+      : m_gridSize(grid_size), m_blockSize(block_size) {}
 
-        config(int grid_size, int block_size, size_t ext_memory) :
-            m_gridSize(grid_size),
-            m_blockSize(block_size),
-            m_memorySize(ext_memory) {}
+  config(int grid_size, int block_size, size_t ext_memory)
+      : m_gridSize(grid_size), m_blockSize(block_size),
+        m_memorySize(ext_memory) {}
 
-        bool isEmpty() {
-            return (m_gridSize == 0 || m_blockSize == 0);
-        }
+  bool isEmpty() { return (m_gridSize == 0 || m_blockSize == 0); }
 
-        int m_gridSize = 0;
-        int m_blockSize = 0;
-        size_t m_memorySize = 0;
-    };
-}
+  int m_gridSize = 0;
+  int m_blockSize = 0;
+  size_t m_memorySize = 0;
+};
+} // namespace vecpar
 
-#endif //VECPAR_CONFIG_HPP
+#endif // VECPAR_CONFIG_HPP

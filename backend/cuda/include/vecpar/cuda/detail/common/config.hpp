@@ -1,8 +1,8 @@
 #ifndef VECPAR_CUDA_CONFIG_HPP
 #define VECPAR_CUDA_CONFIG_HPP
 
-#include <cstddef>
 #include "vecpar/core/definitions/config.hpp"
+#include <cstddef>
 
 namespace vecpar::cuda {
 
@@ -32,5 +32,5 @@ static inline vecpar::config getReduceConfig(size_t size) {
   // TODO: here check if the needed shared memory fits the GPU
   return {nBlocks, nThreadsPerBlock, nThreadsPerBlock * sizeof(Ri)};
 }
-}
-#endif //VECPAR_CUDA_CONFIG_HPP
+} // namespace vecpar::cuda
+#endif // VECPAR_CUDA_CONFIG_HPP

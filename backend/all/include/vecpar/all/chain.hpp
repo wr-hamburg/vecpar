@@ -9,5 +9,4 @@
 #include "orchestrator/gpu_chain.hpp"
 #endif
 
-
-#endif //VECPAR_CHAIN_HPP
+#endif // VECPAR_CHAIN_HPP

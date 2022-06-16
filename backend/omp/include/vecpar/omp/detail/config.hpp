@@ -8,5 +8,5 @@ namespace vecpar::omp {
 static inline config getDefaultConfig() {
   return vecpar::config(); // let the OMP runtime decide based on hardware
 }
-}
-#endif //VECPAR_OMP_CONFIG_HPP
+} // namespace vecpar::omp
+#endif // VECPAR_OMP_CONFIG_HPP
