@@ -20,10 +20,17 @@ spack install llvm@13.0.0 +all_targets +cuda cuda_arch=<XY>
 | CUDA 11.5.0                                              | | x |       |
 | GoogleTest                                               | | | x     |
 
+vecpar uses [nestoroprysk/FunctionComposition](https://github.com/nestoroprysk/FunctionComposition) for supporting the algorithm chaining functionality.
 
 ## Installation
 
-To build the code:
+Get the code
+
+```sh
+git clone --recurse-submodules https://github.com/wr-hamburg/vecpar.git
+```
+
+To build the code
 
 ```sh
 cmake -S <source_dir> -B <build_directory>
@@ -39,7 +46,7 @@ To enable the automated tests, set also `-DVECPAR_BUILD_TESTS=On`.
 
 By default, all build options are enabled.
 
-To install the library:
+To install the library
 
 ```sh 
 cmake --install <build_directory>

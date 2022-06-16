@@ -1,9 +1,9 @@
 add_library(vecpar_cuda INTERFACE
-        "include/vecpar/cuda/detail/host_memory.hpp"
-        "include/vecpar/cuda/detail/managed_memory.hpp"
-        "include/vecpar/cuda/detail/internal.hpp"
-        "include/vecpar/cuda/detail/kernels.hpp"
-        "include/vecpar/cuda/detail/cuda_utils.hpp"
+        "include/vecpar/cuda/detail/vecmem/host_memory.hpp"
+        "include/vecpar/cuda/detail/vecmem/managed_memory.hpp"
+        "include/vecpar/cuda/detail/vecmem/internal.hpp"
+        "include/vecpar/cuda/detail/common/kernels.hpp"
+        "include/vecpar/cuda/detail/common/cuda_utils.hpp"
         "include/vecpar/cuda/cuda_parallelization.hpp")
 
 target_include_directories(vecpar_cuda INTERFACE

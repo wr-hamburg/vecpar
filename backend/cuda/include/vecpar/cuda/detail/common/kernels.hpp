@@ -20,5 +20,5 @@ __global__ void rkernel(int *lock, size_t size, Function f, Arguments... args) {
     return;
   f(lock, args...);
 }
-}
-#endif //VECPAR_KERNELS_HPP
+} // namespace vecpar::cuda
+#endif // VECPAR_KERNELS_HPP
