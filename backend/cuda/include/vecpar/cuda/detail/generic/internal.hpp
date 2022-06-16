@@ -176,7 +176,6 @@ namespace vecpar::cuda_raw {
             __syncthreads();
 
             if (tid == 0) {
-                //    printf("First thread from block: %d\n ", blockIdx.x);
 
                 R temp_result[256]; // TODO: this should not be hardcoded;
                 int count = 0;
@@ -187,7 +186,6 @@ namespace vecpar::cuda_raw {
                     if (algorithm.filter(temp[tid + i])) {
                         temp_result[count] = temp[tid + i];
                         count++;
-                        //            printf("%f added to temp\n", temp[tid+i]);
                     }
                 }
 
@@ -198,11 +196,9 @@ namespace vecpar::cuda_raw {
                 pos = *idx;
                 atomicAdd(idx, count);
                 __threadfence();
-                //    printf("thread %d adds element from index %d to index %d\n", gidx, *idx, (*idx)+count);
                 atomicCAS(lock, 1, 0); // release lock
 
                 // printf("element %f fits the list\n", temp[tid]);
-                //    printf("Has to copy %u elements in the final vector \n", count);
                 for (int i = 0; i < count; i++) {
                     d_result.ptr[pos + i] = temp_result[i];
                     //     printf("%f added to final\n", temp_result[i]);

@@ -11,7 +11,7 @@
 /// GPU CUDA and the data is initially in host memory
 namespace vecpar {
 
-    ///  Specialization for host_memory & result as vecmem::vector
+    ///  1. Specialization for host_memory & result as vecmem::vector
     template<typename R, typename T, typename... OtherInput>
     class chain<vecmem::host_memory_resource,
             vecmem::vector<R>,
@@ -63,7 +63,7 @@ namespace vecpar {
                 class result_t = typename Algorithm::result_t>
 
         auto wrapper_first(Algorithm &algorithm) {
-            return [&](vecmem::vector<input_t> coll, OtherInput... otherInput) {
+            return [&](vecmem::vector<input_t>& coll, OtherInput... otherInput) {
                 size_t size = coll.size();
 
                 /// copy the initial collection to the device
@@ -74,9 +74,11 @@ namespace vecpar {
                 /// convert into raw pointer & size
                 cuda_data<T> input {d_data, size};
 
-                if constexpr (
-                        std::is_base_of<vecpar::detail::parallel_map<result_t, input_t, OtherInput...>, Algorithm>::value ||
-                        std::is_base_of<vecpar::detail::parallel_mmap<result_t, OtherInput...>, Algorithm>::value) {
+                if constexpr (std::is_base_of<vecpar::detail::parallel_mmap<result_t, OtherInput...>, Algorithm>::value) {
+                    /// make sure the input host vector is also changed
+                    return vecpar::cuda_raw::copy_intermediate_result<Algorithm, result_t>(coll,
+                                                                                           vecpar::cuda_raw::parallel_algorithm(algorithm, m_config, input, otherInput...));
+                } else if constexpr (std::is_base_of<vecpar::detail::parallel_map<result_t, input_t, OtherInput...>, Algorithm>::value) {
                     return vecpar::cuda_raw::parallel_algorithm(algorithm, m_config, input, otherInput...);
                 } else {
                     return vecpar::cuda_raw::parallel_algorithm(algorithm, m_config, input);
@@ -147,7 +149,7 @@ namespace vecpar {
                 class result_t = typename Algorithm::result_t>
 
         auto wrapper_first(Algorithm &algorithm) {
-            return [&](vecmem::vector<input_t> coll, OtherInput... otherInput) {
+            return [&](vecmem::vector<input_t>& coll, OtherInput... otherInput) {
                 size_t size = coll.size();
 
                 /// copy the initial collection to the device
@@ -158,10 +160,12 @@ namespace vecpar {
                 /// convert into raw pointer & size
                 cuda_data<T> input {d_data, size};
 
-                if constexpr (
-                        std::is_base_of<vecpar::detail::parallel_map<result_t, input_t, OtherInput...>, Algorithm>::value ||
-                        std::is_base_of<vecpar::detail::parallel_mmap<result_t, OtherInput...>, Algorithm>::value) {
-                    return vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t, input_t, OtherInput...>(algorithm, m_config, input, otherInput...);
+                if constexpr (std::is_base_of<vecpar::detail::parallel_mmap<result_t, OtherInput...>, Algorithm>::value) {
+                    /// make sure the input host vector is also changed
+                    return vecpar::cuda_raw::copy_intermediate_result<Algorithm, result_t>(coll,
+                                                                                           vecpar::cuda_raw::parallel_algorithm(algorithm, m_config, input, otherInput...));
+                } else if constexpr (std::is_base_of<vecpar::detail::parallel_map<result_t, input_t, OtherInput...>, Algorithm>::value) {
+                    return vecpar::cuda_raw::parallel_algorithm(algorithm, m_config, input, otherInput...);
                 } else {
                     return vecpar::cuda_raw::parallel_algorithm<Algorithm, input_t>(algorithm, m_config, input);
                 }

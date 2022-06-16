@@ -138,5 +138,16 @@ namespace vecpar::cuda_raw {
 
         return vecpar::cuda_raw::parallel_reduce<R>(algorithm, config, data);
     }
+
+    template<class Algorithm,
+            typename R,
+            typename... Arguments>
+    cuda_data<R> copy_intermediate_result(vecmem::vector<R>& coll, cuda_data<R> mmap_result) {
+        R* result_vec = (R*) malloc(mmap_result.size * sizeof(R));
+        CHECK_ERROR(cudaMemcpy(result_vec, mmap_result.ptr, mmap_result.size * sizeof(R), cudaMemcpyDeviceToHost));
+        coll.clear();
+        coll.assign(result_vec, result_vec + mmap_result.size);
+        return mmap_result;
+    }
 }
 #endif //VECPAR_RAW_DATA_HPP

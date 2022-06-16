@@ -48,7 +48,7 @@ namespace vecpar {
                 class Input = typename Algorithm::input_type,
                 class Output = typename Algorithm::output_type_t,
                 class input_t = typename Algorithm::input_t,
-                class result_t = typename Algorithm::result_t> //,
+                class result_t = typename Algorithm::result_t>
         auto wrapper(Algorithm& algorithm) {
             return [&](Input& coll, OtherInput... otherInput) -> Output& {
                 if constexpr (std::is_base_of<vecpar::detail::parallel_map<result_t, input_t, OtherInput...>, Algorithm>::value ||

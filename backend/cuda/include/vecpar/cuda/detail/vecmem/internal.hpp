@@ -190,12 +190,9 @@ namespace internal {
 
             size_t tid = threadIdx.x;
             temp[tid] = partial_result[tid + blockIdx.x * blockDim.x];
-            //    printf("thread %d loads element %f\n", gidx, temp[tid]);
             __syncthreads();
 
             if (tid == 0) {
-                //    printf("First thread from block: %d\n ", blockIdx.x);
-
                 R temp_result[256]; // TODO: this should not be hardcoded;
                 int count = 0;
                 //printf("blocks = %d, threads = %d\n", c.gridSize, c.blockSize);
@@ -219,8 +216,6 @@ namespace internal {
                 //    printf("thread %d adds element from index %d to index %d\n", gidx, *idx, (*idx)+count);
                 atomicCAS(lock, 1, 0); // release lock
 
-                // printf("element %f fits the list\n", temp[tid]);
-                //    printf("Has to copy %u elements in the final vector \n", count);
                 for (int i = 0; i < count; i++) {
                     d_result[pos + i] = temp_result[i];
                     //     printf("%f added to final\n", temp_result[i]);

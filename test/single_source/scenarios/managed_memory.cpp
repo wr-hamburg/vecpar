@@ -161,7 +161,27 @@ namespace {
     }
 
 
-    TEST_P(SingleSourceManagedMemoryTest, Parallel_Chained) {
+    // destructive test (will change vec_d)
+    TEST_P(SingleSourceManagedMemoryTest, Parallel_Chained_one) {
+        test_algorithm_5 first_alg;
+        X x{1, 1.0};
+        //    vecpar::config c = {1, static_cast<int>(vec->size())};
+
+        vecpar::chain<vecmem::cuda::managed_memory_resource,
+                vecmem::vector<double>,
+                vecmem::vector<double>, X> chain(mr);
+
+        vecmem::vector<double> second_result =
+                chain//.with_config(c)
+                        .with_algorithms(first_alg)
+                        .execute(*vec_d, x);
+
+        for (size_t i = 0; i < second_result.size(); i++) {
+            EXPECT_EQ(second_result[i], vec_d->at(i));
+        }
+    }
+
+    TEST_P(SingleSourceManagedMemoryTest, Parallel_Chained_Two) {
         test_algorithm_3 first_alg(mr);
         test_algorithm_4 second_alg;
 

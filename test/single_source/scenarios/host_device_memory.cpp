@@ -177,6 +177,7 @@ namespace {
         EXPECT_EQ(second_result, expectedFilterReduceResult);
     }
 
+    // mmap -> destructive change to input
     TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained_one) {
         test_algorithm_5 first_alg;
         X x{1, 1.0};
@@ -191,20 +192,13 @@ namespace {
                     .with_algorithms(first_alg)
                     .execute(*vec_d, x);
 
-        //TODO: unify behavior??
         for (size_t i = 0; i < second_result.size(); i++) {
-            /// the host-device efficient flow for CUDA does not change the input
-            /// while the others work as mutable map
-#if defined(__CUDA__) && defined(__clang__)
-            EXPECT_EQ(second_result[i], vec_d->at(i) + 1.0);
-#else
             EXPECT_EQ(second_result[i], vec_d->at(i));
-#endif
         }
 
     }
 
-    // destructive tests (will change vec_d)
+    // destructive test (will change vec_d)
     TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_MMap_Correctness) {
         test_algorithm_5 alg;
         X x{1, 1.0};
