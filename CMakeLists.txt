@@ -33,22 +33,19 @@ if(VECPAR_SETUP_VECMEM )
 endif()
 
 ### dependencies for OMP backend ###
-if (VECPAR_BUILD_OMP_BACKEND)
-    find_package(OpenMP REQUIRED)
-   # message(STATUS "Found OpenMP version ${OpenMP_CXX_VERSION}")
-endif()
+find_package(OpenMP)
+set( VECPAR_BUILD_OMP_BACKEND ${OpenMP_FOUND} CACHE BOOL
+        "Enable/disable vecpar OpenMP backend")
 
 ### dependencies for CUDA backend ###
-if (VECPAR_BUILD_CUDA_BACKEND)
-    find_package(CUDAToolkit REQUIRED 11.5)
-   # message(STATUS "Found CUDATookit ${CUDAToolkit_VERSION}")
-endif()
+find_package(CUDAToolkit 11.5)
+set( VECPAR_BUILD_CUDA_BACKEND ${CUDA_FOUND} CACHE BOOL
+        "Enable/disable vecpar CUDA backend")
 
-### depencies for TEST ###
-if (VECPAR_BUILD_TESTS)
-    find_package(GTest REQUIRED)
-#    message(STATUS "Found GTest")
-endif()
+### dependencies for TEST ###
+find_package(GTest)
+set( VECPAR_BUILD_TESTS ${GTest_FOUND} CACHE BOOL
+        "Enable/disable vecpar tests")
 
 set(VECPAR_BUILD_WITH_CLANG False)
 if (CUDAToolkit_FOUND)
