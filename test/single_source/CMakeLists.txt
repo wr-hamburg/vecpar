@@ -1,5 +1,5 @@
 ### Managed memory ; compiled for CPU ###
-if (${OpenMP_FOUND})
+if (${OpenMP_FOUND} AND ${CUDAToolkit_FOUND})
     add_executable(mm_tests_compiled_for_cpu "SingleSource_MM_Tests.cpp")
 
     target_include_directories(mm_tests_compiled_for_cpu PUBLIC
