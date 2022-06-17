@@ -57,7 +57,6 @@ endif()
 ### include sources ###
 add_subdirectory(core)
 add_subdirectory(backend)
-add_subdirectory(extern/composition)
 
 ### include tests ###
 if (VECPAR_BUILD_TESTS)

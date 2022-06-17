@@ -4,7 +4,7 @@
 #include <cassert>
 #include <functional>
 
-#include "../../../../../../extern/composition/Compose.hpp"
+#include "../../../extern/composition/Compose.hpp"
 #include "vecpar/core/definitions/config.hpp"
 
 #define MISSING_ALGORITHMS "A chain should have at least one algorithm."
