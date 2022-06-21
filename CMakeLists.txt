@@ -7,6 +7,11 @@ include(GNUInstallDirs)
 
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" )
 
+### if compile for Aarch64 ###
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
+    include(vecpar-aarch64)
+endif()
+
 ### build options ###
 option(VECPAR_BUILD_OMP_BACKEND "Build OpenMP support for CPU parallelization" ON)
 option(VECPAR_BUILD_CUDA_BACKEND "Build CUDA support for GPU offloading" ON)
