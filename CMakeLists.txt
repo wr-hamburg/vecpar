@@ -39,18 +39,21 @@ endif()
 
 ### dependencies for OMP backend ###
 find_package(OpenMP)
-set( VECPAR_BUILD_OMP_BACKEND ${OpenMP_FOUND} CACHE BOOL
+set( VECPAR_BUILD_OMP_BACKEND (${OpenMP_FOUND} AND ${VECPAR_BUILD_OMP_BACKEND}) CACHE BOOL
         "Enable/disable vecpar OpenMP backend")
+message(STATUS "vecpar OpenMP backend ${VECPAR_BUILD_OMP_BACKEND}")
 
 ### dependencies for CUDA backend ###
 find_package(CUDAToolkit 11.5)
-set( VECPAR_BUILD_CUDA_BACKEND ${CUDA_FOUND} CACHE BOOL
+set( VECPAR_BUILD_CUDA_BACKEND (${CUDA_FOUND} AND ${VECPAR_BUILD_CUDA_BACKEND}) CACHE BOOL
         "Enable/disable vecpar CUDA backend")
+message(STATUS "vecpar CUDA backend ${VECPAR_BUILD_CUDA_BACKEND}")
 
 ### dependencies for TEST ###
 find_package(GTest)
-set( VECPAR_BUILD_TESTS ${GTest_FOUND} CACHE BOOL
+set( VECPAR_BUILD_TESTS (${GTest_FOUND} AND ${VECPAR_BUILD_TESTS}) CACHE BOOL
         "Enable/disable vecpar tests")
+message(STATUS "vecpar automated tests ${VECPAR_BUILD_TESTS}")
 
 set(VECPAR_BUILD_WITH_CLANG False)
 if (CUDAToolkit_FOUND)
