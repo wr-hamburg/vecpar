@@ -46,6 +46,8 @@ To enable the automated tests, set also `-DVECPAR_BUILD_TESTS=On`.
 
 By default, all build options are enabled.
 
+To compile for aarch64, set CC/CXX environment variables to appropriate aarch64 compilers.
+
 To install the library
 
 ```sh 
