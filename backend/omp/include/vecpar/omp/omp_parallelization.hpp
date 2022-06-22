@@ -12,7 +12,7 @@
 #include "vecpar/omp/detail/composed/p_map_reduce.hpp"
 
 namespace vecpar::omp {
-    
+
 template <
     class MemoryResource, class Algorithm,
     class R = typename Algorithm::result_t, class T, typename... Arguments,
