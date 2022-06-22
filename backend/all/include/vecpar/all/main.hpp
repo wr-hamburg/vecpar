@@ -11,6 +11,7 @@
 
 namespace vecpar {
 
+/// ------------------ MAP ---------------------- ///
 template <class MemoryResource, class Algorithm,
           class R = typename Algorithm::result_t, class T,
           typename... Arguments,
@@ -48,6 +49,7 @@ vecmem::vector<R> &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
   return vecpar::parallel_map(algorithm, mr, data, args...);
 }
 
+/// ------------------ FILTER ---------------------- ///
 template <class MemoryResource, class Algorithm, class T, typename... Arguments,
           typename std::enable_if_t<
               std::is_base_of<vecpar::algorithm::parallelizable_filter<T>,
@@ -59,6 +61,7 @@ vecmem::vector<T> &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
   return vecpar::parallel_filter(algorithm, mr, data);
 }
 
+/// ------------------ REDUCE ---------------------- ///
 template <class MemoryResource, class Algorithm, class R, typename... Arguments,
           typename std::enable_if_t<
               std::is_base_of<vecpar::algorithm::parallelizable_reduce<R>,
@@ -70,6 +73,8 @@ R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
   return vecpar::parallel_reduce(algorithm, mr, data);
 }
 
+
+/// ------------------ MAP-FILTER ---------------------- ///
 template <
     class MemoryResource, class Algorithm,
     class R = typename Algorithm::result_t, class T, typename... Arguments,
@@ -107,6 +112,7 @@ vecmem::vector<R> &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
   return vecpar::parallel_map_filter(algorithm, mr, data, args...);
 }
 
+/// ------------------ MAP-REDUCE ---------------------- ///
 template <
     class MemoryResource, class Algorithm,
     class R = typename Algorithm::result_t, class T, typename... Arguments,
