@@ -10,6 +10,7 @@
 #include "../../common/algorithm/test_algorithm_3.hpp"
 #include "../../common/algorithm/test_algorithm_4.hpp"
 #include "../../common/algorithm/test_algorithm_5.hpp"
+#include "../../common/algorithm/test_algorithm_7.hpp"
 
 #include "vecpar/all/chain.hpp"
 #include "vecpar/all/main.hpp"
@@ -222,6 +223,37 @@ TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Map_Extra_Param) {
     EXPECT_EQ(result.at(i), (vec->at(i) + x.a) * x.b);
   }
 }
+
+    TEST_P(SingleSourceHostDeviceMemoryTest, Saxpymzr) {
+        test_algorithm_7 alg;
+
+        vecmem::vector<double> x(GetParam(), &mr);
+        vecmem::vector<int> y(GetParam(), &mr);
+        vecmem::vector<float> z(GetParam(), &mr);
+
+        double expected_result = 0.0;
+
+        float a = 2.0;
+        for (int i = 0; i < GetParam(); i++) {
+            x[i] = i;
+            y[i] = 1;
+            z[i] = -1.0;
+            // as map-reduce is implemented in algorithm 7
+            expected_result += x[i] * a + y[i] * z[i];
+        }
+
+        std::chrono::time_point<std::chrono::steady_clock> start_time;
+        std::chrono::time_point<std::chrono::steady_clock> end_time;
+
+        start_time = std::chrono::steady_clock::now();
+        double result = vecpar::omp::parallel_algorithm(alg, mr, x, y, z, a);
+        end_time = std::chrono::steady_clock::now();
+
+        EXPECT_EQ(result, expected_result);
+
+        std::chrono::duration<double> diff = end_time - start_time;
+        printf("SAXPYMZR map time  = %f s\n", diff.count());
+    }
 
 INSTANTIATE_TEST_SUITE_P(HostDeviceMemory, SingleSourceHostDeviceMemoryTest,
                          testing::ValuesIn(N));

@@ -11,6 +11,8 @@
 #include "../../common/algorithm/test_algorithm_3.hpp"
 #include "../../common/algorithm/test_algorithm_4.hpp"
 #include "../../common/algorithm/test_algorithm_5.hpp"
+#include "../../common/algorithm/test_algorithm_6.hpp"
+#include "../../common/algorithm/test_algorithm_7.hpp"
 
 #include "../native_algorithms/test_algorithm_2_omp.hpp"
 #include "../native_algorithms/test_algorithm_2_omp_optimized.hpp"
@@ -349,6 +351,63 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
     EXPECT_EQ(result.at(i), (vec->at(i) + x.a) * x.b);
   }
 }
+
+TEST_P(CpuHostMemoryTest, Saxpy) {
+        test_algorithm_6 alg;
+
+        vecmem::vector<float> x(GetParam(), &mr);
+        vecmem::vector<float> y(GetParam(), &mr);
+
+        for (int i = 0; i < x.size(); i++) {
+            x[i] = i;
+            y[i] = 1.0;
+        }
+        float a = 2.0;
+
+        std::chrono::time_point<std::chrono::steady_clock> start_time;
+        std::chrono::time_point<std::chrono::steady_clock> end_time;
+
+        start_time = std::chrono::steady_clock::now();
+        vecmem::vector<float> result = vecpar::omp::parallel_map(alg, mr, y, x, a);
+        end_time = std::chrono::steady_clock::now();
+
+        for (int i = 0; i < result.size(); i++) {
+            EXPECT_EQ(result.at(i), x[i] * a + 1.0);
+        }
+        std::chrono::duration<double> diff = end_time - start_time;
+        printf("SAXPY mmap time  = %f s\n", diff.count());
+    }
+
+    TEST_P(CpuHostMemoryTest, Saxpymzr) {
+        test_algorithm_7 alg;
+
+        vecmem::vector<double> x(GetParam(), &mr);
+        vecmem::vector<int> y(GetParam(), &mr);
+        vecmem::vector<float> z(GetParam(), &mr);
+
+        double expected_result = 0.0;
+
+        float a = 2.0;
+        for (int i = 0; i < x.size(); i++) {
+            x[i] = i;
+            y[i] = 1;
+            z[i] = -1.0;
+            // as map-reduce is implemented in algorithm 7
+            expected_result += x[i] * a + y[i] * z[i];
+        }
+
+        std::chrono::time_point<std::chrono::steady_clock> start_time;
+        std::chrono::time_point<std::chrono::steady_clock> end_time;
+
+        start_time = std::chrono::steady_clock::now();
+        double result = vecpar::omp::parallel_algorithm(alg, mr, x, y, z, a);
+        end_time = std::chrono::steady_clock::now();
+
+        EXPECT_EQ(result, expected_result);
+
+        std::chrono::duration<double> diff = end_time - start_time;
+        printf("SAXPYMZR map time  = %f s\n", diff.count());
+    }
 
 INSTANTIATE_TEST_SUITE_P(Trivial_HostMemory, CpuHostMemoryTest,
                          testing::ValuesIn(N));
