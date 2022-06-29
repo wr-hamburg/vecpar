@@ -18,11 +18,11 @@ template <typename T> struct cuda_data {
 namespace vecpar::cuda_raw {
 
 template <
-    typename Algorithm, typename R, typename T,
-    typename... Arguments,
+    typename Algorithm, typename R, typename T, typename... Arguments,
     typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
-cuda_data<typename T::value_type> parallel_map(Algorithm algorithm, vecpar::config config,
-                          cuda_data<typename T::value_type> input, Arguments... args) {
+cuda_data<typename T::value_type>
+parallel_map(Algorithm algorithm, vecpar::config config,
+             cuda_data<typename T::value_type> input, Arguments... args) {
 
   if (config.isEmpty()) {
     config = vecpar::cuda::getDefaultConfig(input.size);
@@ -47,11 +47,11 @@ cuda_data<typename T::value_type> parallel_map(Algorithm algorithm, vecpar::conf
 }
 
 template <
-    typename Algorithm, typename R, typename T,
-    typename... Arguments,
+    typename Algorithm, typename R, typename T, typename... Arguments,
     typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-cuda_data<typename R::value_type> parallel_map(Algorithm algorithm, vecpar::config config,
-                          cuda_data<typename T::value_type> input, Arguments... args) {
+cuda_data<typename R::value_type>
+parallel_map(Algorithm algorithm, vecpar::config config,
+             cuda_data<typename T::value_type> input, Arguments... args) {
 
   if (config.isEmpty()) {
     config = vecpar::cuda::getDefaultConfig(input.size);
@@ -62,7 +62,8 @@ cuda_data<typename R::value_type> parallel_map(Algorithm algorithm, vecpar::conf
                       config.m_memorySize);)
 
   typename R::value_type *d_result = NULL;
-  CHECK_ERROR(cudaMalloc((void **)&d_result, input.size * sizeof(typename R::value_type)))
+  CHECK_ERROR(cudaMalloc((void **)&d_result,
+                         input.size * sizeof(typename R::value_type)))
 
   vecpar::cuda::
       kernel<<<config.m_gridSize, config.m_blockSize, config.m_memorySize>>>(
@@ -79,7 +80,8 @@ cuda_data<typename R::value_type> parallel_map(Algorithm algorithm, vecpar::conf
 }
 
 template <typename Algorithm, typename R>
-void parallel_reduce(Algorithm algorithm, vecpar::config c, cuda_data<typename R::value_type> result,
+void parallel_reduce(Algorithm algorithm, vecpar::config c,
+                     cuda_data<typename R::value_type> result,
                      cuda_data<typename R::value_type> partial_result) {
 
   size_t size = partial_result.size;

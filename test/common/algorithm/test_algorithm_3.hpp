@@ -8,9 +8,8 @@
 
 #include "../data_types.hpp"
 
-class test_algorithm_3
-: public vecpar::algorithm::parallelizable_map_filter_1<vecmem::vector<double>,
-        vecmem::vector<int>> {
+class test_algorithm_3 : public vecpar::algorithm::parallelizable_map_filter_1<
+                             vecmem::vector<double>, vecmem::vector<int>> {
 
 public:
   TARGET test_algorithm_3(vecmem::memory_resource &mr)

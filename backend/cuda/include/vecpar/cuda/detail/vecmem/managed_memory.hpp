@@ -9,14 +9,11 @@
 namespace vecpar::cuda {
 
 template <
-    typename Algorithm, typename R = typename Algorithm::intermediate_result_t, typename T,
-    typename... Arguments,
+    typename Algorithm, typename R = typename Algorithm::intermediate_result_t,
+    typename T, typename... Arguments,
     typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map(Algorithm algorithm,
-                vecmem::cuda::managed_memory_resource &mr,
-                vecpar::config config,
-                T &data,
-                Arguments... args) {
+R &parallel_map(Algorithm algorithm, vecmem::cuda::managed_memory_resource &mr,
+                vecpar::config config, T &data, Arguments... args) {
 
   R *map_result = new R(data.size(), &mr);
   auto map_view = vecmem::get_data(*map_result);
@@ -27,25 +24,23 @@ R &parallel_map(Algorithm algorithm,
 }
 
 template <
-    typename Algorithm, typename R = typename Algorithm::intermediate_result_t, typename T,
-    typename... Arguments,
+    typename Algorithm, typename R = typename Algorithm::intermediate_result_t,
+    typename T, typename... Arguments,
     typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map(Algorithm algorithm,
-                vecmem::cuda::managed_memory_resource &mr,
+R &parallel_map(Algorithm algorithm, vecmem::cuda::managed_memory_resource &mr,
                 T &data, Arguments... args) {
   return parallel_map(algorithm, mr, cuda::getDefaultConfig(data.size()), data,
                       args...);
 }
 
 template <
-    typename Algorithm, typename R = typename Algorithm::intermediate_result_t, typename T,
-    typename... Arguments,
+    typename Algorithm, typename R = typename Algorithm::intermediate_result_t,
+    typename T, typename... Arguments,
     typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
 R &parallel_map(Algorithm algorithm,
                 __attribute__((unused))
                 vecmem::cuda::managed_memory_resource &mr,
-                vecpar::config config, T &data,
-                Arguments... args) {
+                vecpar::config config, T &data, Arguments... args) {
 
   auto map_view = vecmem::get_data(data);
   internal::parallel_map(config, data.size(), algorithm, map_view, args...);
@@ -53,22 +48,23 @@ R &parallel_map(Algorithm algorithm,
 }
 
 template <
-    typename Algorithm, typename R = typename Algorithm::intermediate_result_t, typename T,
-    typename... Arguments,
+    typename Algorithm, typename R = typename Algorithm::intermediate_result_t,
+    typename T, typename... Arguments,
     typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
 R &parallel_map(Algorithm algorithm,
-                                __attribute__((unused))
-                                vecmem::cuda::managed_memory_resource &mr,
-                                T &data, Arguments... args) {
+                __attribute__((unused))
+                vecmem::cuda::managed_memory_resource &mr,
+                T &data, Arguments... args) {
   return parallel_map(algorithm, mr, cuda::getDefaultConfig(data.size()), data,
                       args...);
 }
 
 template <typename Algorithm, typename T>
-typename T::value_type &parallel_reduce(Algorithm algorithm,
-                   __attribute__((unused))
-                   vecmem::cuda::managed_memory_resource &mr,
-                   T &data) {
+typename T::value_type &
+parallel_reduce(Algorithm algorithm,
+                __attribute__((unused))
+                vecmem::cuda::managed_memory_resource &mr,
+                T &data) {
 
   typename T::value_type *d_result;
   cudaMallocManaged(&d_result, sizeof(typename T::value_type));
@@ -82,9 +78,8 @@ typename T::value_type &parallel_reduce(Algorithm algorithm,
 
 template <typename Algorithm, typename T>
 T &parallel_filter(Algorithm algorithm,
-                                   vecmem::cuda::managed_memory_resource &mr,
-                                   T &data) {
-  T* result = new T(data.size(), &mr);
+                   vecmem::cuda::managed_memory_resource &mr, T &data) {
+  T *result = new T(data.size(), &mr);
   auto result_view = vecmem::get_data(*result);
 
   int *idx; // global index
@@ -101,39 +96,39 @@ T &parallel_filter(Algorithm algorithm,
   return *result;
 }
 
-template <class Algorithm, typename Result, typename R, typename T, typename... Arguments>
+template <class Algorithm, typename Result, typename R, typename T,
+          typename... Arguments>
 Result &parallel_map_reduce(Algorithm algorithm,
-                       vecmem::cuda::managed_memory_resource &mr,
-                       vecpar::config config, T &data,
-                       Arguments... args) {
+                            vecmem::cuda::managed_memory_resource &mr,
+                            vecpar::config config, T &data, Arguments... args) {
 
   return parallel_reduce(algorithm, mr,
                          parallel_map(algorithm, mr, config, data, args...));
 }
 
-template <class Algorithm, typename Result, typename R, typename T, typename... Arguments>
+template <class Algorithm, typename Result, typename R, typename T,
+          typename... Arguments>
 Result &parallel_map_reduce(Algorithm algorithm,
-                       vecmem::cuda::managed_memory_resource &mr,
-                       T &data, Arguments... args) {
+                            vecmem::cuda::managed_memory_resource &mr, T &data,
+                            Arguments... args) {
 
   return parallel_map_reduce<Algorithm, Result, R, T, Arguments...>(
       algorithm, mr, cuda::getDefaultConfig(data.size()), data, args...);
 }
 
 template <class Algorithm, typename R, typename T, typename... Arguments>
-R &parallel_map_filter(
-    Algorithm algorithm, vecmem::cuda::managed_memory_resource &mr,
-    vecpar::config config, T &data, Arguments... args) {
+R &parallel_map_filter(Algorithm algorithm,
+                       vecmem::cuda::managed_memory_resource &mr,
+                       vecpar::config config, T &data, Arguments... args) {
 
   return parallel_filter(algorithm, mr,
                          parallel_map(algorithm, mr, config, data, args...));
 }
 
 template <class Algorithm, typename R, typename T, typename... Arguments>
-R &
-parallel_map_filter(Algorithm algorithm,
-                    vecmem::cuda::managed_memory_resource &mr,
-                    T &data, Arguments... args) {
+R &parallel_map_filter(Algorithm algorithm,
+                       vecmem::cuda::managed_memory_resource &mr, T &data,
+                       Arguments... args) {
 
   return parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, cuda::getDefaultConfig(data.size()), data, args...);

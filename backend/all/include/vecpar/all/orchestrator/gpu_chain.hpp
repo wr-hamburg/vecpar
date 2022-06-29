@@ -13,8 +13,8 @@ namespace vecpar {
 
 ///  1. Specialization for host_memory & result as vecmem::vector
 template <typename Ri, typename Ti, typename... OtherInput>
-class chain<vecmem::host_memory_resource, vecmem::vector<Ri>, vecmem::vector<Ti>,
-            OtherInput...> {
+class chain<vecmem::host_memory_resource, vecmem::vector<Ri>,
+            vecmem::vector<Ti>, OtherInput...> {
 
 public:
   chain(vecmem::host_memory_resource &mem) : m_mr(mem) {}
@@ -56,8 +56,7 @@ public:
   }
 
 private:
-  template <class Algorithm,
-            class input_t = typename Algorithm::input_t,
+  template <class Algorithm, class input_t = typename Algorithm::input_t,
             class result_t = typename Algorithm::result_t,
             class input_ti = typename Algorithm::input_ti,
             class result_ti = typename Algorithm::result_ti>
@@ -75,17 +74,18 @@ private:
       /// convert into raw pointer & size
       cuda_data<Ti> input{d_data, size};
 
-      if constexpr (std::is_base_of<
-                        vecpar::algorithm::parallelizable_mmap_1<result_t, OtherInput...>,
-                        Algorithm>::value) {
+      if constexpr (std::is_base_of<vecpar::algorithm::parallelizable_mmap_1<
+                                        result_t, OtherInput...>,
+                                    Algorithm>::value) {
         /// make sure the input host vector is also changed
-        cuda_data<result_ti> partial_result = vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t, input_t>(algorithm, m_config,
-                                                                                                     input, otherInput...);
+        cuda_data<result_ti> partial_result =
+            vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t, input_t>(
+                algorithm, m_config, input, otherInput...);
         return vecpar::cuda_raw::copy_intermediate_result<Algorithm, result_ti>(
             coll, partial_result);
       } else if constexpr (std::is_base_of<
-                               vecpar::algorithm::parallelizable_map_1<result_t, input_t,
-                                                            OtherInput...>,
+                               vecpar::algorithm::parallelizable_map_1<
+                                   result_t, input_t, OtherInput...>,
                                Algorithm>::value) {
         return vecpar::cuda_raw::parallel_algorithm(algorithm, m_config, input,
                                                     otherInput...);
@@ -95,8 +95,7 @@ private:
     };
   }
 
-  template <class Algorithm,
-            class input_ti = typename Algorithm::input_ti,
+  template <class Algorithm, class input_ti = typename Algorithm::input_ti,
             class result_ti = typename Algorithm::result_ti>
 
   auto wrapper(Algorithm &algorithm) {
@@ -114,7 +113,8 @@ private:
 
 ///  Specialization for host_memory & result as an object R
 template <typename R, typename Ti, typename... OtherInput>
-class chain<vecmem::host_memory_resource, R, vecmem::vector<Ti>, OtherInput...> {
+class chain<vecmem::host_memory_resource, R, vecmem::vector<Ti>,
+            OtherInput...> {
 
 public:
   chain(vecmem::host_memory_resource &mem) : m_mr(mem) {}
@@ -149,8 +149,7 @@ public:
   }
 
 private:
-  template <class Algorithm,
-            class input_t = typename Algorithm::input_t,
+  template <class Algorithm, class input_t = typename Algorithm::input_t,
             class result_t = typename Algorithm::result_t,
             class input_ti = typename Algorithm::input_ti,
             class result_ti = typename Algorithm::result_ti>
@@ -168,35 +167,37 @@ private:
       /// convert into raw pointer & size
       cuda_data<Ti> input{d_data, size};
 
-      if constexpr (std::is_base_of<
-                        vecpar::detail::parallel_mmap_1<result_t, OtherInput...>,
-                        Algorithm>::value) {
+      if constexpr (std::is_base_of<vecpar::detail::parallel_mmap_1<
+                                        result_t, OtherInput...>,
+                                    Algorithm>::value) {
         /// make sure the input host vector is also changed
         return vecpar::cuda_raw::copy_intermediate_result<Algorithm, result_ti>(
             coll, vecpar::cuda_raw::parallel_algorithm(algorithm, m_config,
                                                        input, otherInput...));
       } else if constexpr (std::is_base_of<
                                vecpar::detail::parallel_map_1<result_t, input_t,
-                                                            OtherInput...>,
+                                                              OtherInput...>,
                                Algorithm>::value) {
-        return vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t, input_t, OtherInput...>(algorithm, m_config, input,
-                                                    otherInput...);
+        return vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t,
+                                                    input_t, OtherInput...>(
+            algorithm, m_config, input, otherInput...);
       } else {
-        return vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t, input_t>(
-            algorithm, m_config, input);
+        return vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t,
+                                                    input_t>(algorithm,
+                                                             m_config, input);
       }
     };
   }
 
-  template <class Algorithm,
-            class input_t = typename Algorithm::input_t,
+  template <class Algorithm, class input_t = typename Algorithm::input_t,
             class result_t = typename Algorithm::result_t,
             class input_ti = typename Algorithm::input_ti,
             class result_ti = typename Algorithm::result_ti>
 
   auto wrapper(Algorithm &algorithm) {
     return [&](cuda_data<input_ti> input) {
-      return vecpar::cuda_raw::parallel_algorithm<Algorithm> (algorithm, m_config, input);
+      return vecpar::cuda_raw::parallel_algorithm<Algorithm>(algorithm,
+                                                             m_config, input);
     };
   }
 

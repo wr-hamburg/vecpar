@@ -9,7 +9,8 @@
 #include "../data_types.hpp"
 
 class test_algorithm_1
-: public vecpar::algorithm::parallelizable_map_reduce_1<double, vecmem::vector<double>, vecmem::vector<int>> {
+    : public vecpar::algorithm::parallelizable_map_reduce_1<
+          double, vecmem::vector<double>, vecmem::vector<int>> {
 
 public:
   TARGET test_algorithm_1(vecmem::memory_resource &mr)

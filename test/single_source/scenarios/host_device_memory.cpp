@@ -3,9 +3,9 @@
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 
+#include "../../common/infrastructure/TimeLogger.hpp"
 #include "../../common/infrastructure/TimeTest.hpp"
 #include "../../common/infrastructure/sizes.hpp"
-#include "../../common/infrastructure/TimeLogger.hpp"
 
 #include "../../common/algorithm/test_algorithm_1.hpp"
 #include "../../common/algorithm/test_algorithm_2.hpp"
@@ -201,36 +201,36 @@ TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained_one) {
 }
 
 TEST_P(SingleSourceHostDeviceMemoryTest, Chain_perf) {
-    test_algorithm_3 first_alg(mr);
-    test_algorithm_4 second_alg;
+  test_algorithm_3 first_alg(mr);
+  test_algorithm_4 second_alg;
 
-    std::chrono::time_point<std::chrono::steady_clock> start_time;
-    std::chrono::time_point<std::chrono::steady_clock> end_time;
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-    start_time = std::chrono::steady_clock::now();
-    vecpar::parallel_algorithm(
-                second_alg, mr, vecpar::parallel_algorithm(first_alg, mr, *vec));
-    end_time = std::chrono::steady_clock::now();
+  start_time = std::chrono::steady_clock::now();
+  vecpar::parallel_algorithm(second_alg, mr,
+                             vecpar::parallel_algorithm(first_alg, mr, *vec));
+  end_time = std::chrono::steady_clock::now();
 
-    std::chrono::duration<double> diff1 = end_time - start_time;
-    printf("Default = %f s\n", diff1.count());
+  std::chrono::duration<double> diff1 = end_time - start_time;
+  printf("Default = %f s\n", diff1.count());
 
-    start_time = std::chrono::steady_clock::now();
-    vecpar::chain<vecmem::host_memory_resource, double, vecmem::vector<int>>
-                chain(mr);
+  start_time = std::chrono::steady_clock::now();
+  vecpar::chain<vecmem::host_memory_resource, double, vecmem::vector<int>>
+      chain(mr);
 
-    chain //.with_config(c)
-                .with_algorithms(first_alg, second_alg)
-                .execute(*vec);
-    end_time = std::chrono::steady_clock::now();
+  chain //.with_config(c)
+      .with_algorithms(first_alg, second_alg)
+      .execute(*vec);
+  end_time = std::chrono::steady_clock::now();
 
-    std::chrono::duration<double> diff2 = end_time - start_time;
-    printf("Chain  = %f s\n", diff2.count());
+  std::chrono::duration<double> diff2 = end_time - start_time;
+  printf("Chain  = %f s\n", diff2.count());
 
 #if defined(__CUDA__) && defined(__clang__)
-        write_to_csv("gpu_hd.csv", GetParam(), diff1.count(), diff2.count());
+  write_to_csv("gpu_hd.csv", GetParam(), diff1.count(), diff2.count());
 #else
-        write_to_csv("cpu_hd.csv", GetParam(), diff1.count(), diff2.count());
+  write_to_csv("cpu_hd.csv", GetParam(), diff1.count(), diff2.count());
 #endif
 }
 

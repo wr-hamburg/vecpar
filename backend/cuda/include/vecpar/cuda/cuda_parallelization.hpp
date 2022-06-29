@@ -70,15 +70,12 @@ template <
         std::is_base_of<
             vecpar::algorithm::parallelizable_map_filter_1<R, T, Arguments...>,
             Algorithm>::value ||
-            std::is_base_of<
-                vecpar::algorithm::parallelizable_mmap_filter_1<T, Arguments...>,
-                Algorithm>::value,
+            std::is_base_of<vecpar::algorithm::parallelizable_mmap_filter_1<
+                                T, Arguments...>,
+                            Algorithm>::value,
         bool> = true>
-R &parallel_algorithm(Algorithm algorithm,
-                      MemoryResource &mr,
-                      vecpar::config config,
-                      T &data,
-                      Arguments... args) {
+R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
+                      vecpar::config config, T &data, Arguments... args) {
 
   return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, config, data, args...);
@@ -91,13 +88,12 @@ template <
         std::is_base_of<
             vecpar::algorithm::parallelizable_map_filter_1<R, T, Arguments...>,
             Algorithm>::value ||
-            std::is_base_of<
-                vecpar::algorithm::parallelizable_mmap_filter_1<T, Arguments...>,
-                Algorithm>::value,
+            std::is_base_of<vecpar::algorithm::parallelizable_mmap_filter_1<
+                                T, Arguments...>,
+                            Algorithm>::value,
         bool> = true>
-R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                                      T &data,
-                                      Arguments... args) {
+R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr, T &data,
+                      Arguments... args) {
 
   return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, cuda::getDefaultConfig(data.size()), data, args...);
@@ -105,42 +101,41 @@ R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
 
 template <
     class MemoryResource, class Algorithm,
-        typename R = typename Algorithm::intermediate_result_t,
-        class Result = typename Algorithm::result_t,
-    class T, typename... Arguments,
+    typename R = typename Algorithm::intermediate_result_t,
+    class Result = typename Algorithm::result_t, class T, typename... Arguments,
     typename std::enable_if_t<
-        std::is_base_of<
-            vecpar::algorithm::parallelizable_map_reduce_1<Result, R, T, Arguments...>,
-            Algorithm>::value ||
-            std::is_base_of<
-                vecpar::algorithm::parallelizable_mmap_reduce_1<Result, T, Arguments...>,
-                Algorithm>::value,
+        std::is_base_of<vecpar::algorithm::parallelizable_map_reduce_1<
+                            Result, R, T, Arguments...>,
+                        Algorithm>::value ||
+            std::is_base_of<vecpar::algorithm::parallelizable_mmap_reduce_1<
+                                Result, T, Arguments...>,
+                            Algorithm>::value,
         bool> = true>
 Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                      vecpar::config config, T &data,
-                      Arguments... args) {
+                           vecpar::config config, T &data, Arguments... args) {
 
-  return vecpar::cuda::parallel_map_reduce<Algorithm, Result, R, T, Arguments...>(
-      algorithm, mr, config, data, args...);
+  return vecpar::cuda::parallel_map_reduce<Algorithm, Result, R, T,
+                                           Arguments...>(algorithm, mr, config,
+                                                         data, args...);
 }
 
 template <
     class MemoryResource, class Algorithm,
-        typename R = typename Algorithm::intermediate_result_t,
-        class Result = typename Algorithm::result_t,
-    class T, typename... Arguments,
+    typename R = typename Algorithm::intermediate_result_t,
+    class Result = typename Algorithm::result_t, class T, typename... Arguments,
     typename std::enable_if_t<
-        std::is_base_of<
-            vecpar::algorithm::parallelizable_map_reduce_1<Result, R, T, Arguments...>,
-            Algorithm>::value ||
-            std::is_base_of<
-                vecpar::algorithm::parallelizable_mmap_reduce_1<Result, T, Arguments...>,
-                Algorithm>::value,
+        std::is_base_of<vecpar::algorithm::parallelizable_map_reduce_1<
+                            Result, R, T, Arguments...>,
+                        Algorithm>::value ||
+            std::is_base_of<vecpar::algorithm::parallelizable_mmap_reduce_1<
+                                Result, T, Arguments...>,
+                            Algorithm>::value,
         bool> = true>
-Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                      T &data, Arguments... args) {
+Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr, T &data,
+                           Arguments... args) {
 
-  return vecpar::cuda::parallel_map_reduce<Algorithm, Result, R, T, Arguments...>(
+  return vecpar::cuda::parallel_map_reduce<Algorithm, Result, R, T,
+                                           Arguments...>(
       algorithm, mr, cuda::getDefaultConfig(data.size()), data, args...);
 }
 

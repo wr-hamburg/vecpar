@@ -5,9 +5,8 @@
 
 namespace vecpar::algorithm {
 
-    template <typename R>
-    struct parallelizable_reduce : public vecpar::detail::parallel_reduce<R> {};
-
+template <typename R>
+struct parallelizable_reduce : public vecpar::detail::parallel_reduce<R> {};
 
 } // namespace vecpar::algorithm
 #endif // VECPAR_PARALLELIZABLE_REDUCE_HPP

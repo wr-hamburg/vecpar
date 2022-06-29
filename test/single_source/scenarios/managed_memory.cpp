@@ -3,9 +3,9 @@
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
 
+#include "../../common/infrastructure/TimeLogger.hpp"
 #include "../../common/infrastructure/TimeTest.hpp"
 #include "../../common/infrastructure/sizes.hpp"
-#include "../../common/infrastructure/TimeLogger.hpp"
 
 #include "../../common/algorithm/test_algorithm_1.hpp"
 #include "../../common/algorithm/test_algorithm_2.hpp"
@@ -186,14 +186,15 @@ TEST_P(SingleSourceManagedMemoryTest, Parallel_Chained_Two) {
   test_algorithm_3 first_alg(mr);
   test_algorithm_4 second_alg;
 
-//  vecpar::config c = {1, static_cast<int>(vec->size())};
+  //  vecpar::config c = {1, static_cast<int>(vec->size())};
 
   vecpar::chain<vecmem::cuda::managed_memory_resource, double,
                 vecmem::vector<int>>
       chain(mr);
 
   double second_result = chain //.with_config(c)
-          .with_algorithms(first_alg, second_alg).execute(*vec);
+                             .with_algorithms(first_alg, second_alg)
+                             .execute(*vec);
 
   EXPECT_EQ(second_result, expectedFilterReduceResult);
 }
@@ -216,39 +217,40 @@ TEST_P(SingleSourceManagedMemoryTest, Parallel_Chained_mmap) {
     EXPECT_EQ(second_result[i], vec_d->at(i));
 }
 
-    TEST_P(SingleSourceManagedMemoryTest, Chain_perf) {
-        test_algorithm_3 first_alg(mr);
-        test_algorithm_4 second_alg;
+TEST_P(SingleSourceManagedMemoryTest, Chain_perf) {
+  test_algorithm_3 first_alg(mr);
+  test_algorithm_4 second_alg;
 
-        std::chrono::time_point<std::chrono::steady_clock> start_time;
-        std::chrono::time_point<std::chrono::steady_clock> end_time;
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-        start_time = std::chrono::steady_clock::now();
-        vecpar::parallel_algorithm(
-                second_alg, mr, vecpar::parallel_algorithm(first_alg, mr, *vec));
-        end_time = std::chrono::steady_clock::now();
+  start_time = std::chrono::steady_clock::now();
+  vecpar::parallel_algorithm(second_alg, mr,
+                             vecpar::parallel_algorithm(first_alg, mr, *vec));
+  end_time = std::chrono::steady_clock::now();
 
-        std::chrono::duration<double> diff1 = end_time - start_time;
-        printf("Default = %f s\n", diff1.count());
+  std::chrono::duration<double> diff1 = end_time - start_time;
+  printf("Default = %f s\n", diff1.count());
 
-        start_time = std::chrono::steady_clock::now();
-        vecpar::chain<vecmem::cuda::managed_memory_resource, double, vecmem::vector<int>>
-                chain(mr);
+  start_time = std::chrono::steady_clock::now();
+  vecpar::chain<vecmem::cuda::managed_memory_resource, double,
+                vecmem::vector<int>>
+      chain(mr);
 
-        chain //.with_config(c)
-                .with_algorithms(first_alg, second_alg)
-                .execute(*vec);
-        end_time = std::chrono::steady_clock::now();
+  chain //.with_config(c)
+      .with_algorithms(first_alg, second_alg)
+      .execute(*vec);
+  end_time = std::chrono::steady_clock::now();
 
-        std::chrono::duration<double> diff2 = end_time - start_time;
-        printf("Chain  = %f s\n", diff2.count());
+  std::chrono::duration<double> diff2 = end_time - start_time;
+  printf("Chain  = %f s\n", diff2.count());
 
 #if defined(__CUDA__) && defined(__clang__)
-        write_to_csv("gpu_mm.csv", GetParam(), diff1.count(), diff2.count());
+  write_to_csv("gpu_mm.csv", GetParam(), diff1.count(), diff2.count());
 #else
-        write_to_csv("cpu_mm.csv", GetParam(), diff1.count(), diff2.count());
+  write_to_csv("cpu_mm.csv", GetParam(), diff1.count(), diff2.count());
 #endif
-    }
+}
 
 TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Extra_Param) {
   test_algorithm_5 alg;
