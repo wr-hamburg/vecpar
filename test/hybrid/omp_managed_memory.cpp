@@ -232,6 +232,6 @@ TEST_P(CpuManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
   EXPECT_EQ(second_result, expectedFilterReduceResult);
 }
 
-INSTANTIATE_TEST_SUITE_P(Trivial_ManagedMemory, CpuManagedMemoryTest,
+INSTANTIATE_TEST_SUITE_P(OMP_ManagedMemory, CpuManagedMemoryTest,
                          testing::ValuesIn(N));
 } // namespace

@@ -9,13 +9,14 @@
 #include "../data_types.hpp"
 
 class test_algorithm_3
-    : public vecpar::algorithm::parallelizable_map_filter<double, int> {
+: public vecpar::algorithm::parallelizable_map_filter_1<vecmem::vector<double>,
+        vecmem::vector<int>> {
 
 public:
   TARGET test_algorithm_3(vecmem::memory_resource &mr)
-      : parallelizable_map_filter(), m_mr(mr) {}
+      : parallelizable_map_filter_1(), m_mr(mr) {}
 
-  TARGET double &map(double &result_i, int &data_i) override {
+  TARGET double &map(double &result_i, const int &data_i) override {
     result_i = data_i * 1.0;
     return result_i;
   }

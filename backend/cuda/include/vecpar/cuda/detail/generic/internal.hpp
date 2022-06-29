@@ -18,11 +18,11 @@ template <typename T> struct cuda_data {
 namespace vecpar::cuda_raw {
 
 template <
-    typename Algorithm, class R = typename Algorithm::result_t, typename T,
+    typename Algorithm, typename R, typename T,
     typename... Arguments,
     typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
-cuda_data<T> parallel_map(Algorithm algorithm, vecpar::config config,
-                          cuda_data<T> input, Arguments... args) {
+cuda_data<typename T::value_type> parallel_map(Algorithm algorithm, vecpar::config config,
+                          cuda_data<typename T::value_type> input, Arguments... args) {
 
   if (config.isEmpty()) {
     config = vecpar::cuda::getDefaultConfig(input.size);
@@ -47,11 +47,11 @@ cuda_data<T> parallel_map(Algorithm algorithm, vecpar::config config,
 }
 
 template <
-    typename Algorithm, class R = typename Algorithm::result_t, typename T,
+    typename Algorithm, typename R, typename T,
     typename... Arguments,
     typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-cuda_data<R> parallel_map(Algorithm algorithm, vecpar::config config,
-                          cuda_data<T> input, Arguments... args) {
+cuda_data<typename R::value_type> parallel_map(Algorithm algorithm, vecpar::config config,
+                          cuda_data<typename T::value_type> input, Arguments... args) {
 
   if (config.isEmpty()) {
     config = vecpar::cuda::getDefaultConfig(input.size);
@@ -61,8 +61,8 @@ cuda_data<R> parallel_map(Algorithm algorithm, vecpar::config config,
                       config.m_gridSize, config.m_blockSize,
                       config.m_memorySize);)
 
-  R *d_result = NULL;
-  CHECK_ERROR(cudaMalloc((void **)&d_result, input.size * sizeof(R)))
+  typename R::value_type *d_result = NULL;
+  CHECK_ERROR(cudaMalloc((void **)&d_result, input.size * sizeof(typename R::value_type)))
 
   vecpar::cuda::
       kernel<<<config.m_gridSize, config.m_blockSize, config.m_memorySize>>>(
@@ -79,8 +79,8 @@ cuda_data<R> parallel_map(Algorithm algorithm, vecpar::config config,
 }
 
 template <typename Algorithm, typename R>
-void parallel_reduce(Algorithm algorithm, vecpar::config c, cuda_data<R> result,
-                     cuda_data<R> partial_result) {
+void parallel_reduce(Algorithm algorithm, vecpar::config c, cuda_data<typename R::value_type> result,
+                     cuda_data<typename R::value_type> partial_result) {
 
   size_t size = partial_result.size;
 
@@ -90,7 +90,7 @@ void parallel_reduce(Algorithm algorithm, vecpar::config c, cuda_data<R> result,
 
   // make sure that an empty config ends up to be used
   if (c.isEmpty()) {
-    c = vecpar::cuda::getReduceConfig<R>(size);
+    c = vecpar::cuda::getReduceConfig<typename R::value_type>(size);
   }
 
   DEBUG_ACTION(printf("[REDUCE] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
@@ -98,7 +98,7 @@ void parallel_reduce(Algorithm algorithm, vecpar::config c, cuda_data<R> result,
 
   vecpar::cuda::rkernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       lock, size, [=] __device__(int *lock) mutable {
-        extern __shared__ R temp[];
+        extern __shared__ typename R::value_type temp[];
 
         size_t tid = threadIdx.x;
         temp[tid] = partial_result.ptr[tid + blockIdx.x * blockDim.x];

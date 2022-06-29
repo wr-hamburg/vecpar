@@ -188,6 +188,6 @@ TEST_P(GpuHostDeviceMemoryTest, Parallel_Map_Extra_Param) {
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(Trivial_HostDevice, GpuHostDeviceMemoryTest,
+INSTANTIATE_TEST_SUITE_P(CUDA_HostDevice, GpuHostDeviceMemoryTest,
                          testing::ValuesIn(N));
 } // namespace

@@ -350,6 +350,6 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(Trivial_HostMemory, CpuHostMemoryTest,
+INSTANTIATE_TEST_SUITE_P(OMP_HostMemory, CpuHostMemoryTest,
                          testing::ValuesIn(N));
 } // namespace

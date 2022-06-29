@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <vecmem/containers/vector.hpp>
+#include <vecmem/memory/host_memory_resource.hpp>
 
 #include "../../common/infrastructure/TimeTest.hpp"
 #include "../../common/infrastructure/sizes.hpp"

@@ -5,6 +5,9 @@
 
 #include "vecpar/core/algorithms/parallelizable_map_filter.hpp"
 #include "vecpar/core/algorithms/parallelizable_map_reduce.hpp"
+#include "vecpar/core/algorithms/parallelizable_map.hpp"
+#include "vecpar/core/algorithms/parallelizable_reduce.hpp"
+#include "vecpar/core/algorithms/parallelizable_filter.hpp"
 #include "vecpar/core/definitions/config.hpp"
 
 #include "internal.hpp"
@@ -12,38 +15,40 @@
 namespace vecpar {
 
 template <class MemoryResource, class Algorithm,
-          class R = typename Algorithm::result_t, class T,
+          class R = typename Algorithm::intermediate_result_t, class T,
           typename... Arguments,
           typename std::enable_if_t<
               std::is_base_of<
-                  vecpar::algorithm::parallelizable_map<R, T, Arguments...>,
+                  vecpar::algorithm::parallelizable_map_1<R, T, Arguments...>,
                   Algorithm>::value ||
                   std::is_base_of<
-                      vecpar::algorithm::parallelizable_mmap<T, Arguments...>,
+                      vecpar::algorithm::parallelizable_mmap_1<T, Arguments...>,
                       Algorithm>::value,
               bool> = true>
-vecmem::vector<R> &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                                      vecpar::config config,
-                                      vecmem::vector<T> &data,
-                                      Arguments... args) {
+R &parallel_algorithm(Algorithm algorithm,
+                      MemoryResource &mr,
+                      vecpar::config config,
+                      T &data,
+                      Arguments... args) {
 
   return vecpar::parallel_map(algorithm, mr, config, data, args...);
 }
 
 template <class MemoryResource, class Algorithm,
-          class R = typename Algorithm::result_t, class T,
+          class R = typename Algorithm::intermediate_result_t, class T,
           typename... Arguments,
           typename std::enable_if_t<
               std::is_base_of<
-                  vecpar::algorithm::parallelizable_map<R, T, Arguments...>,
+                  vecpar::algorithm::parallelizable_map_1<R, T, Arguments...>,
                   Algorithm>::value ||
                   std::is_base_of<
-                      vecpar::algorithm::parallelizable_mmap<T, Arguments...>,
+                      vecpar::algorithm::parallelizable_mmap_1<T, Arguments...>,
                       Algorithm>::value,
               bool> = true>
-vecmem::vector<R> &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                                      vecmem::vector<T> &data,
-                                      Arguments... args) {
+R &parallel_algorithm(Algorithm algorithm,
+                      MemoryResource &mr,
+                      T &data,
+                      Arguments... args) {
 
   return vecpar::parallel_map(algorithm, mr, data, args...);
 }
@@ -53,8 +58,9 @@ template <class MemoryResource, class Algorithm, class T, typename... Arguments,
               std::is_base_of<vecpar::algorithm::parallelizable_filter<T>,
                               Algorithm>::value,
               bool> = true>
-vecmem::vector<T> &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                                      vecmem::vector<T> &data) {
+T &parallel_algorithm(Algorithm algorithm,
+                      MemoryResource &mr,
+                      T &data) {
 
   return vecpar::parallel_filter(algorithm, mr, data);
 }
@@ -64,8 +70,9 @@ template <class MemoryResource, class Algorithm, class R, typename... Arguments,
               std::is_base_of<vecpar::algorithm::parallelizable_reduce<R>,
                               Algorithm>::value,
               bool> = true>
-R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                      vecmem::vector<R> &data) {
+typename R::value_type &parallel_algorithm(Algorithm algorithm,
+                                           MemoryResource &mr,
+                                           R &data) {
 
   return vecpar::parallel_reduce(algorithm, mr, data);
 }
@@ -75,16 +82,17 @@ template <
     class R = typename Algorithm::result_t, class T, typename... Arguments,
     typename std::enable_if_t<
         std::is_base_of<
-            vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>,
+            vecpar::algorithm::parallelizable_map_filter_1<R, T, Arguments...>,
             Algorithm>::value ||
             std::is_base_of<
-                vecpar::algorithm::parallelizable_mmap_filter<T, Arguments...>,
+                vecpar::algorithm::parallelizable_mmap_filter_1<T, Arguments...>,
                 Algorithm>::value,
         bool> = true>
-vecmem::vector<R> &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                                      vecpar::config config,
-                                      vecmem::vector<T> &data,
-                                      Arguments... args) {
+R &parallel_algorithm(Algorithm algorithm,
+                      MemoryResource &mr,
+                      vecpar::config config,
+                      T &data,
+                      Arguments... args) {
 
   return vecpar::parallel_map_filter(algorithm, mr, config, data, args...);
 }
@@ -94,32 +102,35 @@ template <
     class R = typename Algorithm::result_t, class T, typename... Arguments,
     typename std::enable_if_t<
         std::is_base_of<
-            vecpar::algorithm::parallelizable_map_filter<R, T, Arguments...>,
+            vecpar::algorithm::parallelizable_map_filter_1<R, T, Arguments...>,
             Algorithm>::value ||
             std::is_base_of<
-                vecpar::algorithm::parallelizable_mmap_filter<T, Arguments...>,
+                vecpar::algorithm::parallelizable_mmap_filter_1<T, Arguments...>,
                 Algorithm>::value,
         bool> = true>
-vecmem::vector<R> &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                                      vecmem::vector<T> &data,
-                                      Arguments... args) {
+R &parallel_algorithm(Algorithm algorithm,
+                      MemoryResource &mr,
+                      T &data,
+                      Arguments... args) {
 
   return vecpar::parallel_map_filter(algorithm, mr, data, args...);
 }
 
 template <
     class MemoryResource, class Algorithm,
-    class R = typename Algorithm::result_t, class T, typename... Arguments,
+        typename R = typename Algorithm::intermediate_result_t,
+        class Result = typename Algorithm::result_t,
+    class T, typename... Arguments,
     typename std::enable_if_t<
         std::is_base_of<
-            vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>,
+            vecpar::algorithm::parallelizable_map_reduce_1<Result, R, T, Arguments...>,
             Algorithm>::value ||
             std::is_base_of<
-                vecpar::algorithm::parallelizable_mmap_reduce<T, Arguments...>,
+                vecpar::algorithm::parallelizable_mmap_reduce_1<Result, T, Arguments...>,
                 Algorithm>::value,
         bool> = true>
-R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                      vecpar::config config, vecmem::vector<T> &data,
+Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
+                      vecpar::config config, T &data,
                       Arguments... args) {
 
   return vecpar::parallel_map_reduce(algorithm, mr, config, data, args...);
@@ -127,17 +138,19 @@ R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
 
 template <
     class MemoryResource, class Algorithm,
-    class R = typename Algorithm::result_t, class T, typename... Arguments,
+        typename R = typename Algorithm::intermediate_result_t,
+        class Result = typename Algorithm::result_t,
+    class T, typename... Arguments,
     typename std::enable_if_t<
         std::is_base_of<
-            vecpar::algorithm::parallelizable_map_reduce<R, T, Arguments...>,
+            vecpar::algorithm::parallelizable_map_reduce_1<Result, R, T, Arguments...>,
             Algorithm>::value ||
             std::is_base_of<
-                vecpar::algorithm::parallelizable_mmap_reduce<T, Arguments...>,
+                vecpar::algorithm::parallelizable_mmap_reduce_1<Result, T, Arguments...>,
                 Algorithm>::value,
         bool> = true>
-R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                      vecmem::vector<T> &data, Arguments... args) {
+Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
+                      T &data, Arguments... args) {
 
   return vecpar::parallel_map_reduce(algorithm, mr, data, args...);
 }

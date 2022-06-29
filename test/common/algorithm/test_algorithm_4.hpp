@@ -11,10 +11,10 @@
 
 class test_algorithm_4
     : public traccc::algorithm<double *(vecmem::vector<double>)>,
-      public vecpar::algorithm::parallelizable_mmap_reduce<double> {
+public vecpar::algorithm::parallelizable_mmap_reduce_1<double, vecmem::vector<double>> {
 
 public:
-  TARGET test_algorithm_4() : algorithm(), parallelizable_mmap_reduce() {}
+  TARGET test_algorithm_4() : algorithm(), parallelizable_mmap_reduce_1() {}
 
   TARGET double &map(double &i) override {
     i = i * 2;

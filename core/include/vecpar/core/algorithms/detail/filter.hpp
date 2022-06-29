@@ -6,7 +6,7 @@
 namespace vecpar::detail {
 
 template <typename T> struct parallel_filter {
-  TARGET virtual bool filter(T &) = 0;
+  TARGET virtual bool filter(typename T::value_type& item) = 0;
 };
 } // namespace vecpar::detail
 

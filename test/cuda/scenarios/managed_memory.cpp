@@ -215,6 +215,6 @@ TEST_P(GpuManagedMemoryTest, Parallel_Map_Extra_Param) {
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(Trivial_ManagedMemory, GpuManagedMemoryTest,
+INSTANTIATE_TEST_SUITE_P(CUDA_ManagedMemory, GpuManagedMemoryTest,
                          testing::ValuesIn(N));
 } // namespace
