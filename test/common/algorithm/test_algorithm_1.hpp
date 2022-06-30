@@ -8,13 +8,13 @@
 
 #include "../data_types.hpp"
 
-class test_algorithm_1
-    : public vecpar::algorithm::parallelizable_map_reduce_1<
-          double, vecmem::vector<double>, vecmem::vector<int>> {
+class test_algorithm_1 : public vecpar::algorithm::parallelizable_map_reduce<
+                             vecpar::collection::One, double,
+                             vecmem::vector<double>, vecmem::vector<int>> {
 
 public:
   TARGET test_algorithm_1(vecmem::memory_resource &mr)
-      : parallelizable_map_reduce_1(), m_mr(mr) {}
+      : parallelizable_map_reduce(), m_mr(mr) {}
 
   TARGET double &map(double &result_i, const int &data_i) override {
     result_i = data_i * 1.0;

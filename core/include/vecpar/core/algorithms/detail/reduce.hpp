@@ -9,10 +9,16 @@ namespace vecpar::detail {
  * The operation has to be commutative and associative
  * since the order is not guaranteed.
  */
-template <typename R> struct parallel_reduce {
+template <Iterable R> struct parallel_reduce {
   TARGET virtual typename R::value_type *
   reduce(typename R::value_type *result,
          typename R::value_type &partial_result) = 0;
 };
+
+/// concepts
+template <typename Algorithm, typename R>
+concept is_reduce =
+    std::is_base_of<vecpar::detail::parallel_reduce<R>, Algorithm>::value;
+
 } // namespace vecpar::detail
 #endif // VECPAR_REDUCE_HPP

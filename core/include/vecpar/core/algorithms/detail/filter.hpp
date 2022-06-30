@@ -5,9 +5,15 @@
 
 namespace vecpar::detail {
 
-template <typename T> struct parallel_filter {
+template <Iterable T> struct parallel_filter {
   TARGET virtual bool filter(typename T::value_type &item) = 0;
 };
+
+/// concepts
+template <typename Algorithm, typename T>
+concept is_filter =
+    std::is_base_of<vecpar::detail::parallel_filter<T>, Algorithm>::value;
+
 } // namespace vecpar::detail
 
 #endif // VECPAR_FILTER_HPP

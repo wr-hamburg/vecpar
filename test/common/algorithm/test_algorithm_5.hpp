@@ -12,11 +12,11 @@
 class test_algorithm_5
     : public traccc::algorithm<vecmem::vector<double>(vecmem::vector<double>,
                                                       X)>,
-      public vecpar::algorithm::parallelizable_mmap_1<vecmem::vector<double>,
-                                                      X> {
+      public vecpar::algorithm::parallelizable_mmap<
+          vecpar::collection::count::One, vecmem::vector<double>, X> {
 
 public:
-  TARGET test_algorithm_5() : algorithm(), parallelizable_mmap_1() {}
+  TARGET test_algorithm_5() : algorithm(), parallelizable_mmap() {}
 
   TARGET double &map(double &i, X second_i) override {
     i = i + second_i.f();

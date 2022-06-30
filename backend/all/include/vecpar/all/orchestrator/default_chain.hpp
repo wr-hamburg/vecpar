@@ -43,12 +43,10 @@ private:
             class result_t = typename Algorithm::result_t>
   auto wrapper(Algorithm &algorithm) {
     return [&](input_t &coll, OtherInput... otherInput) -> result_t & {
-      if constexpr (std::is_base_of<vecpar::algorithm::parallelizable_map_1<
-                                        result_t, input_t, OtherInput...>,
-                                    Algorithm>::value ||
-                    std::is_base_of<vecpar::algorithm::parallelizable_mmap_1<
-                                        result_t, OtherInput...>,
-                                    Algorithm>::value) {
+      if constexpr (vecpar::algorithm::is_map<Algorithm, result_t, input_t,
+                                              OtherInput...> ||
+                    vecpar::algorithm::is_mmap<Algorithm, result_t,
+                                               OtherInput...>) {
         return vecpar::parallel_algorithm(algorithm, m_mr, m_config, coll,
                                           otherInput...);
       } else {

@@ -11,12 +11,13 @@
 
 class test_algorithm_2
     : public traccc::algorithm<double *(vecmem::vector<int>, X)>,
-      public vecpar::algorithm::parallelizable_map_reduce_1<
-          double, vecmem::vector<double>, vecmem::vector<int>, X> {
+      public vecpar::algorithm::parallelizable_map_reduce<
+          vecpar::collection::One, double, vecmem::vector<double>,
+          vecmem::vector<int>, X> {
 
 public:
   test_algorithm_2(vecmem::memory_resource &mr)
-      : algorithm(), parallelizable_map_reduce_1(), m_mr(mr) {}
+      : algorithm(), parallelizable_map_reduce(), m_mr(mr) {}
 
   TARGET double &map(double &result_i, const int &first_i,
                      X second_i) override {
