@@ -12,7 +12,7 @@ struct parallelizable_map_reduce {};
 
 template <typename Result, Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_reduce<One, Result, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_1<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_one<R, T, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = T;
   using result_t = Result;
@@ -21,7 +21,7 @@ struct parallelizable_map_reduce<One, Result, R, T, Arguments...>
 
 template <typename Result, Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_reduce<Two, Result, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_2<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_two<R, T, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = T;
   using result_t = Result;
@@ -30,7 +30,7 @@ struct parallelizable_map_reduce<Two, Result, R, T, Arguments...>
 
 template <typename Result, Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_reduce<Three, Result, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_3<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_three<R, T, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = T;
   using result_t = Result;
@@ -38,7 +38,7 @@ struct parallelizable_map_reduce<Three, Result, R, T, Arguments...>
 };
 template <typename Result, Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_reduce<Four, Result, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_4<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_four<R, T, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = T;
   using result_t = Result;
@@ -46,7 +46,7 @@ struct parallelizable_map_reduce<Four, Result, R, T, Arguments...>
 };
 template <typename Result, Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_reduce<Five, Result, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_5<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_five<R, T, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = T;
   using result_t = Result;
@@ -59,7 +59,7 @@ struct parallelizable_mmap_reduce {};
 
 template <typename Result, Iterable R, typename... Arguments>
 struct parallelizable_mmap_reduce<One, Result, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_1<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = R;
   using result_t = Result;
@@ -68,7 +68,7 @@ struct parallelizable_mmap_reduce<One, Result, R, Arguments...>
 
 template <typename Result, Iterable R, typename... Arguments>
 struct parallelizable_mmap_reduce<Two, Result, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_2<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_two<R, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = R;
   using result_t = Result;
@@ -76,7 +76,7 @@ struct parallelizable_mmap_reduce<Two, Result, R, Arguments...>
 };
 template <typename Result, Iterable R, typename... Arguments>
 struct parallelizable_mmap_reduce<Three, Result, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_3<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_three<R, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = R;
   using result_t = Result;
@@ -84,7 +84,7 @@ struct parallelizable_mmap_reduce<Three, Result, R, Arguments...>
 };
 template <typename Result, Iterable R, typename... Arguments>
 struct parallelizable_mmap_reduce<Four, Result, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_4<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_four<R, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = R;
   using result_t = Result;
@@ -92,7 +92,7 @@ struct parallelizable_mmap_reduce<Four, Result, R, Arguments...>
 };
 template <typename Result, Iterable R, typename... Arguments>
 struct parallelizable_mmap_reduce<Five, Result, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_5<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_five<R, Arguments...>,
       public vecpar::detail::parallel_reduce<R> {
   using input_t = R;
   using result_t = Result;

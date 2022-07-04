@@ -9,45 +9,45 @@ template <count, typename... Arguments> struct parallelizable_map {};
 
 template <typename... Arguments>
 struct parallelizable_map<One, Arguments...>
-    : public vecpar::detail::parallel_map_1<Arguments...> {};
+    : public vecpar::detail::parallel_map_one<Arguments...> {};
 
 template <typename... Arguments>
 struct parallelizable_map<Two, Arguments...>
-    : public vecpar::detail::parallel_map_2<Arguments...> {};
+    : public vecpar::detail::parallel_map_two<Arguments...> {};
 
 template <typename... Arguments>
 struct parallelizable_map<Three, Arguments...>
-    : public vecpar::detail::parallel_map_3<Arguments...> {};
+    : public vecpar::detail::parallel_map_three<Arguments...> {};
 
 template <typename... Arguments>
 struct parallelizable_map<Four, Arguments...>
-    : public vecpar::detail::parallel_map_4<Arguments...> {};
+    : public vecpar::detail::parallel_map_four<Arguments...> {};
 
 template <typename... Arguments>
 struct parallelizable_map<Five, Arguments...>
-    : public vecpar::detail::parallel_map_5<Arguments...> {};
+    : public vecpar::detail::parallel_map_five<Arguments...> {};
 
 template <count, typename... Arguments> struct parallelizable_mmap {};
 
 template <typename... Arguments>
 struct parallelizable_mmap<One, Arguments...>
-    : public vecpar::detail::parallel_mmap_1<Arguments...> {};
+    : public vecpar::detail::parallel_mmap_one<Arguments...> {};
 
 template <typename... Arguments>
 struct parallelizable_mmap<Two, Arguments...>
-    : public vecpar::detail::parallel_mmap_2<Arguments...> {};
+    : public vecpar::detail::parallel_mmap_two<Arguments...> {};
 
 template <typename... Arguments>
 struct parallelizable_mmap<Three, Arguments...>
-    : public vecpar::detail::parallel_mmap_3<Arguments...> {};
+    : public vecpar::detail::parallel_mmap_three<Arguments...> {};
 
 template <typename... Arguments>
 struct parallelizable_mmap<Four, Arguments...>
-    : public vecpar::detail::parallel_mmap_4<Arguments...> {};
+    : public vecpar::detail::parallel_mmap_four<Arguments...> {};
 
 template <typename... Arguments>
 struct parallelizable_mmap<Five, Arguments...>
-    : public vecpar::detail::parallel_mmap_5<Arguments...> {};
+    : public vecpar::detail::parallel_mmap_five<Arguments...> {};
 
 /// concepts
 template <typename Algorithm, typename... All>

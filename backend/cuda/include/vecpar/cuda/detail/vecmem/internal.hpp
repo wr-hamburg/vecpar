@@ -8,6 +8,7 @@
 
 #include "vecpar/core/definitions/common.hpp"
 #include "vecpar/core/definitions/config.hpp"
+#include "vecpar/core/definitions/helper.hpp"
 #include "vecpar/cuda/detail/common/config.hpp"
 #include "vecpar/cuda/detail/common/cuda_utils.hpp"
 #include "vecpar/cuda/detail/common/kernels.hpp"
@@ -17,12 +18,14 @@ namespace internal {
 static vecmem::cuda::device_memory_resource d_mem;
 static vecmem::cuda::copy copy;
 
-template <typename Algorithm, typename R, typename T, typename... Arguments>
-void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
-                  vecmem::data::vector_view<R> &result,
-                  vecmem::data::vector_view<T> data, Arguments... args) {
+template <typename Algorithm, typename R = typename Algorithm::result_t,
+          typename T, typename... Arguments>
+void parallel_map_one(vecpar::config c, size_t size, Algorithm algorithm,
+                      vecmem::data::vector_view<typename R::value_type> &result,
+                      vecmem::data::vector_view<typename T::value_type> &data,
+                      Arguments... args) {
 
-  // make sure that an empty config ends up to be used
+  // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
@@ -33,8 +36,8 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<T> dv_data(data);
-        vecmem::device_vector<R> dv_result(result);
+        vecmem::device_vector<typename T::value_type> dv_data(data);
+        vecmem::device_vector<typename R::value_type> dv_result(result);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_result[idx], dv_data[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
@@ -45,12 +48,15 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
   CHECK_ERROR(cudaDeviceSynchronize())
 }
 
-template <typename Algorithm, typename TT, typename... Arguments>
-void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
-                  vecmem::data::vector_view<TT> &input_output,
-                  Arguments... args) {
+template <typename Algorithm, typename R = typename Algorithm::result_t,
+          typename T1, typename T2, typename... Arguments>
+void parallel_map_two(vecpar::config c, size_t size, Algorithm algorithm,
+                      vecmem::data::vector_view<typename R::value_type> &result,
+                      vecmem::data::vector_view<typename T1::value_type> &in_1,
+                      vecmem::data::vector_view<typename T2::value_type> &in_2,
+                      Arguments... args) {
 
-  // make sure that an empty config ends up to be used
+  // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
@@ -61,7 +67,153 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<TT> dv_data(input_output);
+        vecmem::device_vector<typename T1::value_type> dv_data_1(in_1);
+        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
+        vecmem::device_vector<typename R::value_type> dv_result(result);
+        //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
+        algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx], a...);
+        //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
+      },
+      args...);
+
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
+}
+
+template <typename Algorithm, typename R = typename Algorithm::result_t,
+          typename T1, typename T2, typename T3, typename... Arguments>
+void parallel_map_three(
+    vecpar::config c, size_t size, Algorithm algorithm,
+    vecmem::data::vector_view<typename R::value_type> &result,
+    vecmem::data::vector_view<typename T1::value_type> &in_1,
+    vecmem::data::vector_view<typename T2::value_type> &in_2,
+    vecmem::data::vector_view<typename T3::value_type> &in_3,
+    Arguments... args) {
+
+  // make sure that an empty config doesn't end up to be used
+  if (c.isEmpty()) {
+    c = vecpar::cuda::getDefaultConfig(size);
+  }
+
+  DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
+                      c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+
+  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+      size,
+      [=] __device__(int idx, Arguments... a) mutable {
+        vecmem::device_vector<typename T1::value_type> dv_data_1(in_1);
+        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
+        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
+        vecmem::device_vector<typename R::value_type> dv_result(result);
+        //       printf("[mapper] data[%d]=%f\n", idx, dv_data_3[idx]);
+        algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
+                      dv_data_3[idx], a...);
+        //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
+      },
+      args...);
+
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
+}
+
+template <typename Algorithm, typename R = typename Algorithm::result_t,
+          typename T1, typename T2, typename T3, typename T4,
+          typename... Arguments>
+void parallel_map_four(
+    vecpar::config c, size_t size, Algorithm algorithm,
+    vecmem::data::vector_view<typename R::value_type> &result,
+    vecmem::data::vector_view<typename T1::value_type> &in_1,
+    vecmem::data::vector_view<typename T2::value_type> &in_2,
+    vecmem::data::vector_view<typename T3::value_type> &in_3,
+    vecmem::data::vector_view<typename T4::value_type> &in_4,
+    Arguments... args) {
+
+  // make sure that an empty config doesn't end up to be used
+  if (c.isEmpty()) {
+    c = vecpar::cuda::getDefaultConfig(size);
+  }
+
+  DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
+                      c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+
+  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+      size,
+      [=] __device__(int idx, Arguments... a) mutable {
+        vecmem::device_vector<typename T1::value_type> dv_data_1(in_1);
+        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
+        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
+        vecmem::device_vector<typename T4::value_type> dv_data_4(in_4);
+        vecmem::device_vector<typename R::value_type> dv_result(result);
+        //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
+        algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
+                      dv_data_3[idx], dv_data_4[idx], a...);
+        //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
+      },
+      args...);
+
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
+}
+
+template <typename Algorithm, typename R = typename Algorithm::result_t,
+          typename T1, typename T2, typename T3, typename T4, typename T5,
+          typename... Arguments>
+void parallel_map_five(
+    vecpar::config c, size_t size, Algorithm algorithm,
+    vecmem::data::vector_view<typename R::value_type> &result,
+    vecmem::data::vector_view<typename T1::value_type> &in_1,
+    vecmem::data::vector_view<typename T2::value_type> &in_2,
+    vecmem::data::vector_view<typename T3::value_type> &in_3,
+    vecmem::data::vector_view<typename T4::value_type> &in_4,
+    vecmem::data::vector_view<typename T5::value_type> &in_5,
+    Arguments... args) {
+
+  // make sure that an empty config doesn't end up to be used
+  if (c.isEmpty()) {
+    c = vecpar::cuda::getDefaultConfig(size);
+  }
+
+  DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
+                      c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+
+  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+      size,
+      [=] __device__(int idx, Arguments... a) mutable {
+        vecmem::device_vector<typename T1::value_type> dv_data_1(in_1);
+        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
+        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
+        vecmem::device_vector<typename T4::value_type> dv_data_4(in_4);
+        vecmem::device_vector<typename T5::value_type> dv_data_5(in_5);
+        vecmem::device_vector<typename R::value_type> dv_result(result);
+        //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
+        algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
+                      dv_data_3[idx], dv_data_4[idx], dv_data_5[idx], a...);
+        //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
+      },
+      args...);
+
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
+}
+
+template <typename Algorithm, typename TT, typename... Arguments>
+void parallel_mmap_one(
+    vecpar::config c, size_t size, Algorithm algorithm,
+    vecmem::data::vector_view<typename TT::value_type> &input_output,
+    Arguments... args) {
+
+  // make sure that an empty config doesn't end up to be used
+  if (c.isEmpty()) {
+    c = vecpar::cuda::getDefaultConfig(size);
+  }
+
+  DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
+                      c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+
+  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+      size,
+      [=] __device__(int idx, Arguments... a) mutable {
+        vecmem::device_vector<typename TT::value_type> dv_data(input_output);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_data[idx], a...);
         //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
@@ -72,22 +224,139 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
   CHECK_ERROR(cudaDeviceSynchronize())
 }
 
-template <typename Algorithm, typename R, typename T, typename... Arguments>
-void parallel_map(size_t size, Algorithm algorithm,
-                  vecmem::data::vector_view<R> &result,
-                  vecmem::data::vector_view<T> data, Arguments... args) {
+template <typename Algorithm, typename T1, typename T2, typename... Arguments>
+void parallel_mmap_two(
+    vecpar::config c, size_t size, Algorithm algorithm,
+    vecmem::data::vector_view<typename T1::value_type> &input_output,
+    vecmem::data::vector_view<typename T2::value_type> &in_2,
+    Arguments... args) {
 
-  parallel_map(vecpar::cuda::getDefaultConfig(size), size, algorithm, result,
-               data, args...);
+  // make sure that an empty config doesn't end up to be used
+  if (c.isEmpty()) {
+    c = vecpar::cuda::getDefaultConfig(size);
+  }
+
+  DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
+                      c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+
+  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+      size,
+      [=] __device__(int idx, Arguments... a) mutable {
+        vecmem::device_vector<typename T1::value_type> dv_data_1(input_output);
+        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
+        //      printf("[mapper] data[%d]=%f \n", idx, dv_data_1[idx]);
+        //    printf("[mapper] data_2[%d]=%f \n", idx, dv_data_2[idx]);
+        algorithm.map(dv_data_1[idx], dv_data_2[idx], a...);
+        //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
+      },
+      args...);
+
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
 }
 
-template <typename Algorithm, typename TT, typename... Arguments>
-void parallel_map(size_t size, Algorithm algorithm,
-                  vecmem::data::vector_view<TT> &input_output,
-                  Arguments... args) {
+template <typename Algorithm, typename T1, typename T2, typename T3,
+          typename... Arguments>
+void parallel_mmap_three(
+    vecpar::config c, size_t size, Algorithm algorithm,
+    vecmem::data::vector_view<typename T1::value_type> &input_output,
+    vecmem::data::vector_view<typename T2::value_type> &in_2,
+    vecmem::data::vector_view<typename T3::value_type> &in_3,
+    Arguments... args) {
 
-  parallel_map(vecpar::cuda::getDefaultConfig(size), size, algorithm,
-               input_output, args...);
+  // make sure that an empty config doesn't end up to be used
+  if (c.isEmpty()) {
+    c = vecpar::cuda::getDefaultConfig(size);
+  }
+
+  DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
+                      c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+
+  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+      size,
+      [=] __device__(int idx, Arguments... a) mutable {
+        vecmem::device_vector<typename T1::value_type> dv_data_1(input_output);
+        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
+        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
+
+        algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx], a...);
+      },
+      args...);
+
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
+}
+
+template <typename Algorithm, typename T1, typename T2, typename T3,
+          typename T4, typename... Arguments>
+void parallel_mmap_four(
+    vecpar::config c, size_t size, Algorithm algorithm,
+    vecmem::data::vector_view<typename T1::value_type> &input_output,
+    vecmem::data::vector_view<typename T2::value_type> &in_2,
+    vecmem::data::vector_view<typename T3::value_type> &in_3,
+    vecmem::data::vector_view<typename T4::value_type> &in_4,
+    Arguments... args) {
+
+  // make sure that an empty config doesn't end up to be used
+  if (c.isEmpty()) {
+    c = vecpar::cuda::getDefaultConfig(size);
+  }
+
+  DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
+                      c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+
+  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+      size,
+      [=] __device__(int idx, Arguments... a) mutable {
+        vecmem::device_vector<typename T1::value_type> dv_data_1(input_output);
+        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
+        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
+        vecmem::device_vector<typename T4::value_type> dv_data_4(in_4);
+
+        algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
+                      dv_data_4[idx], a...);
+      },
+      args...);
+
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
+}
+
+template <typename Algorithm, typename T1, typename T2, typename T3,
+          typename T4, typename T5, typename... Arguments>
+void parallel_mmap_five(
+    vecpar::config c, size_t size, Algorithm algorithm,
+    vecmem::data::vector_view<typename T1::value_type> &input_output,
+    vecmem::data::vector_view<typename T2::value_type> &in_2,
+    vecmem::data::vector_view<typename T3::value_type> &in_3,
+    vecmem::data::vector_view<typename T4::value_type> &in_4,
+    vecmem::data::vector_view<typename T5::value_type> &in_5,
+    Arguments... args) {
+
+  // make sure that an empty config doesn't end up to be used
+  if (c.isEmpty()) {
+    c = vecpar::cuda::getDefaultConfig(size);
+  }
+
+  DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
+                      c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+
+  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+      size,
+      [=] __device__(int idx, Arguments... a) mutable {
+        vecmem::device_vector<typename T1::value_type> dv_data_1(input_output);
+        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
+        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
+        vecmem::device_vector<typename T4::value_type> dv_data_4(in_4);
+        vecmem::device_vector<typename T5::value_type> dv_data_5(in_5);
+
+        algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
+                      dv_data_4[idx], dv_data_5[idx], a...);
+      },
+      args...);
+
+  CHECK_ERROR(cudaGetLastError())
+  CHECK_ERROR(cudaDeviceSynchronize())
 }
 
 /// based on

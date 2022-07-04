@@ -6,7 +6,7 @@
 #include "orchestrator/default_chain.hpp"
 
 #if defined(__CUDA__) && defined(__clang__)
-#include "orchestrator/gpu_chain.hpp"
+//#include "orchestrator/gpu_chain.hpp"
 #endif
 
 #endif // VECPAR_CHAIN_HPP

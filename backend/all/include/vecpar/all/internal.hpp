@@ -17,7 +17,7 @@ template <class Algorithm, class MemoryResource,
           typename R = typename Algorithm::intermediate_result_t, typename T,
           typename... Arguments>
 R &parallel_map(Algorithm &algorithm, MemoryResource &mr, vecpar::config config,
-                T &data, Arguments... args) {
+                T &data, Arguments &...args) {
 #if defined(__CUDA__) && defined(__clang__)
   return vecpar::cuda::parallel_map<Algorithm, R, T, Arguments...>(
       algorithm, mr, config, data, args...);
@@ -31,7 +31,7 @@ template <class Algorithm, class MemoryResource,
           typename R = typename Algorithm::intermediate_result_t, typename T,
           typename... Arguments>
 R &parallel_map(Algorithm &algorithm, MemoryResource &mr, T &data,
-                Arguments... args) {
+                Arguments &...args) {
 #if defined(__CUDA__) && defined(__clang__)
   return vecpar::cuda::parallel_map<Algorithm, R, T, Arguments...>(
       algorithm, mr, data, args...);
@@ -65,7 +65,8 @@ template <class Algorithm, class MemoryResource,
           typename Result = typename Algorithm::result_t, typename T,
           typename... Arguments>
 Result &parallel_map_reduce(Algorithm &algorithm, MemoryResource &mr,
-                            vecpar::config config, T &data, Arguments... args) {
+                            vecpar::config config, T &data,
+                            Arguments &...args) {
 #if defined(__CUDA__) && defined(__clang__)
   return vecpar::cuda::parallel_map_reduce<Algorithm, Result, R, T,
                                            Arguments...>(algorithm, mr, config,
@@ -82,7 +83,7 @@ template <class Algorithm, class MemoryResource,
           typename Result = typename Algorithm::result_t, typename T,
           typename... Arguments>
 Result &parallel_map_reduce(Algorithm &algorithm, MemoryResource &mr, T &data,
-                            Arguments... args) {
+                            Arguments &...args) {
 #if defined(__CUDA__) && defined(__clang__)
   return vecpar::cuda::parallel_map_reduce<Algorithm, Result, R, T,
                                            Arguments...>(algorithm, mr, data,
@@ -98,7 +99,7 @@ template <class Algorithm, class MemoryResource,
           class R = typename Algorithm::result_t, typename T,
           typename... Arguments>
 R &parallel_map_filter(Algorithm &algorithm, MemoryResource &mr,
-                       vecpar::config config, T &data, Arguments... args) {
+                       vecpar::config config, T &data, Arguments &...args) {
 #if defined(__CUDA__) && defined(__clang__)
   return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, config, data, args...);
@@ -112,7 +113,7 @@ template <class Algorithm, class MemoryResource,
           class R = typename Algorithm::result_t, typename T,
           typename... Arguments>
 R &parallel_map_filter(Algorithm &algorithm, MemoryResource &mr, T &data,
-                       Arguments... args) {
+                       Arguments &...args) {
 #if defined(__CUDA__) && defined(__clang__)
   return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, data, args...);

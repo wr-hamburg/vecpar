@@ -21,7 +21,7 @@ requires algorithm::is_map<Algorithm, R, T, Arguments...> ||
     algorithm::is_mmap<Algorithm, R, Arguments...>
         R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
                               vecpar::config config, T &data,
-                              Arguments... args) {
+                              Arguments &...args) {
 
   return vecpar::parallel_map(algorithm, mr, config, data, args...);
 }
@@ -32,7 +32,7 @@ template <class MemoryResource, class Algorithm,
 requires algorithm::is_map<Algorithm, R, T, Arguments...> ||
     algorithm::is_mmap<Algorithm, R, Arguments...>
         R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr, T &data,
-                              Arguments... args) {
+                              Arguments &...args) {
 
   return vecpar::parallel_map(algorithm, mr, data, args...);
 }
@@ -59,7 +59,7 @@ requires algorithm::is_map_filter<Algorithm, R, T, Arguments...> ||
     algorithm::is_mmap_filter<Algorithm, R, Arguments...>
         R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
                               vecpar::config config, T &data,
-                              Arguments... args) {
+                              Arguments &...args) {
 
   return vecpar::parallel_map_filter(algorithm, mr, config, data, args...);
 }
@@ -70,7 +70,7 @@ template <class MemoryResource, class Algorithm,
 requires algorithm::is_map_filter<Algorithm, R, T, Arguments...> ||
     algorithm::is_mmap_filter<Algorithm, R, Arguments...>
         R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr, T &data,
-                              Arguments... args) {
+                              Arguments &...args) {
 
   return vecpar::parallel_map_filter(algorithm, mr, data, args...);
 }
@@ -83,7 +83,7 @@ requires algorithm::is_map_reduce<Algorithm, Result, R, T, Arguments...> ||
     algorithm::is_mmap_reduce<Algorithm, Result, R, Arguments...>
         Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
                                    vecpar::config config, T &data,
-                                   Arguments... args) {
+                                   Arguments &...args) {
 
   return vecpar::parallel_map_reduce(algorithm, mr, config, data, args...);
 }
@@ -95,7 +95,7 @@ template <class MemoryResource, class Algorithm,
 requires algorithm::is_map_reduce<Algorithm, Result, R, T, Arguments...> ||
     algorithm::is_mmap_reduce<Algorithm, Result, R, Arguments...>
         Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                                   T &data, Arguments... args) {
+                                   T &data, Arguments &...args) {
 
   return vecpar::parallel_map_reduce(algorithm, mr, data, args...);
 }

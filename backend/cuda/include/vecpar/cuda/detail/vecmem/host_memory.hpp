@@ -11,12 +11,12 @@
 
 namespace vecpar::cuda {
 
-template <
-    typename Algorithm, typename R = typename Algorithm::intermediate_result_t,
-    typename T, typename... Arguments,
-    typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map(Algorithm algorithm, vecmem::host_memory_resource &mr,
-                vecpar::config config, T &data, Arguments... args) {
+template <typename Algorithm,
+          typename R = typename Algorithm::intermediate_result_t, typename T,
+          typename... Arguments>
+requires vecpar::detail::is_map<Algorithm, R, T, Arguments...> R &
+parallel_map(Algorithm algorithm, vecmem::host_memory_resource &mr,
+             vecpar::config config, T &data, Arguments... args) {
 
   // copy input data from host to device
   auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
@@ -30,50 +30,51 @@ R &parallel_map(Algorithm algorithm, vecmem::host_memory_resource &mr,
                         vecmem::copy::type::host_to_device);
   auto result_view = vecmem::get_data(result_buffer);
 
-  internal::parallel_map(config, data.size(), algorithm, result_view, data_view,
-                         args...);
+  internal::parallel_map_one<Algorithm, R, T, Arguments...>(
+      config, data.size(), algorithm, result_view, data_view, args...);
 
   internal::copy(result_buffer, *map_result,
                  vecmem::copy::type::device_to_host);
   return *map_result;
 }
 
-template <
-    typename Algorithm, typename R = typename Algorithm::intermediate_result_t,
-    typename T, typename... Arguments,
-    typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map(Algorithm algorithm, vecmem::host_memory_resource &mr, T &data,
-                Arguments... args) {
+template <typename Algorithm,
+          typename R = typename Algorithm::intermediate_result_t, typename T,
+          typename... Arguments>
+requires vecpar::detail::is_map<Algorithm, R, T, Arguments...> R &
+parallel_map(Algorithm algorithm, vecmem::host_memory_resource &mr, T &data,
+             Arguments... args) {
   return parallel_map(algorithm, mr, cuda::getDefaultConfig(data.size()), data,
                       args...);
 }
 
-template <
-    typename Algorithm, typename R = typename Algorithm::intermediate_result_t,
-    typename T, typename... Arguments,
-    typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map(Algorithm algorithm,
-                __attribute__((unused)) vecmem::host_memory_resource &mr,
-                vecpar::config config, T &data, Arguments... args) {
+template <typename Algorithm,
+          typename R = typename Algorithm::intermediate_result_t, typename T,
+          typename... Arguments>
+requires vecpar::detail::is_mmap<Algorithm, R, Arguments...> R &
+parallel_map(Algorithm algorithm,
+             __attribute__((unused)) vecmem::host_memory_resource &mr,
+             vecpar::config config, T &data, Arguments... args) {
 
   // copy input data from host to device
   auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
                                        vecmem::copy::type::host_to_device);
   auto data_view = vecmem::get_data(data_buffer);
 
-  internal::parallel_map(config, data.size(), algorithm, data_view, args...);
+  internal::parallel_mmap_one<Algorithm, R, Arguments...>(
+      config, data.size(), algorithm, data_view, args...);
 
   internal::copy(data_buffer, data, vecmem::copy::type::device_to_host);
   return data;
 }
 
-template <
-    typename Algorithm, typename R = typename Algorithm::intermediate_result_t,
-    typename T, typename... Arguments,
-    typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map(Algorithm algorithm,
-                __attribute__((unused)) vecmem::host_memory_resource &mr,
-                T &data, Arguments... args) {
+template <typename Algorithm,
+          typename R = typename Algorithm::intermediate_result_t, typename T,
+          typename... Arguments>
+requires vecpar::detail::is_mmap<Algorithm, R, Arguments...> R &
+parallel_map(Algorithm algorithm,
+             __attribute__((unused)) vecmem::host_memory_resource &mr, T &data,
+             Arguments... args) {
   return parallel_map(algorithm, mr, cuda::getDefaultConfig(data.size()), data,
                       args...);
 }
@@ -132,13 +133,13 @@ R &parallel_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
   return *result;
 }
 
-template <
-    class Algorithm, typename Result, typename R, typename T,
-    typename... Arguments,
-    typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-Result &parallel_map_reduce(Algorithm algorithm,
-                            vecmem::host_memory_resource &mr,
-                            vecpar::config config, T &data, Arguments... args) {
+template <class Algorithm, typename Result = typename Algorithm::result_t,
+          typename R = typename Algorithm::intermediate_result_t, typename T,
+          typename... Arguments>
+requires vecpar::algorithm::is_map_reduce<Algorithm, Result, R, T, Arguments...>
+    Result &
+    parallel_map_reduce(Algorithm algorithm, vecmem::host_memory_resource &mr,
+                        vecpar::config config, T &data, Arguments... args) {
   // copy input data from host to device
   auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
                                        vecmem::copy::type::host_to_device);
@@ -152,8 +153,8 @@ Result &parallel_map_reduce(Algorithm algorithm,
                         vecmem::copy::type::host_to_device);
   auto result_view = vecmem::get_data(result_buffer);
 
-  internal::parallel_map(config, data.size(), algorithm, result_view, data_view,
-                         args...);
+  internal::parallel_map_one<Algorithm, R, T, Arguments...>(
+      config, data.size(), algorithm, result_view, data_view, args...);
 
   Result *result = (Result *)malloc(sizeof(Result));
   Result *d_result;
@@ -170,25 +171,26 @@ Result &parallel_map_reduce(Algorithm algorithm,
   return *result;
 }
 
-template <
-    class Algorithm, typename Result, typename R, typename T,
-    typename... Arguments,
-    typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-Result &parallel_map_reduce(Algorithm algorithm,
-                            vecmem::host_memory_resource &mr, T &data,
-                            Arguments... args) {
+template <class Algorithm, typename Result = typename Algorithm::result_t,
+          typename R = typename Algorithm::intermediate_result_t, typename T,
+          typename... Arguments>
+requires vecpar::algorithm::is_map_reduce<Algorithm, Result, R, T, Arguments...>
+    Result &parallel_map_reduce(Algorithm algorithm,
+                                vecmem::host_memory_resource &mr, T &data,
+                                Arguments... args) {
   return parallel_map_reduce(algorithm, mr, cuda::getDefaultConfig(data.size()),
                              data, args...);
 }
 
-template <
-    class Algorithm, typename Result, typename R, typename T,
-    typename... Arguments,
-    typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
-Result &parallel_map_reduce(Algorithm algorithm,
-                            __attribute__((unused))
-                            vecmem::host_memory_resource &mr,
-                            vecpar::config config, T &data, Arguments... args) {
+template <class Algorithm, typename Result = typename Algorithm::result_t,
+          typename R = typename Algorithm::intermediate_result_t, typename T,
+          typename... Arguments>
+requires vecpar::algorithm::is_mmap_reduce<Algorithm, Result, R, Arguments...>
+    Result &parallel_map_reduce(Algorithm algorithm,
+                                __attribute__((unused))
+                                vecmem::host_memory_resource &mr,
+                                vecpar::config config, T &data,
+                                Arguments... args) {
   // copy input data from host to device
   auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
                                        vecmem::copy::type::host_to_device);
@@ -200,7 +202,8 @@ Result &parallel_map_reduce(Algorithm algorithm,
   //     vecmem::copy::type::host_to_device);
   //    auto result_view = vecmem::get_data(result_buffer);
 
-  internal::parallel_map(config, data.size(), algorithm, data_view, args...);
+  internal::parallel_mmap_one<Algorithm, R, Arguments...>(
+      config, data.size(), algorithm, data_view, args...);
 
   Result *result = (Result *)malloc(sizeof(Result));
   Result *d_result;
@@ -217,23 +220,22 @@ Result &parallel_map_reduce(Algorithm algorithm,
   return *result;
 }
 
-template <
-    class Algorithm, typename Result, typename R, typename T,
-    typename... Arguments,
-    typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
-Result &parallel_map_reduce(Algorithm algorithm,
-                            __attribute__((unused))
-                            vecmem::host_memory_resource &mr,
-                            T &data, Arguments... args) {
+template <class Algorithm, typename Result = typename Algorithm::result_t,
+          typename R = typename Algorithm::intermediate_result_t, typename T,
+          typename... Arguments>
+requires vecpar::algorithm::is_mmap_reduce<Algorithm, Result, R, Arguments...>
+    Result &parallel_map_reduce(Algorithm algorithm,
+                                __attribute__((unused))
+                                vecmem::host_memory_resource &mr,
+                                T &data, Arguments... args) {
   return parallel_map_reduce(algorithm, mr, cuda::getDefaultConfig(data.size()),
                              data, args...);
 }
 
-template <
-    class Algorithm, typename R, typename T, typename... Arguments,
-    typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
-                       vecpar::config config, T &data, Arguments... args) {
+template <class Algorithm, typename R, typename T, typename... Arguments>
+requires vecpar::algorithm::is_map_filter<Algorithm, R, T, Arguments...> R &
+parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
+                    vecpar::config config, T &data, Arguments... args) {
   size_t size = data.size();
   // copy input data from host to device
   auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
@@ -248,8 +250,8 @@ R &parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
                         vecmem::copy::type::host_to_device);
   auto map_result_view = vecmem::get_data(map_result_buffer);
 
-  internal::parallel_map(config, size, algorithm, map_result_view, data_view,
-                         args...);
+  internal::parallel_map_one<Algorithm, R, T, Arguments...>(
+      config, size, algorithm, map_result_view, data_view, args...);
 
   // allocate result on host and device
   R *result = new R(size, &mr);
@@ -273,20 +275,18 @@ R &parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
   return *result;
 }
 
-template <
-    class Algorithm, typename R, typename T, typename... Arguments,
-    typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
-                       T &data, Arguments... args) {
+template <class Algorithm, typename R, typename T, typename... Arguments>
+requires vecpar::algorithm::is_map_filter<Algorithm, R, Arguments...> R &
+parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
+                    T &data, Arguments... args) {
   return parallel_map_filter(algorithm, mr, cuda::getDefaultConfig(data.size()),
                              data, args...);
 }
 
-template <
-    class Algorithm, typename R, typename T, typename... Arguments,
-    typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
-                       vecpar::config config, T &data, Arguments... args) {
+template <class Algorithm, typename R, typename T, typename... Arguments>
+requires vecpar::algorithm::is_mmap_filter<Algorithm, R, Arguments...> R &
+parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
+                    vecpar::config config, T &data, Arguments... args) {
   size_t size = data.size();
   // copy input data from host to device
   auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
@@ -299,7 +299,8 @@ R &parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
   //  vecmem::copy::type::host_to_device); auto map_result_view =
   //  vecmem::get_data(map_result_buffer);
 
-  internal::parallel_map(config, size, algorithm, data_view, args...);
+  internal::parallel_mmap_one<Algorithm, R, Arguments...>(
+      config, size, algorithm, data_view, args...);
 
   // allocate result on host and device
   R *result = new R(size, &mr);
@@ -322,11 +323,10 @@ R &parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
   return *result;
 }
 
-template <
-    class Algorithm, typename R, typename T, typename... Arguments,
-    typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
-R &parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
-                       T &data, Arguments... args) {
+template <class Algorithm, typename R, typename T, typename... Arguments>
+requires vecpar::algorithm::is_mmap_filter<Algorithm, R, Arguments...> R &
+parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
+                    T &data, Arguments... args) {
 
   return parallel_map_filter(algorithm, mr, cuda::getDefaultConfig(data.size()),
                              data, args...);

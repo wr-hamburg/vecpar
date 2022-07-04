@@ -11,31 +11,31 @@ struct parallelizable_map_filter {};
 
 template <Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_filter<One, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_1<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_one<R, T, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_filter<Two, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_2<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_two<R, T, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_filter<Three, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_3<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_three<R, T, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_filter<Four, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_4<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_four<R, T, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, Iterable T, typename... Arguments>
 struct parallelizable_map_filter<Five, R, T, Arguments...>
-    : public vecpar::detail::parallel_map_5<R, T, Arguments...>,
+    : public vecpar::detail::parallel_map_five<R, T, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
@@ -45,32 +45,32 @@ struct parallelizable_mmap_filter {};
 
 template <Iterable R, typename... Arguments>
 struct parallelizable_mmap_filter<One, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_1<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 
 template <Iterable R, typename... Arguments>
 struct parallelizable_mmap_filter<Two, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_1<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, typename... Arguments>
 struct parallelizable_mmap_filter<Three, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_1<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, typename... Arguments>
 struct parallelizable_mmap_filter<Four, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_1<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, typename... Arguments>
 struct parallelizable_mmap_filter<Five, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_1<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };

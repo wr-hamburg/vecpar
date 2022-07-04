@@ -9,7 +9,8 @@ using namespace vecpar::collection;
 namespace vecpar::detail {
 
 /// 1 iterable collection
-template <Iterable R, Iterable T, typename... Arguments> struct parallel_map_1 {
+template <Iterable R, Iterable T, typename... Arguments>
+struct parallel_map_one {
   TARGET virtual typename R::value_type &
   map(typename R::value_type &out_item, const typename T::value_type &in_item,
       Arguments... obj) = 0;
@@ -21,7 +22,7 @@ template <Iterable R, Iterable T, typename... Arguments> struct parallel_map_1 {
 };
 
 /// 1 iterable and mutable collection
-template <Iterable T, typename... Arguments> struct parallel_mmap_1 {
+template <Iterable T, typename... Arguments> struct parallel_mmap_one {
   TARGET virtual typename T::value_type &
   map(typename T::value_type &in_out_item, Arguments... obj) = 0;
   using input_t = T;
@@ -33,7 +34,7 @@ template <Iterable T, typename... Arguments> struct parallel_mmap_1 {
 
 /// 2 iterable collections
 template <Iterable R, Iterable T1, Iterable T2, typename... Arguments>
-struct parallel_map_2 {
+struct parallel_map_two {
   TARGET virtual typename R::value_type &
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
@@ -44,7 +45,7 @@ struct parallel_map_2 {
 
 /// 2 iterable collections; result in first collection
 template <Iterable T1, Iterable T2, typename... Arguments>
-struct parallel_mmap_2 {
+struct parallel_mmap_two {
   TARGET virtual typename T1::value_type &
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item, Arguments... obj) = 0;
@@ -55,7 +56,7 @@ struct parallel_mmap_2 {
 /// 3 iterable collections
 template <typename R, typename T1, typename T2, typename T3,
           typename... Arguments>
-struct parallel_map_3 {
+struct parallel_map_three {
   TARGET virtual typename R::value_type &
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
@@ -67,7 +68,7 @@ struct parallel_map_3 {
 
 /// 3 iterable collections; result in first collection
 template <typename T1, typename T2, typename T3, typename... Arguments>
-struct parallel_mmap_3 {
+struct parallel_mmap_three {
   TARGET virtual typename T1::value_type &
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item,
@@ -79,7 +80,7 @@ struct parallel_mmap_3 {
 /// 4 iterable collections
 template <typename R, typename T1, typename T2, typename T3, typename T4,
           typename... Arguments>
-struct parallel_map_4 {
+struct parallel_map_four {
   TARGET virtual typename R::value_type &
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
@@ -93,7 +94,7 @@ struct parallel_map_4 {
 /// 4 iterable collections; result in first collection
 template <typename T1, typename T2, typename T3, typename T4,
           typename... Arguments>
-struct parallel_mmap_4 {
+struct parallel_mmap_four {
   TARGET virtual typename T1::value_type &
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item,
@@ -106,7 +107,7 @@ struct parallel_mmap_4 {
 /// 5 iterable collections
 template <typename R, typename T1, typename T2, typename T3, typename T4,
           typename T5, typename... Arguments>
-struct parallel_map_5 {
+struct parallel_map_five {
   TARGET virtual typename R::value_type &
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
@@ -121,7 +122,7 @@ struct parallel_map_5 {
 /// 5 iterable collections; result in first collection
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
           typename... Arguments>
-struct parallel_mmap_5 {
+struct parallel_mmap_five {
   TARGET virtual typename T1::value_type &
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item,
@@ -133,24 +134,56 @@ struct parallel_mmap_5 {
 };
 
 /// concepts
-template <typename Algorithm, typename... All>
-concept is_map =
-    std::is_base_of<vecpar::detail::parallel_map_1<All...>, Algorithm>::value ||
-    std::is_base_of<vecpar::detail::parallel_map_2<All...>, Algorithm>::value ||
-    std::is_base_of<vecpar::detail::parallel_map_3<All...>, Algorithm>::value ||
-    std::is_base_of<vecpar::detail::parallel_map_4<All...>, Algorithm>::value ||
-    std::is_base_of<vecpar::detail::parallel_map_5<All...>, Algorithm>::value;
 
 template <typename Algorithm, typename... All>
-concept is_mmap = std::is_base_of<vecpar::detail::parallel_mmap_1<All...>,
-                                  Algorithm>::value ||
-    std::is_base_of<vecpar::detail::parallel_mmap_2<All...>,
-                    Algorithm>::value ||
-    std::is_base_of<vecpar::detail::parallel_mmap_3<All...>,
-                    Algorithm>::value ||
-    std::is_base_of<vecpar::detail::parallel_mmap_4<All...>,
-                    Algorithm>::value ||
-    std::is_base_of<vecpar::detail::parallel_mmap_5<All...>, Algorithm>::value;
+concept is_map_1 =
+    std::is_base_of<vecpar::detail::parallel_map_one<All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_2 =
+    std::is_base_of<vecpar::detail::parallel_map_two<All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_3 = std::is_base_of<vecpar::detail::parallel_map_three<All...>,
+                                   Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_4 = std::is_base_of<vecpar::detail::parallel_map_four<All...>,
+                                   Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_5 = std::is_base_of<vecpar::detail::parallel_map_five<All...>,
+                                   Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map = is_map_1<Algorithm, All...> || is_map_2<Algorithm, All...> ||
+    is_map_3<Algorithm, All...> || is_map_4<Algorithm, All...> ||
+    is_map_5<Algorithm, All...>;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_1 = std::is_base_of<vecpar::detail::parallel_mmap_one<All...>,
+                                    Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_2 = std::is_base_of<vecpar::detail::parallel_mmap_two<All...>,
+                                    Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_3 = std::is_base_of<vecpar::detail::parallel_mmap_three<All...>,
+                                    Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_4 = std::is_base_of<vecpar::detail::parallel_mmap_four<All...>,
+                                    Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_5 = std::is_base_of<vecpar::detail::parallel_mmap_five<All...>,
+                                    Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap = is_mmap_1<Algorithm, All...> ||
+    is_mmap_2<Algorithm, All...> || is_mmap_3<Algorithm, All...> ||
+    is_mmap_4<Algorithm, All...> || is_mmap_5<Algorithm, All...>;
 
 } // namespace vecpar::detail
 #endif // VECPAR_MAP_HPP
