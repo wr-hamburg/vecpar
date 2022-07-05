@@ -20,10 +20,11 @@ static vecmem::cuda::copy copy;
 
 template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename T, typename... Arguments>
-void parallel_map_one(vecpar::config c, size_t size, Algorithm algorithm,
-                      vecmem::data::vector_view<typename R::value_type> &result,
-                      vecmem::data::vector_view<typename T::value_type> &data,
-                      Arguments... args) {
+requires vecpar::detail::is_map_1<Algorithm, R, T, Arguments...>
+void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
+                  vecmem::data::vector_view<typename R::value_type> &result,
+                  vecmem::data::vector_view<typename T::value_type> &data,
+                  Arguments... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -50,11 +51,12 @@ void parallel_map_one(vecpar::config c, size_t size, Algorithm algorithm,
 
 template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename T1, typename T2, typename... Arguments>
-void parallel_map_two(vecpar::config c, size_t size, Algorithm algorithm,
-                      vecmem::data::vector_view<typename R::value_type> &result,
-                      vecmem::data::vector_view<typename T1::value_type> &in_1,
-                      vecmem::data::vector_view<typename T2::value_type> &in_2,
-                      Arguments... args) {
+requires vecpar::detail::is_map_2<Algorithm, R, T1, T2, Arguments...>
+void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
+                  vecmem::data::vector_view<typename R::value_type> &result,
+                  vecmem::data::vector_view<typename T1::value_type> &in_1,
+                  vecmem::data::vector_view<typename T2::value_type> &in_2,
+                  Arguments... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -82,13 +84,13 @@ void parallel_map_two(vecpar::config c, size_t size, Algorithm algorithm,
 
 template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename T1, typename T2, typename T3, typename... Arguments>
-void parallel_map_three(
-    vecpar::config c, size_t size, Algorithm algorithm,
-    vecmem::data::vector_view<typename R::value_type> &result,
-    vecmem::data::vector_view<typename T1::value_type> &in_1,
-    vecmem::data::vector_view<typename T2::value_type> &in_2,
-    vecmem::data::vector_view<typename T3::value_type> &in_3,
-    Arguments... args) {
+requires vecpar::detail::is_map_3<Algorithm, R, T1, T2, T3, Arguments...>
+void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
+                  vecmem::data::vector_view<typename R::value_type> &result,
+                  vecmem::data::vector_view<typename T1::value_type> &in_1,
+                  vecmem::data::vector_view<typename T2::value_type> &in_2,
+                  vecmem::data::vector_view<typename T3::value_type> &in_3,
+                  Arguments... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -119,14 +121,14 @@ void parallel_map_three(
 template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename T1, typename T2, typename T3, typename T4,
           typename... Arguments>
-void parallel_map_four(
-    vecpar::config c, size_t size, Algorithm algorithm,
-    vecmem::data::vector_view<typename R::value_type> &result,
-    vecmem::data::vector_view<typename T1::value_type> &in_1,
-    vecmem::data::vector_view<typename T2::value_type> &in_2,
-    vecmem::data::vector_view<typename T3::value_type> &in_3,
-    vecmem::data::vector_view<typename T4::value_type> &in_4,
-    Arguments... args) {
+requires vecpar::detail::is_map_4<Algorithm, R, T1, T2, T3, T4, Arguments...>
+void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
+                  vecmem::data::vector_view<typename R::value_type> &result,
+                  vecmem::data::vector_view<typename T1::value_type> &in_1,
+                  vecmem::data::vector_view<typename T2::value_type> &in_2,
+                  vecmem::data::vector_view<typename T3::value_type> &in_3,
+                  vecmem::data::vector_view<typename T4::value_type> &in_4,
+                  Arguments... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -158,15 +160,16 @@ void parallel_map_four(
 template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename T1, typename T2, typename T3, typename T4, typename T5,
           typename... Arguments>
-void parallel_map_five(
-    vecpar::config c, size_t size, Algorithm algorithm,
-    vecmem::data::vector_view<typename R::value_type> &result,
-    vecmem::data::vector_view<typename T1::value_type> &in_1,
-    vecmem::data::vector_view<typename T2::value_type> &in_2,
-    vecmem::data::vector_view<typename T3::value_type> &in_3,
-    vecmem::data::vector_view<typename T4::value_type> &in_4,
-    vecmem::data::vector_view<typename T5::value_type> &in_5,
-    Arguments... args) {
+requires vecpar::detail::is_map_5<Algorithm, R, T1, T2, T3, T4, T5,
+                                  Arguments...>
+void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
+                  vecmem::data::vector_view<typename R::value_type> &result,
+                  vecmem::data::vector_view<typename T1::value_type> &in_1,
+                  vecmem::data::vector_view<typename T2::value_type> &in_2,
+                  vecmem::data::vector_view<typename T3::value_type> &in_3,
+                  vecmem::data::vector_view<typename T4::value_type> &in_4,
+                  vecmem::data::vector_view<typename T5::value_type> &in_5,
+                  Arguments... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -197,7 +200,8 @@ void parallel_map_five(
 }
 
 template <typename Algorithm, typename TT, typename... Arguments>
-void parallel_mmap_one(
+requires vecpar::detail::is_mmap_1<Algorithm, TT, Arguments...>
+void parallel_mmap(
     vecpar::config c, size_t size, Algorithm algorithm,
     vecmem::data::vector_view<typename TT::value_type> &input_output,
     Arguments... args) {
@@ -225,7 +229,8 @@ void parallel_mmap_one(
 }
 
 template <typename Algorithm, typename T1, typename T2, typename... Arguments>
-void parallel_mmap_two(
+requires vecpar::detail::is_mmap_2<Algorithm, T1, T2, Arguments...>
+void parallel_mmap(
     vecpar::config c, size_t size, Algorithm algorithm,
     vecmem::data::vector_view<typename T1::value_type> &input_output,
     vecmem::data::vector_view<typename T2::value_type> &in_2,
@@ -257,7 +262,8 @@ void parallel_mmap_two(
 
 template <typename Algorithm, typename T1, typename T2, typename T3,
           typename... Arguments>
-void parallel_mmap_three(
+requires vecpar::detail::is_mmap_3<Algorithm, T1, T2, T3, Arguments...>
+void parallel_mmap(
     vecpar::config c, size_t size, Algorithm algorithm,
     vecmem::data::vector_view<typename T1::value_type> &input_output,
     vecmem::data::vector_view<typename T2::value_type> &in_2,
@@ -289,7 +295,8 @@ void parallel_mmap_three(
 
 template <typename Algorithm, typename T1, typename T2, typename T3,
           typename T4, typename... Arguments>
-void parallel_mmap_four(
+requires vecpar::detail::is_mmap_4<Algorithm, T1, T2, T3, T4, Arguments...>
+void parallel_mmap(
     vecpar::config c, size_t size, Algorithm algorithm,
     vecmem::data::vector_view<typename T1::value_type> &input_output,
     vecmem::data::vector_view<typename T2::value_type> &in_2,
@@ -324,7 +331,8 @@ void parallel_mmap_four(
 
 template <typename Algorithm, typename T1, typename T2, typename T3,
           typename T4, typename T5, typename... Arguments>
-void parallel_mmap_five(
+requires vecpar::detail::is_mmap_5<Algorithm, T1, T2, T3, T4, T5, Arguments...>
+void parallel_mmap(
     vecpar::config c, size_t size, Algorithm algorithm,
     vecmem::data::vector_view<typename T1::value_type> &input_output,
     vecmem::data::vector_view<typename T2::value_type> &in_2,

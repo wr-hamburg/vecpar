@@ -30,7 +30,7 @@ parallel_map(Algorithm algorithm, vecmem::host_memory_resource &mr,
                         vecmem::copy::type::host_to_device);
   auto result_view = vecmem::get_data(result_buffer);
 
-  internal::parallel_map_one<Algorithm, R, T, Arguments...>(
+  internal::parallel_map<Algorithm, R, T, Arguments...>(
       config, data.size(), algorithm, result_view, data_view, args...);
 
   internal::copy(result_buffer, *map_result,
@@ -61,7 +61,7 @@ parallel_map(Algorithm algorithm,
                                        vecmem::copy::type::host_to_device);
   auto data_view = vecmem::get_data(data_buffer);
 
-  internal::parallel_mmap_one<Algorithm, R, Arguments...>(
+  internal::parallel_mmap<Algorithm, R, Arguments...>(
       config, data.size(), algorithm, data_view, args...);
 
   internal::copy(data_buffer, data, vecmem::copy::type::device_to_host);
@@ -153,7 +153,7 @@ requires vecpar::algorithm::is_map_reduce<Algorithm, Result, R, T, Arguments...>
                         vecmem::copy::type::host_to_device);
   auto result_view = vecmem::get_data(result_buffer);
 
-  internal::parallel_map_one<Algorithm, R, T, Arguments...>(
+  internal::parallel_map<Algorithm, R, T, Arguments...>(
       config, data.size(), algorithm, result_view, data_view, args...);
 
   Result *result = (Result *)malloc(sizeof(Result));
@@ -202,7 +202,7 @@ requires vecpar::algorithm::is_mmap_reduce<Algorithm, Result, R, Arguments...>
   //     vecmem::copy::type::host_to_device);
   //    auto result_view = vecmem::get_data(result_buffer);
 
-  internal::parallel_mmap_one<Algorithm, R, Arguments...>(
+  internal::parallel_mmap<Algorithm, R, Arguments...>(
       config, data.size(), algorithm, data_view, args...);
 
   Result *result = (Result *)malloc(sizeof(Result));
@@ -250,7 +250,7 @@ parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
                         vecmem::copy::type::host_to_device);
   auto map_result_view = vecmem::get_data(map_result_buffer);
 
-  internal::parallel_map_one<Algorithm, R, T, Arguments...>(
+  internal::parallel_map<Algorithm, R, T, Arguments...>(
       config, size, algorithm, map_result_view, data_view, args...);
 
   // allocate result on host and device
@@ -299,8 +299,8 @@ parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
   //  vecmem::copy::type::host_to_device); auto map_result_view =
   //  vecmem::get_data(map_result_buffer);
 
-  internal::parallel_mmap_one<Algorithm, R, Arguments...>(
-      config, size, algorithm, data_view, args...);
+  internal::parallel_mmap<Algorithm, R, Arguments...>(config, size, algorithm,
+                                                      data_view, args...);
 
   // allocate result on host and device
   R *result = new R(size, &mr);
