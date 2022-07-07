@@ -52,25 +52,25 @@ struct parallelizable_mmap_filter<One, R, Arguments...>
 
 template <Iterable R, typename... Arguments>
 struct parallelizable_mmap_filter<Two, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_two<R, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, typename... Arguments>
 struct parallelizable_mmap_filter<Three, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_three<R, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, typename... Arguments>
 struct parallelizable_mmap_filter<Four, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_four<R, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };
 template <Iterable R, typename... Arguments>
 struct parallelizable_mmap_filter<Five, R, Arguments...>
-    : public vecpar::detail::parallel_mmap_one<R, Arguments...>,
+    : public vecpar::detail::parallel_mmap_five<R, Arguments...>,
       public vecpar::detail::parallel_filter<R> {
   using result_t = R;
 };

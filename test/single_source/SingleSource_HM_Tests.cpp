@@ -1,4 +1,6 @@
+#include "benchmark/performance_host_device_memory.cpp"
 #include "scenarios/host_device_memory.cpp"
+
 #include <gtest/gtest.h>
 
 int main(int argc, char **argv) {

@@ -5,7 +5,7 @@
 
 namespace vecpar::algorithm {
 
-template <Iterable T>
+template <vecpar::collection::Iterable T>
 struct parallelizable_filter : public vecpar::detail::parallel_filter<T> {};
 
 /// concepts

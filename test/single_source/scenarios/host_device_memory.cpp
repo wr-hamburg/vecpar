@@ -3,7 +3,6 @@
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 
-#include "../../common/infrastructure/TimeLogger.hpp"
 #include "../../common/infrastructure/TimeTest.hpp"
 #include "../../common/infrastructure/sizes.hpp"
 
@@ -15,6 +14,7 @@
 #include "../../common/algorithm/test_algorithm_6.hpp"
 #include "../../common/algorithm/test_algorithm_7.hpp"
 
+#include "../../common/infrastructure/cleanup.hpp"
 #include "vecpar/all/chain.hpp"
 #include "vecpar/all/main.hpp"
 
@@ -36,9 +36,9 @@ public:
     printf("*******************************\n");
   }
 
-  virtual ~SingleSourceHostDeviceMemoryTest() {
-    free(vec);
-    free(vec_d);
+  ~SingleSourceHostDeviceMemoryTest() {
+    cleanup::free(*vec);
+    cleanup::free(*vec_d);
   }
 
 protected:
@@ -202,40 +202,6 @@ TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Chained_one) {
   }
 }
 
-TEST_P(SingleSourceHostDeviceMemoryTest, Chain_perf) {
-  test_algorithm_3 first_alg(mr);
-  test_algorithm_4 second_alg;
-
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
-  std::chrono::time_point<std::chrono::steady_clock> end_time;
-
-  start_time = std::chrono::steady_clock::now();
-  vecpar::parallel_algorithm(second_alg, mr,
-                             vecpar::parallel_algorithm(first_alg, mr, *vec));
-  end_time = std::chrono::steady_clock::now();
-
-  std::chrono::duration<double> diff1 = end_time - start_time;
-  printf("Default = %f s\n", diff1.count());
-
-  start_time = std::chrono::steady_clock::now();
-  vecpar::chain<vecmem::host_memory_resource, double, vecmem::vector<int>>
-      chain(mr);
-
-  chain //.with_config(c)
-      .with_algorithms(first_alg, second_alg)
-      .execute(*vec);
-  end_time = std::chrono::steady_clock::now();
-
-  std::chrono::duration<double> diff2 = end_time - start_time;
-  printf("Chain  = %f s\n", diff2.count());
-
-#if defined(__CUDA__) && defined(__clang__)
-  write_to_csv("gpu_hd.csv", GetParam(), diff1.count(), diff2.count());
-#else
-  write_to_csv("cpu_hd.csv", GetParam(), diff1.count(), diff2.count());
-#endif
-}
-
 // destructive test (will change vec_d)
 TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_MMap_Correctness) {
   test_algorithm_5 alg;
@@ -271,21 +237,16 @@ TEST_P(SingleSourceHostDeviceMemoryTest, Saxpy) {
     y[i] = 1.0;
   }
   float a = 5.0;
-  vecpar::config c = {1, static_cast<int>(vec->size())};
 
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
-  std::chrono::time_point<std::chrono::steady_clock> end_time;
-
-  start_time = std::chrono::steady_clock::now();
-  vecmem::vector<float> result =
-      vecpar::parallel_algorithm(alg, mr, c, y, x, a);
-  end_time = std::chrono::steady_clock::now();
+  vecmem::vector<float> result = vecpar::parallel_algorithm(alg, mr, y, x, a);
 
   for (size_t i = 0; i < result.size(); i++) {
     EXPECT_EQ(result.at(i), x[i] * a + 1.0);
   }
-  std::chrono::duration<double> diff = end_time - start_time;
-  printf("SAXPY mmap time  = %f s\n", diff.count());
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(result);
 }
 
 TEST_P(SingleSourceHostDeviceMemoryTest, Saxpymzr) {
@@ -306,18 +267,13 @@ TEST_P(SingleSourceHostDeviceMemoryTest, Saxpymzr) {
     expected_result += x[i] * a + y[i] * z[i];
   }
 
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
-  std::chrono::time_point<std::chrono::steady_clock> end_time;
-  vecpar::config c = {1, static_cast<int>(vec->size())};
-
-  start_time = std::chrono::steady_clock::now();
-  double result = vecpar::parallel_algorithm(alg, mr, c, x, y, z, a);
-  end_time = std::chrono::steady_clock::now();
+  double result = vecpar::parallel_algorithm(alg, mr, x, y, z, a);
 
   EXPECT_EQ(result, expected_result);
 
-  std::chrono::duration<double> diff = end_time - start_time;
-  printf("SAXPYMZR map time  = %f s\n", diff.count());
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
 }
 
 INSTANTIATE_TEST_SUITE_P(HostDeviceMemory, SingleSourceHostDeviceMemoryTest,

@@ -4,8 +4,8 @@
 #include "vecpar/core/algorithms/parallelizable_map_reduce.hpp"
 #include "vecpar/core/definitions/config.hpp"
 
-#include "../../common/algorithm/algorithm.hpp"
-#include "../../common/data_types.hpp"
+#include "../../../common/algorithm/algorithm.hpp"
+#include "../../../common/data_types.hpp"
 
 class test_algorithm_2_omp
     : public traccc::algorithm<double(vecmem::vector<int>, X)> {
