@@ -28,6 +28,11 @@ template <class T> struct value_type<T, std::void_t<typename T::value_type>> {
 
 template <class T> using value_type_t = typename value_type<T>::type;
 
+template <typename> struct is_iterable : std::false_type {};
+
+template <typename T, typename A>
+struct is_iterable<std::vector<T, A>> : std::true_type {};
+
 /// retrieve the view from a vector/jagged_vector or object unmodified otherwise
 template <typename... T>
 std::tuple<std::conditional_t<(std::is_object<T>::value && Iterable<T>),

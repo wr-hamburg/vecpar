@@ -101,27 +101,56 @@ struct parallelizable_mmap_reduce<Five, Result, R, Arguments...>
 
 /// concepts
 template <typename Algorithm, typename... All>
-concept is_map_reduce =
-    // map reduce
-    std::is_base_of<parallelizable_map_reduce<One, All...>, Algorithm>::value ||
-    std::is_base_of<parallelizable_map_reduce<Two, All...>, Algorithm>::value ||
-    std::is_base_of<parallelizable_map_reduce<Three, All...>,
-                    Algorithm>::value ||
-    std::is_base_of<parallelizable_map_reduce<Four, All...>,
-                    Algorithm>::value ||
+concept is_map_reduce_1 =
+    std::is_base_of<parallelizable_map_reduce<One, All...>, Algorithm>::value;
+template <typename Algorithm, typename... All>
+
+concept is_map_reduce_2 =
+    std::is_base_of<parallelizable_map_reduce<Two, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_reduce_3 =
+    std::is_base_of<parallelizable_map_reduce<Three, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_reduce_4 =
+    std::is_base_of<parallelizable_map_reduce<Four, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_reduce_5 =
     std::is_base_of<parallelizable_map_reduce<Five, All...>, Algorithm>::value;
 
 template <typename Algorithm, typename... All>
-concept is_mmap_reduce =
-    // mmap-reduce
-    std::is_base_of<parallelizable_mmap_reduce<One, All...>,
-                    Algorithm>::value ||
-    std::is_base_of<parallelizable_mmap_reduce<Two, All...>,
-                    Algorithm>::value ||
+concept is_map_reduce = is_map_reduce_1<Algorithm, All...> ||
+    is_map_reduce_2<Algorithm, All...> || is_map_reduce_3<Algorithm, All...> ||
+    is_map_reduce_4<Algorithm, All...> || is_map_reduce_5<Algorithm, All...>;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_reduce_1 =
+    std::is_base_of<parallelizable_mmap_reduce<One, All...>, Algorithm>::value;
+template <typename Algorithm, typename... All>
+
+concept is_mmap_reduce_2 =
+    std::is_base_of<parallelizable_mmap_reduce<Two, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_reduce_3 =
     std::is_base_of<parallelizable_mmap_reduce<Three, All...>,
-                    Algorithm>::value ||
-    std::is_base_of<parallelizable_mmap_reduce<Four, All...>,
-                    Algorithm>::value ||
+                    Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_reduce_4 =
+    std::is_base_of<parallelizable_mmap_reduce<Four, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_reduce_5 =
     std::is_base_of<parallelizable_mmap_reduce<Five, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_reduce = is_mmap_reduce_1<Algorithm, All...> ||
+    is_mmap_reduce_2<Algorithm, All...> ||
+    is_mmap_reduce_3<Algorithm, All...> ||
+    is_mmap_reduce_4<Algorithm, All...> || is_mmap_reduce_5<Algorithm, All...>;
+
 } // namespace vecpar::algorithm
 #endif // VECPAR_MAP_REDUCE_HPP

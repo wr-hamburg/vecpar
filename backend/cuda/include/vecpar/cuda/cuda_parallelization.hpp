@@ -70,7 +70,7 @@ requires vecpar::algorithm::is_map_filter<Algorithm, R, T, Arguments...> ||
     vecpar::algorithm::is_mmap_filter<Algorithm, T, Arguments...>
         R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
                               vecpar::config config, T &data,
-                              Arguments... args) {
+                              Arguments &...args) {
 
   return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, config, data, args...);
@@ -82,7 +82,7 @@ template <class MemoryResource, class Algorithm,
 requires vecpar::algorithm::is_map_filter<Algorithm, R, T, Arguments...> ||
     vecpar::algorithm::is_mmap_filter<Algorithm, T, Arguments...>
         R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr, T &data,
-                              Arguments... args) {
+                              Arguments &...args) {
 
   return vecpar::cuda::parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, cuda::getDefaultConfig(data.size()), data, args...);
@@ -97,7 +97,7 @@ requires vecpar::algorithm::is_map_reduce<Algorithm, Result, R, T,
     vecpar::algorithm::is_mmap_reduce<Algorithm, Result, T, Arguments...>
         Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
                                    vecpar::config config, T &data,
-                                   Arguments... args) {
+                                   Arguments &...args) {
 
   return vecpar::cuda::parallel_map_reduce<Algorithm, Result, R, T,
                                            Arguments...>(algorithm, mr, config,
@@ -112,7 +112,7 @@ requires vecpar::algorithm::is_map_reduce<Algorithm, Result, R, T,
                                           Arguments...> ||
     vecpar::algorithm::is_mmap_reduce<Algorithm, Result, T, Arguments...>
         Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                                   T &data, Arguments... args) {
+                                   T &data, Arguments &...args) {
 
   return vecpar::cuda::parallel_map_reduce<Algorithm, Result, R, T,
                                            Arguments...>(

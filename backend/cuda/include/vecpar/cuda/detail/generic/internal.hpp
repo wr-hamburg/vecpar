@@ -17,12 +17,13 @@ template <typename T> struct cuda_data {
 
 namespace vecpar::cuda_raw {
 
-template <
-    typename Algorithm, typename R, typename T, typename... Arguments,
-    typename std::enable_if<std::is_same<T, R>::value, void>::type * = nullptr>
-cuda_data<typename T::value_type>
-parallel_map(Algorithm algorithm, vecpar::config config,
-             cuda_data<typename T::value_type> input, Arguments... args) {
+template <typename Algorithm,
+          typename R = typename Algorithm::intermediate_result_t,
+          class T = typename Algorithm::input_t, typename... Arguments>
+requires detail::is_mmap<Algorithm, T, Arguments...>
+    cuda_data<typename T::value_type>
+    parallel_map(Algorithm algorithm, vecpar::config config,
+                 cuda_data<typename T::value_type> input, Arguments... args) {
 
   if (config.isEmpty()) {
     config = vecpar::cuda::getDefaultConfig(input.size);
@@ -46,12 +47,13 @@ parallel_map(Algorithm algorithm, vecpar::config config,
   return input;
 }
 
-template <
-    typename Algorithm, typename R, typename T, typename... Arguments,
-    typename std::enable_if<!std::is_same<T, R>::value, void>::type * = nullptr>
-cuda_data<typename R::value_type>
-parallel_map(Algorithm algorithm, vecpar::config config,
-             cuda_data<typename T::value_type> input, Arguments... args) {
+template <typename Algorithm,
+          typename R = typename Algorithm::intermediate_result_t,
+          class T = typename Algorithm::input_t, typename... Arguments>
+requires detail::is_map<Algorithm, R, T, Arguments...>
+    cuda_data<typename R::value_type>
+    parallel_map(Algorithm algorithm, vecpar::config config,
+                 cuda_data<typename T::value_type> input, Arguments... args) {
 
   if (config.isEmpty()) {
     config = vecpar::cuda::getDefaultConfig(input.size);

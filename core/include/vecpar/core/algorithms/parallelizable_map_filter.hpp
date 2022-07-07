@@ -76,28 +76,57 @@ struct parallelizable_mmap_filter<Five, R, Arguments...>
 };
 
 /// concepts
+
 template <typename Algorithm, typename... All>
-concept is_map_filter =
-    // map filter
-    std::is_base_of<parallelizable_map_filter<One, All...>, Algorithm>::value ||
-    std::is_base_of<parallelizable_map_filter<Two, All...>, Algorithm>::value ||
-    std::is_base_of<parallelizable_map_filter<Three, All...>,
-                    Algorithm>::value ||
-    std::is_base_of<parallelizable_map_filter<Four, All...>,
-                    Algorithm>::value ||
+concept is_map_filter_1 =
+    std::is_base_of<parallelizable_map_filter<One, All...>, Algorithm>::value;
+template <typename Algorithm, typename... All>
+
+concept is_map_filter_2 =
+    std::is_base_of<parallelizable_map_filter<Two, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_filter_3 =
+    std::is_base_of<parallelizable_map_filter<Three, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_filter_4 =
+    std::is_base_of<parallelizable_map_filter<Four, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_map_filter_5 =
     std::is_base_of<parallelizable_map_filter<Five, All...>, Algorithm>::value;
 
 template <typename Algorithm, typename... All>
-concept is_mmap_filter =
-    std::is_base_of<parallelizable_mmap_filter<One, All...>,
-                    Algorithm>::value ||
-    std::is_base_of<parallelizable_mmap_filter<Two, All...>,
-                    Algorithm>::value ||
+concept is_map_filter = is_map_filter_1<Algorithm, All...> ||
+    is_map_filter_2<Algorithm, All...> || is_map_filter_3<Algorithm, All...> ||
+    is_map_filter_4<Algorithm, All...> || is_map_filter_5<Algorithm, All...>;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_filter_1 =
+    std::is_base_of<parallelizable_mmap_filter<One, All...>, Algorithm>::value;
+template <typename Algorithm, typename... All>
+
+concept is_mmap_filter_2 =
+    std::is_base_of<parallelizable_mmap_filter<Two, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_filter_3 =
     std::is_base_of<parallelizable_mmap_filter<Three, All...>,
-                    Algorithm>::value ||
-    std::is_base_of<parallelizable_mmap_filter<Four, All...>,
-                    Algorithm>::value ||
+                    Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_filter_4 =
+    std::is_base_of<parallelizable_mmap_filter<Four, All...>, Algorithm>::value;
+
+template <typename Algorithm, typename... All>
+concept is_mmap_filter_5 =
     std::is_base_of<parallelizable_mmap_filter<Five, All...>, Algorithm>::value;
 
+template <typename Algorithm, typename... All>
+concept is_mmap_filter = is_mmap_filter_1<Algorithm, All...> ||
+    is_mmap_filter_2<Algorithm, All...> ||
+    is_mmap_filter_3<Algorithm, All...> ||
+    is_mmap_filter_4<Algorithm, All...> || is_mmap_filter_5<Algorithm, All...>;
 } // namespace vecpar::algorithm
 #endif // VECPAR_MAP_FILTER_HPP

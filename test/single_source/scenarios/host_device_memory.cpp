@@ -12,6 +12,7 @@
 #include "../../common/algorithm/test_algorithm_3.hpp"
 #include "../../common/algorithm/test_algorithm_4.hpp"
 #include "../../common/algorithm/test_algorithm_5.hpp"
+#include "../../common/algorithm/test_algorithm_6.hpp"
 #include "../../common/algorithm/test_algorithm_7.hpp"
 
 #include "vecpar/all/chain.hpp"
@@ -259,6 +260,33 @@ TEST_P(SingleSourceHostDeviceMemoryTest, Parallel_Map_Extra_Param) {
     EXPECT_EQ(result.at(i), (vec->at(i) + x.a) * x.b);
   }
 }
+TEST_P(SingleSourceHostDeviceMemoryTest, Saxpy) {
+  test_algorithm_6 alg;
+
+  vecmem::vector<float> x(GetParam(), &mr);
+  vecmem::vector<float> y(GetParam(), &mr);
+
+  for (size_t i = 0; i < x.size(); i++) {
+    x[i] = i;
+    y[i] = 1.0;
+  }
+  float a = 5.0;
+  vecpar::config c = {1, static_cast<int>(vec->size())};
+
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> end_time;
+
+  start_time = std::chrono::steady_clock::now();
+  vecmem::vector<float> result =
+      vecpar::parallel_algorithm(alg, mr, c, y, x, a);
+  end_time = std::chrono::steady_clock::now();
+
+  for (size_t i = 0; i < result.size(); i++) {
+    EXPECT_EQ(result.at(i), x[i] * a + 1.0);
+  }
+  std::chrono::duration<double> diff = end_time - start_time;
+  printf("SAXPY mmap time  = %f s\n", diff.count());
+}
 
 TEST_P(SingleSourceHostDeviceMemoryTest, Saxpymzr) {
   test_algorithm_7 alg;
@@ -280,9 +308,10 @@ TEST_P(SingleSourceHostDeviceMemoryTest, Saxpymzr) {
 
   std::chrono::time_point<std::chrono::steady_clock> start_time;
   std::chrono::time_point<std::chrono::steady_clock> end_time;
+  vecpar::config c = {1, static_cast<int>(vec->size())};
 
   start_time = std::chrono::steady_clock::now();
-  double result = vecpar::parallel_algorithm(alg, mr, x, y, z, a);
+  double result = vecpar::parallel_algorithm(alg, mr, c, x, y, z, a);
   end_time = std::chrono::steady_clock::now();
 
   EXPECT_EQ(result, expected_result);

@@ -9,6 +9,7 @@
 
 /// different variants for chains when the code is built for
 /// GPU CUDA and the data is initially in host memory
+/// TODO: currently limited to using only 1 iterable collections as entry point!
 namespace vecpar {
 
 ///  1. Specialization for host_memory & result as vecmem::vector
@@ -74,19 +75,17 @@ private:
       /// convert into raw pointer & size
       cuda_data<Ti> input{d_data, size};
 
-      if constexpr (std::is_base_of<vecpar::algorithm::parallelizable_mmap_1<
-                                        result_t, OtherInput...>,
-                                    Algorithm>::value) {
+      if constexpr (vecpar::algorithm::is_mmap<Algorithm, input_t,
+                                               OtherInput...>) {
         /// make sure the input host vector is also changed
         cuda_data<result_ti> partial_result =
-            vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t, input_t>(
+            vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t, input_t,
+                                                 OtherInput...>(
                 algorithm, m_config, input, otherInput...);
         return vecpar::cuda_raw::copy_intermediate_result<Algorithm, result_ti>(
             coll, partial_result);
-      } else if constexpr (std::is_base_of<
-                               vecpar::algorithm::parallelizable_map_1<
-                                   result_t, input_t, OtherInput...>,
-                               Algorithm>::value) {
+      } else if constexpr (vecpar::algorithm::is_map<Algorithm, result_t,
+                                                     input_t, OtherInput...>) {
         return vecpar::cuda_raw::parallel_algorithm(algorithm, m_config, input,
                                                     otherInput...);
       } else {
@@ -167,17 +166,14 @@ private:
       /// convert into raw pointer & size
       cuda_data<Ti> input{d_data, size};
 
-      if constexpr (std::is_base_of<vecpar::detail::parallel_mmap_1<
-                                        result_t, OtherInput...>,
-                                    Algorithm>::value) {
+      if constexpr (vecpar::algorithm::is_mmap<Algorithm, input_t,
+                                               OtherInput...>) {
         /// make sure the input host vector is also changed
         return vecpar::cuda_raw::copy_intermediate_result<Algorithm, result_ti>(
             coll, vecpar::cuda_raw::parallel_algorithm(algorithm, m_config,
                                                        input, otherInput...));
-      } else if constexpr (std::is_base_of<
-                               vecpar::detail::parallel_map_1<result_t, input_t,
-                                                              OtherInput...>,
-                               Algorithm>::value) {
+      } else if constexpr (vecpar::algorithm::is_map<Algorithm, input_t,
+                                                     OtherInput...>) {
         return vecpar::cuda_raw::parallel_algorithm<Algorithm, result_t,
                                                     input_t, OtherInput...>(
             algorithm, m_config, input, otherInput...);
