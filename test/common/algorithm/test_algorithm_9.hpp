@@ -23,7 +23,7 @@ public:
   TARGET test_algorithm_9() : parallelizable_mmap_filter() {}
 
   TARGET double &map(double &xi, const int &yi, const float &zi,
-                     const float &ti, const int &vi, float a) override {
+                     const float &ti, const int &vi, float &a) override {
     xi = a * xi + yi * zi * ti + vi;
     return xi;
   }

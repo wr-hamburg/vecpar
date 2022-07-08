@@ -24,7 +24,7 @@ public:
   test_algorithm_2_cuda_mm(vecmem::memory_resource &mr)
       : algorithm(), m_mr(mr) {}
 
-  double operator()(vecmem::vector<int> &data, X more_data) override {
+  double operator()(vecmem::vector<int> &data, X &more_data) override {
 
     vecpar::config c = vecpar::cuda::getDefaultConfig(data.size());
 

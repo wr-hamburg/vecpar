@@ -1,4 +1,5 @@
-#include <gtest/gtest.h>
+#include <iostream>
+#include <stdlib.h>
 
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -6,47 +7,37 @@
 #include "vecpar/omp/omp_parallelization.hpp"
 
 #include "../../common/algorithm/test_algorithm_2.hpp"
-#include "../../common/infrastructure/TimeTest.hpp"
-#include "../../common/infrastructure/sizes.hpp"
 
 #include "../../common/infrastructure/cleanup.hpp"
 #include "native_algorithms/test_algorithm_2_omp.hpp"
 #include "native_algorithms/test_algorithm_2_omp_optimized.hpp"
 #include "native_algorithms/test_algorithm_2_seq.hpp"
 
-namespace {
-class OMP_PerformanceTest : public TimeTest,
-                            public testing::WithParamInterface<int> {
+vecmem::host_memory_resource mr;
+test_algorithm_2 alg_lib(mr);
+test_algorithm_2_omp alg_test(mr);
+test_algorithm_2_omp_optimized alg_opt_test(mr);
+test_algorithm_2_seq alg_seq(mr);
+X x{1, 1.0};
 
-public:
-  OMP_PerformanceTest() {
-    vec = new vecmem::vector<int>(GetParam(), &mr);
+std::chrono::time_point<std::chrono::steady_clock> start_time;
+std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-    for (int i = 0; i < vec->size(); i++) {
-      vec->at(i) = i;
-      expectedReduceResult += vec->at(i);
-    }
-    printf("*******************************\n");
+void run_test_for_N(int n) {
+  srand(time(NULL));
+  int iSecret;
+
+  vecmem::vector<int> *vec = new vecmem::vector<int>(n);
+  double expectedReduceResult = 0;
+
+  // init vector
+  for (int i = 0; i < vec->size(); i++) {
+    iSecret = rand() % 10 + 1;
+    vec->at(i) = (iSecret % 2 == 0) ? i : (-i);
+    expectedReduceResult += vec->at(i);
   }
 
-  ~OMP_PerformanceTest() { cleanup::free(*vec); }
-
-protected:
-  vecmem::host_memory_resource mr;
-  vecmem::vector<int> *vec;
-  double expectedReduceResult = 0;
-};
-
-TEST_P(OMP_PerformanceTest, Lib_Overhead) {
-  test_algorithm_2 alg_lib(mr);
-  test_algorithm_2_omp alg_test(mr);
-  test_algorithm_2_omp_optimized alg_opt_test(mr);
-  test_algorithm_2_seq alg_seq(mr);
-  X x{1, 1.0};
-
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
-  std::chrono::time_point<std::chrono::steady_clock> end_time;
-
+  std::cout << "Test for N = " << vec->size() << std::endl;
   // start seq
   start_time = std::chrono::steady_clock::now();
   double seq = alg_seq(*vec, x);
@@ -87,13 +78,14 @@ TEST_P(OMP_PerformanceTest, Lib_Overhead) {
   std::chrono::duration<double> diff_opt_test = end_time - start_time;
   std::cout << "Time for OMP opt code = " << diff_opt_test.count() << " s\n";
 
-  // same result
-  EXPECT_EQ(*par_seq, seq);
-  EXPECT_EQ(reduced_lib, seq);
-  EXPECT_EQ(reduced_lib, reduced_test);
-  EXPECT_EQ(reduced_lib, reduced_opt_test);
+  cleanup::free(*vec);
+  std::cout << "***********************" << std::endl;
 }
 
-INSTANTIATE_TEST_SUITE_P(OMP_PerformanceTest, OMP_PerformanceTest,
-                         testing::ValuesIn(N));
-} // namespace
+int main(int argc, char **argv) {
+  std::vector<int> N = {10, 100, 133, 1000, 10000, 100000, 1000000};
+  for (int i = 0; i < N.size(); i++) {
+    run_test_for_N(N[i]);
+  }
+  return 0;
+}

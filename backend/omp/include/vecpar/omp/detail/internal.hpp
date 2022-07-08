@@ -8,8 +8,8 @@ namespace internal {
 
 template <typename Function, typename... Arguments>
 void offload_map(vecpar::config config, int size, Function f,
-                 Arguments... args) {
-  int threadsNum;
+                 Arguments &...args) {
+  int threadsNum = 0;
 
   if (config.isEmpty()) {
 #pragma omp parallel for
@@ -44,13 +44,13 @@ void offload_reduce(int size, R *result, Function f,
   }
 }
 
-template <typename R, typename Function, typename... Arguments>
-void offload_filter(int size, R *result, Function f, Arguments... args) {
+template <typename R, typename Function>
+void offload_filter(int size, R *result, Function f) {
   int idx = 0;
 #pragma omp teams distribute parallel for
   for (int i = 0; i < size; i++) {
 #pragma omp critical
-    f(i, idx, *result, args...);
+    f(i, idx, *result);
   }
   result->resize(idx);
 }

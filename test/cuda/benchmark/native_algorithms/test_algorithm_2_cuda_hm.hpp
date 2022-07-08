@@ -7,7 +7,9 @@
 #include <vecmem/containers/device_vector.hpp>
 #include <vecmem/containers/vector.hpp>
 
+#include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
+#include <vecmem/utils/cuda/copy.hpp>
 
 #include "vecpar/core/definitions/config.hpp"
 #include "vecpar/cuda/detail/common/config.hpp"
@@ -28,7 +30,7 @@ public:
   test_algorithm_2_cuda_hm(vecmem::memory_resource &mr)
       : algorithm(), m_mr(mr) {}
 
-  double operator()(vecmem::vector<int> &data, X more_data) override {
+  double operator()(vecmem::vector<int> &data, X &more_data) override {
     vecpar::config c = vecpar::cuda::getDefaultConfig(data.size());
 
     double *result = (double *)malloc(sizeof(double));

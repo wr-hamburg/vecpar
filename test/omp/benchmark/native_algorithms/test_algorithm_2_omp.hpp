@@ -13,17 +13,20 @@ class test_algorithm_2_omp
 public:
   test_algorithm_2_omp(vecmem::memory_resource &mr) : algorithm(), m_mr(mr) {}
 
-  double operator()(vecmem::vector<int> data, X x, double &result) {
+  double operator()(vecmem::vector<int> &data, X &x, double &result) {
 #pragma omp parallel for
     for (int i = 0; i < data.size(); i++) {
       double result_i = data[i] * x.f();
 #pragma omp critical
-      { result += result_i; }
+      {
+        if (result_i > 0)
+          result += result_i;
+      }
     }
     return result;
   }
 
-  double operator()(vecmem::vector<int> data, X more_data) override {
+  double operator()(vecmem::vector<int> &data, X &more_data) override {
     double result = 0;
     this->operator()(data, more_data, result);
     return result;

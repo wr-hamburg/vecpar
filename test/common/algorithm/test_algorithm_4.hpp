@@ -27,13 +27,13 @@ public:
     return result;
   }
 
-  double *operator()(vecmem::vector<double> data, double *result) {
+  double *operator()(vecmem::vector<double> &data, double *result) {
     for (size_t i = 0; i < data.size(); i++)
       reduce(result, map(data[i]));
     return result;
   }
 
-  double *operator()(vecmem::vector<double> data) override {
+  double *operator()(vecmem::vector<double> &data) override {
     double *result = new double();
     this->operator()(data, result);
     return result;

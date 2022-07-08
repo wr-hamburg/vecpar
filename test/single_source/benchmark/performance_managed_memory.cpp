@@ -89,11 +89,11 @@ TEST_P(PerformanceTest_ManagedMemory, Saxpy) {
   std::chrono::time_point<std::chrono::steady_clock> end_time;
 
   start_time = std::chrono::steady_clock::now();
-  vecmem::vector<float> result = vecpar::parallel_algorithm(alg, mr, y, x, a);
+  vecpar::parallel_algorithm(alg, mr, y, x, a);
   end_time = std::chrono::steady_clock::now();
 
-  for (size_t i = 0; i < result.size(); i++) {
-    EXPECT_EQ(result.at(i), x[i] * a + (x[i] - 1));
+  for (size_t i = 0; i < y.size(); i++) {
+    EXPECT_EQ(y.at(i), x[i] * a + (x[i] - 1));
   }
   std::chrono::duration<double> diff = end_time - start_time;
   printf("SAXPY mmap time  = %f s\n", diff.count());
@@ -105,7 +105,6 @@ TEST_P(PerformanceTest_ManagedMemory, Saxpy) {
 #endif
   cleanup::free(x);
   cleanup::free(y);
-  cleanup::free(result);
 }
 
 INSTANTIATE_TEST_SUITE_P(PerformanceTest_ManagedMemory,

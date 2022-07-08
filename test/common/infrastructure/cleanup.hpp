@@ -1,7 +1,6 @@
 #ifndef VECPAR_CLEANUP_HPP
 #define VECPAR_CLEANUP_HPP
 
-#include <gtest/gtest.h>
 #include <vecmem/containers/vector.hpp>
 
 namespace cleanup {

@@ -1,6 +1,4 @@
-#include "benchmark/performance.cpp"
 #include "scenarios/host_memory.cpp"
-
 #include <gtest/gtest.h>
 
 int main(int argc, char **argv) {

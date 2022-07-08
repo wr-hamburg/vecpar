@@ -23,18 +23,18 @@ namespace vecpar::omp {
 /// default offloading generic functions
 template <typename Function, typename... Arguments>
 void parallel_map(vecpar::config config, size_t size, Function f,
-                  Arguments... args) {
+                  Arguments &...args) {
   internal::offload_map(config, size, f, args...);
 }
 
 template <typename Function, typename... Arguments>
-void parallel_map(size_t size, Function f, Arguments... args) {
+void parallel_map(size_t size, Function f, Arguments &...args) {
   parallel_map(omp::getDefaultConfig(), size, f, args...);
 }
 
-template <typename Function, typename... Arguments>
-void parallel_reduce(size_t size, Function f, Arguments... args) {
-  internal::offload_reduce(size, f, args...);
+template <typename Function, typename R, typename... Arguments>
+void parallel_reduce(size_t size, R &result, Function f, Arguments &...args) {
+  internal::offload_reduce(size, result, f, args...);
 }
 
 /// specific simple implementations
@@ -44,7 +44,7 @@ template <class Algorithm,
 requires detail::is_map<Algorithm, R, T, Rest...> R &
 parallel_map(Algorithm &algorithm,
              __attribute__((unused)) vecmem::memory_resource &mr,
-             vecpar::config config, T &data, Rest... rest) {
+             vecpar::config config, T &data, Rest &...rest) {
   R *map_result = new R(data.size(), &mr);
   internal::offload_map(config, data.size(), [&](int idx) mutable {
     algorithm.map(map_result->at(idx), data[idx], get(idx, rest)...);
@@ -58,7 +58,7 @@ template <class Algorithm,
 requires detail::is_map<Algorithm, R, T, Rest...> R &
 parallel_map(Algorithm &algorithm,
              __attribute__((unused)) vecmem::memory_resource &mr, T &data,
-             Rest... rest) {
+             Rest &...rest) {
   return vecpar::omp::parallel_map(algorithm, mr, omp::getDefaultConfig(), data,
                                    rest...);
 }
@@ -69,7 +69,7 @@ template <class Algorithm,
 requires detail::is_mmap<Algorithm, T, Rest...> R &
 parallel_map(Algorithm &algorithm,
              __attribute__((unused)) vecmem::memory_resource &mr,
-             vecpar::config config, T &data, Rest... rest) {
+             vecpar::config config, T &data, Rest &...rest) {
   internal::offload_map(config, data.size(), [&](int idx) mutable {
     algorithm.map(data[idx], get(idx, rest)...);
   });
@@ -82,7 +82,7 @@ template <class Algorithm,
 requires detail::is_mmap<Algorithm, T, Rest...> R &
 parallel_map(Algorithm &algorithm,
              __attribute__((unused)) vecmem::memory_resource &mr, T &data,
-             Rest... rest) {
+             Rest &...rest) {
   return vecpar::omp::parallel_map(algorithm, mr, omp::getDefaultConfig(), data,
                                    rest...);
 }
@@ -123,8 +123,7 @@ parallel_filter(Algorithm algorithm, vecmem::memory_resource &mr, T &data) {
 template <class Algorithm, typename Result, typename R, typename T,
           typename... Arguments>
 Result &parallel_map_reduce(Algorithm &algorithm, vecmem::memory_resource &mr,
-                            T &data, Arguments... args) {
-
+                            T &data, Arguments &...args) {
   return vecpar::omp::parallel_reduce(
       algorithm, mr, vecpar::omp::parallel_map(algorithm, mr, data, args...));
 }
@@ -132,7 +131,8 @@ Result &parallel_map_reduce(Algorithm &algorithm, vecmem::memory_resource &mr,
 template <class Algorithm, typename Result, typename R, typename T,
           typename... Arguments>
 Result &parallel_map_reduce(Algorithm &algorithm, vecmem::memory_resource &mr,
-                            vecpar::config config, T &data, Arguments... args) {
+                            vecpar::config config, T &data,
+                            Arguments &...args) {
 
   return vecpar::omp::parallel_reduce(
       algorithm, mr,
@@ -141,7 +141,7 @@ Result &parallel_map_reduce(Algorithm &algorithm, vecmem::memory_resource &mr,
 
 template <class Algorithm, typename R, typename T, typename... Arguments>
 R &parallel_map_filter(Algorithm &algorithm, vecmem::memory_resource &mr,
-                       vecpar::config config, T &data, Arguments... args) {
+                       vecpar::config config, T &data, Arguments &...args) {
 
   return vecpar::omp::parallel_filter<Algorithm, R>(
       algorithm, mr,
@@ -151,7 +151,7 @@ R &parallel_map_filter(Algorithm &algorithm, vecmem::memory_resource &mr,
 
 template <class Algorithm, typename R, typename T, typename... Arguments>
 R &parallel_map_filter(Algorithm &algorithm, vecmem::memory_resource &mr,
-                       T &data, Arguments... args) {
+                       T &data, Arguments &...args) {
 
   return vecpar::omp::parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, omp::getDefaultConfig(), data, args...);
@@ -165,7 +165,7 @@ requires algorithm::is_map_reduce<Algorithm, Result, R, T, Arguments...> ||
     algorithm::is_mmap_reduce<Algorithm, Result, T, Arguments...>
         Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
                                    vecpar::config config, T &data,
-                                   Arguments... args) {
+                                   Arguments &...args) {
 
   return vecpar::omp::parallel_map_reduce<Algorithm, Result, R, T,
                                           Arguments...>(algorithm, mr, config,
@@ -179,7 +179,7 @@ template <class MemoryResource, class Algorithm,
 requires algorithm::is_map_reduce<Algorithm, Result, R, T, Arguments...> ||
     algorithm::is_mmap_reduce<Algorithm, Result, T, Arguments...>
         Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                                   T &data, Arguments... args) {
+                                   T &data, Arguments &...args) {
 
   return vecpar::omp::parallel_map_reduce<Algorithm, Result, R, T,
                                           Arguments...>(
@@ -193,7 +193,7 @@ requires algorithm::is_map_filter<Algorithm, R, T, Arguments...> ||
     algorithm::is_mmap_filter<Algorithm, T, Arguments...>
         R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
                               vecpar::config config, T &data,
-                              Arguments... args) {
+                              Arguments &...args) {
 
   return vecpar::omp::parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, config, data, args...);
@@ -205,7 +205,7 @@ template <class MemoryResource, class Algorithm,
 requires algorithm::is_map_filter<Algorithm, R, T, Arguments...> ||
     algorithm::is_mmap_filter<Algorithm, T, Arguments...>
         R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr, T &data,
-                              Arguments... args) {
+                              Arguments &...args) {
 
   return vecpar::omp::parallel_map_filter<Algorithm, R, T, Arguments...>(
       algorithm, mr, omp::getDefaultConfig(), data, args...);
