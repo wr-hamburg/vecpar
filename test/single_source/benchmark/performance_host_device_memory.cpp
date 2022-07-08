@@ -35,14 +35,13 @@ protected:
   vecmem::host_memory_resource mr;
   vecmem::vector<int> *vec;
   double expectedReduceResult = 1.0;
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> end_time;
 };
 
 TEST_P(PerformanceTest_HostDevice, Chain) {
   test_algorithm_3 first_alg(mr);
   test_algorithm_4 second_alg;
-
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
-  std::chrono::time_point<std::chrono::steady_clock> end_time;
 
   start_time = std::chrono::steady_clock::now();
   vecpar::parallel_algorithm(second_alg, mr,
@@ -71,35 +70,96 @@ TEST_P(PerformanceTest_HostDevice, Chain) {
 #endif
 }
 
+#if defined(__CUDA__) && defined(__clang__)
+#include "common.hpp"
+#include <vecmem/memory/cuda/device_memory_resource.hpp>
+#include <vecmem/utils/cuda/copy.hpp>
+
+vecmem::cuda::device_memory_resource d_mem;
+vecmem::cuda::copy copy;
+
+void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
+
+  auto x_buffer =
+      copy.to(vecmem::get_data(x), d_mem, vecmem::copy::type::host_to_device);
+  auto x_view = vecmem::get_data(x_buffer);
+
+  auto y_buffer =
+      copy.to(vecmem::get_data(y), d_mem, vecmem::copy::type::host_to_device);
+  auto y_view = vecmem::get_data(y_buffer);
+  vecpar::config c = vecpar::cuda::getDefaultConfig(x.size());
+
+  // call kernel
+  kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+      x.size(),
+      [=] __device__(int idx, float d_a) mutable {
+        vecmem::device_vector<float> d_x(x_view);
+        vecmem::device_vector<float> d_y(y_view);
+
+        d_y[idx] = d_x[idx] * d_a + (d_x[idx] - 1);
+      },
+      a);
+
+  CHECK_ERROR(cudaGetLastError());
+  CHECK_ERROR(cudaDeviceSynchronize());
+
+  copy(y_buffer, y, vecmem::copy::type::device_to_host);
+}
+#else
+void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
+#pragma omp parallel for
+  for (size_t i = 0; i < x.size(); i++) {
+    y[i] = x[i] * a + (x[i] - 1);
+  }
+}
+#endif
+
 TEST_P(PerformanceTest_HostDevice, Saxpy) {
   test_algorithm_6 alg;
 
   vecmem::vector<float> x(GetParam(), &mr);
   vecmem::vector<float> y(GetParam(), &mr);
+  float a = 2.0;
 
+  // init vec
   for (int i = 0; i < GetParam(); i++) {
     x[i] = i;
     y[i] = i - 1;
   }
-  float a = 2.0;
+  start_time = std::chrono::steady_clock::now();
+  benchmark(x, y, a);
+  end_time = std::chrono::steady_clock::now();
+  // check results
+  for (size_t i = 0; i < y.size(); i++) {
+    EXPECT_EQ(y[i], x[i] * a + (x[i] - 1));
+  }
+  // check time
+  std::chrono::duration<double> diff_benchmark = end_time - start_time;
+  printf("SAXPY sequential time  = %f s\n", diff_benchmark.count());
 
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
-  std::chrono::time_point<std::chrono::steady_clock> end_time;
+  // init vec
+  for (int i = 0; i < GetParam(); i++) {
+    x[i] = i;
+    y[i] = i - 1;
+  }
 
   start_time = std::chrono::steady_clock::now();
   vecpar::parallel_algorithm(alg, mr, y, x, a);
   end_time = std::chrono::steady_clock::now();
-
+  // check results
   for (size_t i = 0; i < y.size(); i++) {
     EXPECT_EQ(y[i], x[i] * a + (x[i] - 1));
   }
+  // check time
   std::chrono::duration<double> diff = end_time - start_time;
-  printf("SAXPY mmap time  = %f s\n", diff.count());
+  printf("SAXPY vecpar time  = %f s\n", diff.count());
 
 #if defined(__CUDA__) && defined(__clang__)
-  write_to_csv("gpu_saxpy_hd.csv", GetParam(), diff.count());
+  write_to_csv("gpu_saxpy_hd.csv", GetParam(), diff_benchmark.count(),
+               diff.count());
 #else
-  write_to_csv("cpu_saxpy_hd.csv", GetParam(), diff.count());
+  write_to_csv("cpu_saxpy_hd.csv", GetParam(), diff_benchmark.count(),
+               diff.count());
 #endif
 
   cleanup::free(x);
