@@ -83,7 +83,7 @@ void run_test_for_N(int n) {
 }
 
 int main(int argc, char **argv) {
-  std::vector<int> N = {10, 100, 133, 1000, 10000, 100000, 1000000};
+  std::vector<int> N = {10, 1000, 100000, 1000000, 10000000};
   for (int i = 0; i < N.size(); i++) {
     run_test_for_N(N[i]);
   }

@@ -96,7 +96,7 @@ void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
         vecmem::device_vector<float> d_x(x_view);
         vecmem::device_vector<float> d_y(y_view);
 
-        d_y[idx] = d_x[idx] * d_a + (d_x[idx] - 1);
+        d_y[idx] = d_x[idx] * d_a + d_y[idx];
       },
       a);
 
@@ -107,10 +107,13 @@ void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
 }
 #else
 void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
+  int threadsNum = 1;
 #pragma omp parallel for
   for (size_t i = 0; i < x.size(); i++) {
-    y[i] = x[i] * a + (x[i] - 1);
+    y[i] = x[i] * a + y[i];
+    DEBUG_ACTION(threadsNum = omp_get_num_threads();)
   }
+  DEBUG_ACTION(printf("Using %d OpenMP threads \n", threadsNum);)
 }
 #endif
 
@@ -119,28 +122,30 @@ TEST_P(PerformanceTest_HostDevice, Saxpy) {
 
   vecmem::vector<float> x(GetParam(), &mr);
   vecmem::vector<float> y(GetParam(), &mr);
+  vecmem::vector<float> expected_result(GetParam(), &mr);
   float a = 2.0;
 
   // init vec
   for (int i = 0; i < GetParam(); i++) {
-    x[i] = i;
-    y[i] = i - 1;
+    x[i] = i % 100;
+    y[i] = (i - 1) % 100;
+    expected_result[i] = y[i] + x[i] * a;
   }
   start_time = std::chrono::steady_clock::now();
   benchmark(x, y, a);
   end_time = std::chrono::steady_clock::now();
   // check results
   for (size_t i = 0; i < y.size(); i++) {
-    EXPECT_EQ(y[i], x[i] * a + (x[i] - 1));
+    EXPECT_EQ(y[i], expected_result[i]);
   }
   // check time
   std::chrono::duration<double> diff_benchmark = end_time - start_time;
-  printf("SAXPY sequential time  = %f s\n", diff_benchmark.count());
+  printf("SAXPY native time  = %f s\n", diff_benchmark.count());
 
   // init vec
   for (int i = 0; i < GetParam(); i++) {
-    x[i] = i;
-    y[i] = i - 1;
+    x[i] = i % 100;
+    y[i] = (i - 1) % 100;
   }
 
   start_time = std::chrono::steady_clock::now();
@@ -148,7 +153,7 @@ TEST_P(PerformanceTest_HostDevice, Saxpy) {
   end_time = std::chrono::steady_clock::now();
   // check results
   for (size_t i = 0; i < y.size(); i++) {
-    EXPECT_EQ(y[i], x[i] * a + (x[i] - 1));
+    EXPECT_EQ(y.at(i), expected_result[i]);
   }
   // check time
   std::chrono::duration<double> diff = end_time - start_time;

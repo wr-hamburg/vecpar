@@ -79,9 +79,7 @@ void run_test_for_N(vecmem::cuda::managed_memory_resource mem, int n) {
 }
 
 int main(int argc, char **argv) {
-
-  std::vector<int> N = {10, 100, 133, 1000, 10000, 100000, 1000000};
-
+  std::vector<int> N = {10, 1000, 100000, 1000000, 10000000};
   std::cout << "Tests using managed memory: " << std::endl;
   vecmem::cuda::managed_memory_resource mm;
   for (int i = 0; i < N.size(); i++) {
