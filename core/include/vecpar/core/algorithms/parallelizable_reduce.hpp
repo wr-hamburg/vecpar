@@ -5,14 +5,12 @@
 
 namespace vecpar::algorithm {
 
-template <typename R>
-struct parallelizable_reduce : public vecpar::detail::parallel_reduce<R> {
-  using result_t = R;
-  using input_t = R;
-  using output_type_t = R;
-  using input_type = vecmem::vector<R>;
+template <Iterable R>
+struct parallelizable_reduce : public vecpar::detail::parallel_reduce<R> {};
 
-  TARGET virtual R *reduce(R *result, R &partial_result) = 0;
-};
+/// concepts
+template <typename Algorithm, typename R>
+concept is_reduce = std::is_base_of<parallelizable_reduce<R>, Algorithm>::value;
+
 } // namespace vecpar::algorithm
 #endif // VECPAR_PARALLELIZABLE_REDUCE_HPP

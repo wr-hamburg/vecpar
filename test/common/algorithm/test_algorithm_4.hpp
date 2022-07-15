@@ -11,7 +11,8 @@
 
 class test_algorithm_4
     : public traccc::algorithm<double *(vecmem::vector<double>)>,
-      public vecpar::algorithm::parallelizable_mmap_reduce<double> {
+      public vecpar::algorithm::parallelizable_mmap_reduce<
+          vecpar::collection::One, double, vecmem::vector<double>> {
 
 public:
   TARGET test_algorithm_4() : algorithm(), parallelizable_mmap_reduce() {}
@@ -26,13 +27,13 @@ public:
     return result;
   }
 
-  double *operator()(vecmem::vector<double> data, double *result) {
+  double *operator()(vecmem::vector<double> &data, double *result) {
     for (size_t i = 0; i < data.size(); i++)
       reduce(result, map(data[i]));
     return result;
   }
 
-  double *operator()(vecmem::vector<double> data) override {
+  double *operator()(vecmem::vector<double> &data) override {
     double *result = new double();
     this->operator()(data, result);
     return result;

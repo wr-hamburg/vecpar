@@ -11,11 +11,12 @@
 #include "../../common/algorithm/test_algorithm_3.hpp"
 #include "../../common/algorithm/test_algorithm_4.hpp"
 #include "../../common/algorithm/test_algorithm_5.hpp"
+#include "../../common/algorithm/test_algorithm_6.hpp"
+#include "../../common/algorithm/test_algorithm_7.hpp"
+#include "../../common/algorithm/test_algorithm_8.hpp"
 
-#include "../native_algorithms/test_algorithm_2_omp.hpp"
-#include "../native_algorithms/test_algorithm_2_omp_optimized.hpp"
-#include "../native_algorithms/test_algorithm_2_seq.hpp"
-
+#include "../../common/algorithm/test_algorithm_9.hpp"
+#include "../../common/infrastructure/cleanup.hpp"
 #include "vecpar/omp/omp_parallelization.hpp"
 
 namespace {
@@ -34,6 +35,11 @@ public:
       expectedFilterReduceResult += (i % 2 == 0) ? (i * 1.0) * 2 : 0;
     }
     printf("*******************************\n");
+  }
+
+  ~CpuHostMemoryTest() {
+    cleanup::free(*vec);
+    cleanup::free(*vec_d);
   }
 
 protected:
@@ -227,81 +233,6 @@ TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
   EXPECT_EQ(par_reduced, expectedReduceResult);
 }
 
-TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_op_OMP) {
-  test_algorithm_2_omp alg_test(mr);
-  X x{1, 1.0};
-
-  // parallel execution
-  double par_reduced = alg_test(*vec, x);
-  EXPECT_EQ(par_reduced, expectedReduceResult);
-}
-
-TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_op_OMP_optimized) {
-  test_algorithm_2_omp_optimized alg_test(mr);
-  X x{1, 1.0};
-
-  // parallel execution
-  double par_reduced = alg_test(*vec, x);
-  EXPECT_EQ(par_reduced, expectedReduceResult);
-}
-
-TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Lib_vs_op_OMP_Overhead) {
-  test_algorithm_2 alg_lib(mr);
-  test_algorithm_2_omp alg_test(mr);
-  test_algorithm_2_omp_optimized alg_opt_test(mr);
-  test_algorithm_2_seq alg_seq(mr);
-  X x{1, 1.0};
-
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
-  std::chrono::time_point<std::chrono::steady_clock> end_time;
-
-  // start seq
-  start_time = std::chrono::steady_clock::now();
-  double seq = alg_seq(*vec, x);
-  end_time = std::chrono::steady_clock::now();
-
-  std::chrono::duration<double> diff_seq = end_time - start_time;
-  std::cout << "Time for seq  = " << diff_seq.count() << " s\n";
-
-  // start parallel but in seq mode map-reduce
-  start_time = std::chrono::steady_clock::now();
-  double *par_seq = alg_lib(*vec, x);
-  end_time = std::chrono::steady_clock::now();
-
-  std::chrono::duration<double> diff_par_seq = end_time - start_time;
-  std::cout << "Time for lib seq  = " << diff_par_seq.count() << " s\n";
-
-  // start lib map-reduce
-  start_time = std::chrono::steady_clock::now();
-  double reduced_lib = vecpar::omp::parallel_algorithm(alg_lib, mr, *vec, x);
-  end_time = std::chrono::steady_clock::now();
-
-  std::chrono::duration<double> diff_lib = end_time - start_time;
-  std::cout << "Time for lib offload = " << diff_lib.count() << " s\n";
-
-  // start OMP call operator
-  start_time = std::chrono::steady_clock::now();
-  double reduced_test = alg_test(*vec, x);
-  end_time = std::chrono::steady_clock::now();
-
-  std::chrono::duration<double> diff_test = end_time - start_time;
-  std::cout << "Time for OMP code    = " << diff_test.count() << " s\n";
-
-  // start OMP optimized implementation - call operator
-  start_time = std::chrono::steady_clock::now();
-  double reduced_opt_test = alg_opt_test(*vec, x);
-  end_time = std::chrono::steady_clock::now();
-
-  std::chrono::duration<double> diff_opt_test = end_time - start_time;
-  std::cout << "Time for OMP opt code = " << diff_opt_test.count() << " s\n";
-
-  // same result
-  EXPECT_EQ(*par_seq, seq);
-  EXPECT_EQ(reduced_lib, seq);
-  EXPECT_EQ(reduced_lib, reduced_test);
-  EXPECT_EQ(reduced_lib, reduced_opt_test);
-}
-
 TEST_P(CpuHostMemoryTest, Serial_MapFilter_MapReduce_Chained) {
   test_algorithm_3 first_alg(mr);
   test_algorithm_4 second_alg;
@@ -348,6 +279,145 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
     EXPECT_EQ(result.at(i), vec_d->at(i));
     EXPECT_EQ(result.at(i), (vec->at(i) + x.a) * x.b);
   }
+}
+
+TEST_P(CpuHostMemoryTest, two_collections) {
+  test_algorithm_6 alg;
+
+  vecmem::vector<float> x(GetParam(), &mr);
+  vecmem::vector<float> y(GetParam(), &mr);
+
+  for (int i = 0; i < x.size(); i++) {
+    x[i] = i;
+    y[i] = 1.0;
+  }
+  float a = 2.0;
+  vecmem::vector<float> result = vecpar::omp::parallel_map(alg, mr, y, x, a);
+
+  for (int i = 0; i < result.size(); i++) {
+    EXPECT_EQ(result.at(i), x[i] * a + 1.0);
+  }
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(result);
+}
+
+TEST_P(CpuHostMemoryTest, three_collections) {
+  test_algorithm_7 alg;
+
+  vecmem::vector<double> x(GetParam(), &mr);
+  vecmem::vector<int> y(GetParam(), &mr);
+  vecmem::vector<float> z(GetParam(), &mr);
+
+  double expected_result = 0.0;
+
+  float a = 2.0;
+  for (int i = 0; i < x.size(); i++) {
+    x[i] = i;
+    y[i] = 1;
+    z[i] = -1.0;
+    // as map-reduce is implemented in algorithm 7
+    expected_result += x[i] * a + y[i] * z[i];
+  }
+
+  double result = vecpar::omp::parallel_algorithm(alg, mr, x, y, z, a);
+  end_time = std::chrono::steady_clock::now();
+
+  EXPECT_EQ(result, expected_result);
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
+}
+
+TEST_P(CpuHostMemoryTest, four_collections) {
+  test_algorithm_8 alg;
+
+  vecmem::vector<double> x(GetParam(), &mr);
+  vecmem::vector<int> y(GetParam(), &mr);
+  vecmem::vector<float> z(GetParam(), &mr);
+  vecmem::vector<float> t(GetParam(), &mr);
+
+  vecmem::vector<double> expected;
+
+  float a = 2.0;
+  for (int i = 0; i < x.size(); i++) {
+    x[i] = i;
+    y[i] = 1;
+    z[i] = -1.0;
+    t[i] = 4.0 * i;
+    // as map is implemented in algorithm 8
+    double tmp = x[i] * a + y[i] * z[i] * t[i];
+    // as filter is implemented in algorithm 8
+    if (tmp > 0)
+      expected.push_back(tmp);
+  }
+
+  vecmem::vector<double> result =
+      vecpar::omp::parallel_algorithm(alg, mr, x, y, z, t, a);
+
+  EXPECT_EQ(result.size(), expected.size());
+
+  // the result can be in a different order
+  std::sort(expected.begin(), expected.end());
+  std::sort(result.begin(), result.end());
+  for (int i = 0; i < result.size(); i++) {
+    EXPECT_EQ(result.at(i), expected.at(i));
+  }
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
+  cleanup::free(t);
+  cleanup::free(expected);
+  cleanup::free(result);
+}
+
+TEST_P(CpuHostMemoryTest, five_collections) {
+  test_algorithm_9 alg;
+
+  vecmem::vector<double> x(GetParam(), &mr);
+  vecmem::vector<int> y(GetParam(), &mr);
+  vecmem::vector<float> z(GetParam(), &mr);
+  vecmem::vector<float> t(GetParam(), &mr);
+  vecmem::vector<int> v(GetParam(), &mr);
+
+  vecmem::vector<double> expected;
+
+  float a = 2.0;
+  for (int i = 0; i < x.size(); i++) {
+    x[i] = i;
+    y[i] = 1;
+    z[i] = -1.0;
+    t[i] = 4.0 * i;
+    v[i] = i - 1;
+    // as map is implemented in algorithm 8
+    double tmp = x[i] * a + y[i] * z[i] * t[i] + v[i];
+    // as filter is implemented in algorithm 8
+    if (tmp > 0)
+      expected.push_back(tmp);
+  }
+
+  vecmem::vector<double> result =
+      vecpar::omp::parallel_algorithm(alg, mr, x, y, z, t, v, a);
+
+  EXPECT_EQ(result.size(), expected.size());
+
+  // the result can be in a different order
+  std::sort(expected.begin(), expected.end());
+  std::sort(result.begin(), result.end());
+  for (int i = 0; i < result.size(); i++) {
+    EXPECT_EQ(result.at(i), expected.at(i));
+  }
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
+  cleanup::free(t);
+  cleanup::free(v);
+  cleanup::free(expected);
+  cleanup::free(result);
 }
 
 INSTANTIATE_TEST_SUITE_P(Trivial_HostMemory, CpuHostMemoryTest,

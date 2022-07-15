@@ -11,6 +11,7 @@
 #include "../common/algorithm/test_algorithm_3.hpp"
 #include "../common/algorithm/test_algorithm_4.hpp"
 
+#include "../common/infrastructure/cleanup.hpp"
 #include "vecpar/omp/omp_parallelization.hpp"
 
 namespace {
@@ -28,6 +29,11 @@ public:
       expectedFilterReduceResult += (i % 2 == 0) ? (i * 1.0) * 2 : 0;
     }
     printf("*******************************\n");
+  }
+
+  ~CpuManagedMemoryTest() {
+    cleanup::free(*vec);
+    cleanup::free(*vec_d);
   }
 
 protected:
@@ -232,6 +238,6 @@ TEST_P(CpuManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
   EXPECT_EQ(second_result, expectedFilterReduceResult);
 }
 
-INSTANTIATE_TEST_SUITE_P(Trivial_ManagedMemory, CpuManagedMemoryTest,
+INSTANTIATE_TEST_SUITE_P(OMP_ManagedMemory, CpuManagedMemoryTest,
                          testing::ValuesIn(N));
 } // namespace

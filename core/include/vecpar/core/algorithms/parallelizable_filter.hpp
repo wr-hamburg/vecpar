@@ -5,15 +5,12 @@
 
 namespace vecpar::algorithm {
 
-template <typename R>
-struct parallelizable_filter : public vecpar::detail::parallel_filter<R> {
-  using result_t = R;
-  using input_t = R;
+template <vecpar::collection::Iterable T>
+struct parallelizable_filter : public vecpar::detail::parallel_filter<T> {};
 
-  using output_type_t = vecmem::vector<R>;
-  using input_type = vecmem::vector<R>;
+/// concepts
+template <typename Algorithm, typename T>
+concept is_filter = std::is_base_of<parallelizable_filter<T>, Algorithm>::value;
 
-  TARGET virtual bool filter(R &partial_result) = 0;
-};
 } // namespace vecpar::algorithm
 #endif // VECPAR_PARALLELIZABLE_FILTER_HPP

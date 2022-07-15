@@ -2,12 +2,19 @@
 #define VECPAR_FILTER_HPP
 
 #include "vecpar/core/definitions/common.hpp"
+#include "vecpar/core/definitions/types.hpp"
 
 namespace vecpar::detail {
 
-template <typename T> struct parallel_filter {
-  TARGET virtual bool filter(T &) = 0;
+template <vecpar::collection::Iterable R> struct parallel_filter {
+  TARGET virtual bool filter(typename R::value_type &item) = 0;
 };
+
+/// concepts
+template <typename Algorithm, typename R>
+concept is_filter =
+    std::is_base_of<vecpar::detail::parallel_filter<R>, Algorithm>::value;
+
 } // namespace vecpar::detail
 
 #endif // VECPAR_FILTER_HPP

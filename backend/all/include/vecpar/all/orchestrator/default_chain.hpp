@@ -7,9 +7,7 @@
 
 namespace vecpar {
 
-// TODO: have this compiler restriction in vecpar::algorithms too
-//    template<typename> typename S = vecmem::vector,
-template <class MemoryResource, typename R, typename H, typename... OtherInput>
+template <class MemoryResource, typename R, typename T, typename... OtherInput>
 class chain {
 
 public:
@@ -30,7 +28,7 @@ public:
     return *this;
   }
 
-  R execute(H &coll, OtherInput... rest) {
+  R execute(T &coll, OtherInput... rest) {
 
     DEBUG_ACTION(printf("[DEFAULT CHAIN EXECUTOR]\n");)
 
@@ -41,18 +39,14 @@ public:
   }
 
 private:
-  template <class Algorithm, class Input = typename Algorithm::input_type,
-            class Output = typename Algorithm::output_type_t,
-            class input_t = typename Algorithm::input_t,
+  template <class Algorithm, class input_t = typename Algorithm::input_t,
             class result_t = typename Algorithm::result_t>
   auto wrapper(Algorithm &algorithm) {
-    return [&](Input &coll, OtherInput... otherInput) -> Output & {
-      if constexpr (std::is_base_of<vecpar::detail::parallel_map<
-                                        result_t, input_t, OtherInput...>,
-                                    Algorithm>::value ||
-                    std::is_base_of<
-                        vecpar::detail::parallel_mmap<result_t, OtherInput...>,
-                        Algorithm>::value) {
+    return [&](input_t &coll, OtherInput... otherInput) -> result_t & {
+      if constexpr (vecpar::algorithm::is_map<Algorithm, result_t, input_t,
+                                              OtherInput...> ||
+                    vecpar::algorithm::is_mmap<Algorithm, result_t,
+                                               OtherInput...>) {
         return vecpar::parallel_algorithm(algorithm, m_mr, m_config, coll,
                                           otherInput...);
       } else {
@@ -64,7 +58,7 @@ private:
 protected:
   MemoryResource &m_mr;
   vecpar::config m_config;
-  std::function<R(H &, OtherInput...)> composition;
+  std::function<R(T &, OtherInput...)> composition;
   bool algorithms_set = false;
 };
 } // namespace vecpar

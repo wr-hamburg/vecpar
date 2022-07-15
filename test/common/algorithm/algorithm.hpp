@@ -14,9 +14,9 @@ template <typename R, typename... A> class algorithm<R(A...)> {
 public:
   using output_type = R;
 
-  using function_type = R(A...);
+  using function_type = R(A &...);
 
-  virtual output_type operator()(A... args) = 0;
+  virtual output_type operator()(A &...args) = 0;
 };
 } // namespace traccc
 #endif // VECPAR_ALGORITHM_HPP

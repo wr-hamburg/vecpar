@@ -4,6 +4,7 @@
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
 
 #include "../../common/infrastructure/TimeTest.hpp"
+#include "../../common/infrastructure/cleanup.hpp"
 #include "../../common/infrastructure/sizes.hpp"
 
 #include "../../common/algorithm/test_algorithm_1.hpp"
@@ -12,8 +13,10 @@
 #include "../../common/algorithm/test_algorithm_4.hpp"
 #include "../../common/algorithm/test_algorithm_5.hpp"
 
-#include "../native_algorithms/test_algorithm_2_cuda.hpp"
-
+#include "../../common/algorithm/test_algorithm_6.hpp"
+#include "../../common/algorithm/test_algorithm_7.hpp"
+#include "../../common/algorithm/test_algorithm_8.hpp"
+#include "../../common/algorithm/test_algorithm_9.hpp"
 #include "vecpar/cuda/cuda_parallelization.hpp"
 
 namespace {
@@ -34,8 +37,8 @@ public:
   }
 
   ~GpuManagedMemoryTest() {
-    free(vec);
-    free(vec_d);
+    cleanup::free(*vec);
+    cleanup::free(*vec_d);
   }
 
 protected:
@@ -154,31 +157,6 @@ TEST_P(GpuManagedMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
   EXPECT_EQ(par_reduced, expectedReduceResult);
 }
 
-TEST_P(GpuManagedMemoryTest, Parallel_MapReduce_Lib_vs_Op_Cuda_Overhead) {
-  test_algorithm_2 alg(mr);
-  test_algorithm_2_cuda alg_cuda(mr);
-
-  X x{1, 1.0};
-
-  std::chrono::time_point<std::chrono::steady_clock> start_time;
-  std::chrono::time_point<std::chrono::steady_clock> end_time;
-
-  start_time = std::chrono::steady_clock::now();
-  double par_reduced = vecpar::cuda::parallel_algorithm(alg, mr, *vec, x);
-  end_time = std::chrono::steady_clock::now();
-
-  std::chrono::duration<double> diff = end_time - start_time;
-  std::cout << "Time for MapReduce vecpar  = " << diff.count() << " s\n";
-
-  start_time = std::chrono::steady_clock::now();
-  double reduced = alg_cuda(*vec, x);
-  end_time = std::chrono::steady_clock::now();
-
-  diff = end_time - start_time;
-  std::cout << "Time for CUDA              = " << diff.count() << " s\n";
-  EXPECT_EQ(par_reduced, reduced);
-}
-
 TEST_P(GpuManagedMemoryTest, Parallel_MapFilter_MapReduce_Chained) {
   test_algorithm_3 first_alg(mr);
   test_algorithm_4 second_alg;
@@ -215,6 +193,145 @@ TEST_P(GpuManagedMemoryTest, Parallel_Map_Extra_Param) {
   }
 }
 
-INSTANTIATE_TEST_SUITE_P(Trivial_ManagedMemory, GpuManagedMemoryTest,
+TEST_P(GpuManagedMemoryTest, two_collections) {
+  test_algorithm_6 alg;
+
+  vecmem::vector<float> x(GetParam(), &mr);
+  vecmem::vector<float> y(GetParam(), &mr);
+
+  for (int i = 0; i < x.size(); i++) {
+    x[i] = i;
+    y[i] = 1.0;
+  }
+  float a = 2.0;
+  vecmem::vector<float> result = vecpar::cuda::parallel_map(alg, mr, y, x, a);
+
+  for (int i = 0; i < result.size(); i++) {
+    EXPECT_EQ(result.at(i), x[i] * a + 1.0);
+  }
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(result);
+}
+
+TEST_P(GpuManagedMemoryTest, three_collections) {
+  test_algorithm_7 alg;
+
+  vecmem::vector<double> x(GetParam(), &mr);
+  vecmem::vector<int> y(GetParam(), &mr);
+  vecmem::vector<float> z(GetParam(), &mr);
+
+  double expected_result = 0.0;
+
+  float a = 2.0;
+  for (int i = 0; i < x.size(); i++) {
+    x[i] = i;
+    y[i] = 1;
+    z[i] = -1.0;
+    // as map-reduce is implemented in algorithm 7
+    expected_result += x[i] * a + y[i] * z[i];
+  }
+
+  double result = vecpar::cuda::parallel_algorithm(alg, mr, x, y, z, a);
+  end_time = std::chrono::steady_clock::now();
+
+  EXPECT_EQ(result, expected_result);
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
+}
+
+TEST_P(GpuManagedMemoryTest, four_collections) {
+  test_algorithm_8 alg;
+
+  vecmem::vector<double> x(GetParam(), &mr);
+  vecmem::vector<int> y(GetParam(), &mr);
+  vecmem::vector<float> z(GetParam(), &mr);
+  vecmem::vector<float> t(GetParam(), &mr);
+
+  vecmem::vector<double> expected;
+
+  float a = 2.0;
+  for (int i = 0; i < x.size(); i++) {
+    x[i] = i;
+    y[i] = 1;
+    z[i] = -1.0;
+    t[i] = 4.0 * i;
+    // as map is implemented in algorithm 8
+    double tmp = x[i] * a + y[i] * z[i] * t[i];
+    // as filter is implemented in algorithm 8
+    if (tmp > 0)
+      expected.push_back(tmp);
+  }
+
+  vecmem::vector<double> result =
+      vecpar::cuda::parallel_algorithm(alg, mr, x, y, z, t, a);
+
+  EXPECT_EQ(result.size(), expected.size());
+
+  // the result can be in a different order
+  std::sort(expected.begin(), expected.end());
+  std::sort(result.begin(), result.end());
+  for (int i = 0; i < result.size(); i++) {
+    EXPECT_EQ(result.at(i), expected.at(i));
+  }
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
+  cleanup::free(t);
+  cleanup::free(expected);
+  cleanup::free(result);
+}
+
+TEST_P(GpuManagedMemoryTest, five_collections) {
+  test_algorithm_9 alg;
+
+  vecmem::vector<double> x(GetParam(), &mr);
+  vecmem::vector<int> y(GetParam(), &mr);
+  vecmem::vector<float> z(GetParam(), &mr);
+  vecmem::vector<float> t(GetParam(), &mr);
+  vecmem::vector<int> v(GetParam(), &mr);
+
+  vecmem::vector<double> expected;
+
+  float a = 2.0;
+  for (int i = 0; i < x.size(); i++) {
+    x[i] = i;
+    y[i] = 1;
+    z[i] = -1.0;
+    t[i] = 4.0 * i;
+    v[i] = i - 1;
+    // as map is implemented in algorithm 8
+    double tmp = x[i] * a + y[i] * z[i] * t[i] + v[i];
+    // as filter is implemented in algorithm 8
+    if (tmp > 0)
+      expected.push_back(tmp);
+  }
+
+  vecmem::vector<double> result =
+      vecpar::cuda::parallel_algorithm(alg, mr, x, y, z, t, v, a);
+
+  EXPECT_EQ(result.size(), expected.size());
+
+  // the result can be in a different order
+  std::sort(expected.begin(), expected.end());
+  std::sort(result.begin(), result.end());
+  for (int i = 0; i < result.size(); i++) {
+    EXPECT_EQ(result.at(i), expected.at(i));
+  }
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
+  cleanup::free(t);
+  cleanup::free(v);
+  cleanup::free(expected);
+  cleanup::free(result);
+}
+
+INSTANTIATE_TEST_SUITE_P(CUDA_ManagedMemory, GpuManagedMemoryTest,
                          testing::ValuesIn(N));
 } // namespace

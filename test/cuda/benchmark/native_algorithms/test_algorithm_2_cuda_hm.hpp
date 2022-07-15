@@ -7,32 +7,32 @@
 #include <vecmem/containers/device_vector.hpp>
 #include <vecmem/containers/vector.hpp>
 
+#include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
+#include <vecmem/utils/cuda/copy.hpp>
 
 #include "vecpar/core/definitions/config.hpp"
 #include "vecpar/cuda/detail/common/config.hpp"
 #include "vecpar/cuda/detail/common/cuda_utils.hpp"
 
-#include "../../common/algorithm/algorithm.hpp"
-#include "../../common/data_types.hpp"
+#include "../../../common/algorithm/algorithm.hpp"
+#include "../../../common/data_types.hpp"
 
-__global__ void kernel_alg_2(vecmem::data::vector_view<int> data_view, X *x,
-                             double *d_result) {
-  vecmem::device_vector<int> d_data(data_view);
+#include "common.hpp"
 
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx >= d_data.size())
-    return;
-  atomicAdd(d_result, d_data[idx] * x->f());
-}
+vecmem::cuda::device_memory_resource d_mem;
+vecmem::cuda::copy copy;
 
-class test_algorithm_2_cuda
+class test_algorithm_2_cuda_hm
     : public traccc::algorithm<double(vecmem::vector<int> &, X)> {
 
 public:
-  test_algorithm_2_cuda(vecmem::memory_resource &mr) : algorithm(), m_mr(mr) {}
+  test_algorithm_2_cuda_hm(vecmem::memory_resource &mr)
+      : algorithm(), m_mr(mr) {}
 
-  double operator()(vecmem::vector<int> &data, X more_data) override {
+  double operator()(vecmem::vector<int> &data, X &more_data) override {
+    vecpar::config c = vecpar::cuda::getDefaultConfig(data.size());
+
     double *result = (double *)malloc(sizeof(double));
 
     double *d_result;
@@ -44,9 +44,19 @@ public:
     CHECK_ERROR(
         cudaMemcpy(d_extra, &more_data, sizeof(X), cudaMemcpyHostToDevice));
 
-    vecpar::config c = vecpar::cuda::getDefaultConfig(data.size());
-    auto view = vecmem::get_data(data);
-    kernel_alg_2<<<c.m_gridSize, c.m_blockSize>>>(view, d_extra, d_result);
+    auto buffer = copy.to(vecmem::get_data(data), d_mem,
+                          vecmem::copy::type::host_to_device);
+    auto view = vecmem::get_data(buffer);
+
+    // call kernel
+    kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+        data.size(),
+        [=] __device__(int idx, X *) mutable {
+          vecmem::device_vector<int> dv_data(view);
+          atomicAdd(d_result, dv_data[idx] * d_extra->f());
+        },
+        d_extra);
+
     CHECK_ERROR(cudaGetLastError());
     CHECK_ERROR(cudaDeviceSynchronize());
 
