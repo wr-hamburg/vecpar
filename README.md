@@ -10,13 +10,13 @@ This is a header-only library for enabling single source code (C++) to target he
 ## Dependencies
 The project requires LLVM/Clang to build the sources. Recommendation:
 ```sh
-spack install llvm@13.0.0 +all_targets +cuda cuda_arch=<XY>
+spack install llvm@14.0.0 +all_targets +cuda cuda_arch=<XY>
 ```
 
 | Dependency                                               | OpenMP backend | CUDA backend | Tests |
 |----------------------------------------------------------|---|--------------|-------|
 | [vecmem library](https://github.com/acts-project/vecmem) | x | x| x     |
-| OpenMP 5.0 (enabled by default with LLVM13)              | x | |       |
+| OpenMP 5.0 (enabled by default with LLVM14)              | x | |       |
 | CUDA 11.5.0                                              | | x |       |
 | GoogleTest                                               | | | x     |
 
