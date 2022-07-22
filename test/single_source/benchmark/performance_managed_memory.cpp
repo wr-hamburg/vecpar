@@ -85,15 +85,7 @@ void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
   vecpar::config c = vecpar::cuda::getDefaultConfig(x.size());
 
   // call kernel
-  kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
-      x.size(),
-      [=] __device__(int idx, float d_a) mutable {
-        vecmem::device_vector<float> d_x(x_view);
-        vecmem::device_vector<float> d_y(y_view);
-
-        d_y[idx] = d_x[idx] * d_a + d_y[idx];
-      },
-      a);
+  kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(x_view, y_view, a);
 
   CHECK_ERROR(cudaGetLastError());
   CHECK_ERROR(cudaDeviceSynchronize());
