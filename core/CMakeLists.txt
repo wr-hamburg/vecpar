@@ -7,7 +7,9 @@ add_library(vecpar_core INTERFACE
         "include/vecpar/core/algorithms/parallelizable_reduce.hpp"
         "include/vecpar/core/algorithms/parallelizable_filter.hpp"
         "include/vecpar/core/definitions/common.hpp"
-        "include/vecpar/core/definitions/config.hpp")
+        "include/vecpar/core/definitions/config.hpp"
+        "include/vecpar/core/definitions/types.hpp"
+        "include/vecpar/core/definitions/helper.hpp")
 
 target_include_directories(vecpar_core INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
