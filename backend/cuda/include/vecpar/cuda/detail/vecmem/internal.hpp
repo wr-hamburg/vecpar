@@ -24,7 +24,7 @@ requires vecpar::detail::is_map_1<Algorithm, R, T, Arguments...>
 void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   vecmem::data::vector_view<typename R::value_type> &result,
                   vecmem::data::vector_view<typename T::value_type> &data,
-                  Arguments... args) {
+                  Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -56,7 +56,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   vecmem::data::vector_view<typename R::value_type> &result,
                   vecmem::data::vector_view<typename T1::value_type> &in_1,
                   vecmem::data::vector_view<typename T2::value_type> &in_2,
-                  Arguments... args) {
+                  Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -90,7 +90,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   vecmem::data::vector_view<typename T1::value_type> &in_1,
                   vecmem::data::vector_view<typename T2::value_type> &in_2,
                   vecmem::data::vector_view<typename T3::value_type> &in_3,
-                  Arguments... args) {
+                  Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -128,7 +128,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   vecmem::data::vector_view<typename T2::value_type> &in_2,
                   vecmem::data::vector_view<typename T3::value_type> &in_3,
                   vecmem::data::vector_view<typename T4::value_type> &in_4,
-                  Arguments... args) {
+                  Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -169,7 +169,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   vecmem::data::vector_view<typename T3::value_type> &in_3,
                   vecmem::data::vector_view<typename T4::value_type> &in_4,
                   vecmem::data::vector_view<typename T5::value_type> &in_5,
-                  Arguments... args) {
+                  Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -204,7 +204,7 @@ requires vecpar::detail::is_mmap_1<Algorithm, TT, Arguments...>
 void parallel_mmap(
     vecpar::config c, size_t size, Algorithm algorithm,
     vecmem::data::vector_view<typename TT::value_type> &input_output,
-    Arguments... args) {
+    Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -234,7 +234,7 @@ void parallel_mmap(
     vecpar::config c, size_t size, Algorithm algorithm,
     vecmem::data::vector_view<typename T1::value_type> &input_output,
     vecmem::data::vector_view<typename T2::value_type> &in_2,
-    Arguments... args) {
+    Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -268,7 +268,7 @@ void parallel_mmap(
     vecmem::data::vector_view<typename T1::value_type> &input_output,
     vecmem::data::vector_view<typename T2::value_type> &in_2,
     vecmem::data::vector_view<typename T3::value_type> &in_3,
-    Arguments... args) {
+    Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -302,7 +302,7 @@ void parallel_mmap(
     vecmem::data::vector_view<typename T2::value_type> &in_2,
     vecmem::data::vector_view<typename T3::value_type> &in_3,
     vecmem::data::vector_view<typename T4::value_type> &in_4,
-    Arguments... args) {
+    Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -339,7 +339,7 @@ void parallel_mmap(
     vecmem::data::vector_view<typename T3::value_type> &in_3,
     vecmem::data::vector_view<typename T4::value_type> &in_4,
     vecmem::data::vector_view<typename T5::value_type> &in_5,
-    Arguments... args) {
+    Arguments&... args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
