@@ -1,8 +1,8 @@
-#include "../../common/infrastructure/cleanup.hpp"
 #include <iostream>
 #include <vecmem/memory/host_memory_resource.hpp>
 
 #include "../../common/algorithm/test_algorithm_2.hpp"
+#include "../../common/infrastructure/cleanup.hpp"
 #include "native_algorithms/test_algorithm_2_cuda_hm.hpp"
 #include "native_algorithms/test_algorithm_2_cuda_mm.hpp"
 #include "vecpar/cuda/cuda_parallelization.hpp"

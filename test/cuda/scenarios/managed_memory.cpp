@@ -2,6 +2,8 @@
 
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
+#include <vecmem/containers/jagged_vector.hpp>
+#include <vecmem/containers/jagged_device_vector.hpp>
 
 #include "../../common/infrastructure/TimeTest.hpp"
 #include "../../common/infrastructure/cleanup.hpp"
@@ -17,7 +19,9 @@
 #include "../../common/algorithm/test_algorithm_7.hpp"
 #include "../../common/algorithm/test_algorithm_8.hpp"
 #include "../../common/algorithm/test_algorithm_9.hpp"
+#include "../../common/algorithm/test_algorithm_10.hpp"
 #include "vecpar/cuda/cuda_parallelization.hpp"
+
 
 namespace {
 
@@ -65,6 +69,31 @@ TEST_P(GpuManagedMemoryTest, Parallel_Inline_lambda) {
   EXPECT_EQ(vec->at(1), 5.);
   EXPECT_EQ(vec->at(2), 9.);
 }
+
+    TEST_P(GpuManagedMemoryTest, Parallel_Inline_lambda_jagged) {
+        X x{1, 1.0};
+
+        vecmem::jagged_vector<int> jvec(3, &mr);
+        for (int i = 0 ; i < 3; i++) {
+            vecmem::vector<int> v(1, &mr);
+            v[0] = i;
+            jvec[i] = v;
+        }
+
+        vecmem::data::jagged_vector_view<int> jview = vecmem::get_data(jvec);
+        vecpar::cuda::parallel_map(
+                jvec.size(),
+                [=] __device__(int idx,
+                vecmem::data::jagged_vector_view<int> &jvec_view) mutable {
+            vecmem::jagged_device_vector<int> d_jvec(jvec_view);
+            d_jvec[idx][0] = d_jvec[idx][0] * 4 + x.square_a();
+        },
+        jview);
+
+        EXPECT_EQ(jvec[0][0], 1.);
+        EXPECT_EQ(jvec[1][0], 5.);
+        EXPECT_EQ(jvec[2][0], 9.);
+    }
 
 TEST_P(GpuManagedMemoryTest, Parallel_Map_Time) {
   std::chrono::time_point<std::chrono::steady_clock> start_time;
@@ -254,15 +283,16 @@ TEST_P(GpuManagedMemoryTest, four_collections) {
   vecmem::vector<double> expected;
 
   float a = 2.0;
-  for (int i = 0; i < x.size(); i++) {
+  for (int i = 0; i < GetParam(); i++) {
     x[i] = i;
     y[i] = 1;
     z[i] = -1.0;
     t[i] = 4.0 * i;
     // as map is implemented in algorithm 8
     double tmp = x[i] * a + y[i] * z[i] * t[i];
+    printf("tmp=%f\n", tmp);
     // as filter is implemented in algorithm 8
-    if (tmp > 0)
+    if (tmp < 0)
       expected.push_back(tmp);
   }
 
@@ -271,7 +301,7 @@ TEST_P(GpuManagedMemoryTest, four_collections) {
 
   EXPECT_EQ(result.size(), expected.size());
 
-  // the result can be in a different order
+        // the result can be in a different order
   std::sort(expected.begin(), expected.end());
   std::sort(result.begin(), result.end());
   for (int i = 0; i < result.size(); i++) {
@@ -331,6 +361,46 @@ TEST_P(GpuManagedMemoryTest, five_collections) {
   cleanup::free(expected);
   cleanup::free(result);
 }
+
+    TEST_P(GpuManagedMemoryTest, five_jagged) {
+        test_algorithm_10 alg;
+
+        vecmem::jagged_vector<double> x(GetParam(), &mr);
+        vecmem::jagged_vector<double> y(GetParam(), &mr);
+        vecmem::vector<int> z(GetParam(), &mr);
+        vecmem::vector<int> t(GetParam(), &mr);
+        vecmem::jagged_vector<int> v(GetParam(), &mr);
+
+        double a = 2.0;
+
+        vecmem::jagged_vector<double> expected(GetParam(), &mr);
+        for (int i = 0; i < GetParam(); i++) {
+            z[i] = -i;
+            t[i] = -2;
+            for (int j = 0; j < GetParam(); j++) {
+                x[i].push_back(1);
+                y[i].push_back(i);
+                v[i].push_back(10);
+                expected[i].push_back(a * y[i][j] + x[i][j] - z[i] * t[i] * v[i][j]);
+            }
+        }
+
+        vecpar::cuda::parallel_map(alg, mr, x, y, z, t, v, a);
+
+        for (int i = 0; i < GetParam(); i++) {
+            for (int j = 0; j < GetParam(); j++) {
+                EXPECT_EQ(x[i][j], expected[i][j]);
+              //  std::cout << x[i][j] << std::endl;
+            }
+        }
+
+        cleanup::free(x);
+        cleanup::free(y);
+        cleanup::free(z);
+        cleanup::free(t);
+        cleanup::free(v);
+        cleanup::free(expected);
+    }
 
 INSTANTIATE_TEST_SUITE_P(CUDA_ManagedMemory, GpuManagedMemoryTest,
                          testing::ValuesIn(N));

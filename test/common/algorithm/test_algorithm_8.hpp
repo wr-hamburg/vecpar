@@ -29,8 +29,8 @@ public:
     return result;
   }
 
-  // keep only the positive numbers
-  TARGET bool filter(double &item) override { return (item > 0); }
+  // keep only the negative numbers
+  TARGET bool filter(double &item) override { return (item < 0); }
 };
 
 #endif // VECPAR_TEST_ALGORITHM_8_HPP

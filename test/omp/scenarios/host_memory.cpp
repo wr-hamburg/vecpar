@@ -2,6 +2,7 @@
 
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
+#include <vecmem/containers/jagged_vector.hpp>
 
 #include "../../common/infrastructure/TimeTest.hpp"
 #include "../../common/infrastructure/sizes.hpp"
@@ -18,6 +19,7 @@
 #include "../../common/algorithm/test_algorithm_9.hpp"
 #include "../../common/infrastructure/cleanup.hpp"
 #include "vecpar/omp/omp_parallelization.hpp"
+#include "../../common/algorithm/test_algorithm_10.hpp"
 
 namespace {
 
@@ -350,7 +352,7 @@ TEST_P(CpuHostMemoryTest, four_collections) {
     // as map is implemented in algorithm 8
     double tmp = x[i] * a + y[i] * z[i] * t[i];
     // as filter is implemented in algorithm 8
-    if (tmp > 0)
+    if (tmp < 0)
       expected.push_back(tmp);
   }
 
@@ -419,6 +421,47 @@ TEST_P(CpuHostMemoryTest, five_collections) {
   cleanup::free(expected);
   cleanup::free(result);
 }
+
+    TEST_P(CpuHostMemoryTest, five_jagged) {
+        test_algorithm_10 alg;
+
+        vecmem::jagged_vector<double> x(GetParam(), &mr);
+        vecmem::jagged_vector<double> y(GetParam(), &mr);
+        vecmem::vector<int> z(GetParam(), &mr);
+        vecmem::vector<int> t(GetParam(), &mr);
+        vecmem::jagged_vector<int> v(GetParam(), &mr);
+
+        double a = 2.0;
+
+        vecmem::jagged_vector<double> expected(GetParam(), &mr);
+        for (int i = 0; i < GetParam(); i++) {
+            z[i] = -i;
+            t[i] = -2;
+            for (int j = 0; j < GetParam(); j++) {
+                x[i].push_back(1);
+                y[i].push_back(i);
+                v[i].push_back(10);
+                expected[i].push_back(a * y[i][j] + x[i][j] - z[i] * t[i] * v[i][j]);
+            }
+        }
+
+        vecpar::omp::parallel_map(alg, mr, x, y, z, t, v, a);
+
+        for (int i = 0; i < GetParam(); i++) {
+            for (int j = 0; j < GetParam(); j++) {
+                EXPECT_EQ(x[i][j], expected[i][j]);
+              //  std::cout << x[i][j] << std::endl;
+            }
+        }
+
+        cleanup::free(x);
+        cleanup::free(y);
+        cleanup::free(z);
+        cleanup::free(t);
+        cleanup::free(v);
+        cleanup::free(expected);
+    }
+
 
 INSTANTIATE_TEST_SUITE_P(Trivial_HostMemory, CpuHostMemoryTest,
                          testing::ValuesIn(N));
