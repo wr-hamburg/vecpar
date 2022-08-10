@@ -43,6 +43,18 @@ namespace helper {
       //  std::cout << "not jagged" << std::endl;
         return coll;
     }
+
+    template <typename T>
+    vecmem::data::vector_view<value_type_t<T>>
+    get_view(vecmem::data::vector_buffer<value_type_t<T>>& coll) {
+        return vecmem::get_data(coll);
+    }
+
+    template <typename T>
+    vecmem::data::jagged_vector_view<value_type_t<T>>
+    get_view(vecmem::data::jagged_vector_buffer<value_type_t<T>>& coll) {
+        return vecmem::get_data(coll);
+    }
 }
 
 namespace internal {
