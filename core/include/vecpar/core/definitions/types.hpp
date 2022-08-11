@@ -32,6 +32,15 @@ template <Jagged_vector_type T> struct value_type<T, std::void_t<typename T::val
 
 template <class T> using value_type_t = typename value_type<T>::type;
 
+// https://stackoverflow.com/questions/11056714/c-type-traits-to-extract-template-parameter-class
+template <typename T> struct extract_value_type { typedef T value_type; };
+
+template <template <typename> class X, typename T>
+struct extract_value_type<X<T>> // specialization
+{
+  typedef T value_type;
+};
+
 template <typename> struct is_iterable : std::false_type {};
 
 template <typename T, typename A>
@@ -39,7 +48,9 @@ struct is_iterable<std::vector<T, A>> : std::true_type {};
 
 /// check if T is vector_view or jagged_vector_view
 template <typename T>
-concept jagged_view = std::same_as<T,vecmem::data::jagged_vector_data<value_type_t<T>>>;
+concept jagged_view =
+    std::is_same_v<T, vecmem::data::jagged_vector_data<
+                          typename extract_value_type<T>::value_type>>;
 
 /// retrieve the view from a vector/jagged_vector or object unmodified otherwise
 template <typename... T>
