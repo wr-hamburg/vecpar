@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
+#include <vecmem/containers/jagged_vector.hpp>
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
-#include <vecmem/containers/jagged_vector.hpp>
 
 #include "../../common/infrastructure/TimeTest.hpp"
 #include "../../common/infrastructure/sizes.hpp"
@@ -16,10 +16,10 @@
 #include "../../common/algorithm/test_algorithm_7.hpp"
 #include "../../common/algorithm/test_algorithm_8.hpp"
 
+#include "../../common/algorithm/test_algorithm_10.hpp"
 #include "../../common/algorithm/test_algorithm_9.hpp"
 #include "../../common/infrastructure/cleanup.hpp"
 #include "vecpar/omp/omp_parallelization.hpp"
-#include "../../common/algorithm/test_algorithm_10.hpp"
 
 namespace {
 
@@ -422,56 +422,55 @@ TEST_P(CpuHostMemoryTest, five_collections) {
   cleanup::free(result);
 }
 
-    TEST_P(CpuHostMemoryTest, five_jagged) {
-      std::chrono::time_point<std::chrono::steady_clock> start_time;
-      std::chrono::time_point<std::chrono::steady_clock> end_time;
+TEST_P(CpuHostMemoryTest, five_jagged) {
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-      test_algorithm_10 alg;
+  test_algorithm_10 alg;
 
-      vecmem::jagged_vector<double> x(GetParam(), &mr);
-      vecmem::jagged_vector<double> y(GetParam(), &mr);
-      vecmem::vector<int> z(GetParam(), &mr);
-      vecmem::vector<int> t(GetParam(), &mr);
-      vecmem::jagged_vector<int> v(GetParam(), &mr);
+  vecmem::jagged_vector<double> x(GetParam(), &mr);
+  vecmem::jagged_vector<double> y(GetParam(), &mr);
+  vecmem::vector<int> z(GetParam(), &mr);
+  vecmem::vector<int> t(GetParam(), &mr);
+  vecmem::jagged_vector<int> v(GetParam(), &mr);
 
-      double a = 2.0;
+  double a = 2.0;
 
-      // make sure the 2d collection is now square and it is
-      // small enough
-      int N = 10; // second dimension
-      vecmem::jagged_vector<double> expected(GetParam(), &mr);
-      for (int i = 0; i < GetParam(); i++) {
-        z[i] = -i;
-        t[i] = -2;
-        for (int j = 0; j < N; j++) {
-          x[i].push_back(1);
-          y[i].push_back(i);
-          v[i].push_back(10);
-          expected[i].push_back(a * y[i][j] + x[i][j] - z[i] * t[i] * v[i][j]);
-        }
-        }
-
-        start_time = std::chrono::steady_clock::now();
-        vecpar::omp::parallel_map(alg, mr, x, y, z, t, v, a);
-        end_time = std::chrono::steady_clock::now();
-
-        std::chrono::duration<double> diff = end_time - start_time;
-        printf("Parallel map time  = %f s\n", diff.count());
-
-        for (int i = 0; i < GetParam(); i++) {
-          for (int j = 0; j < N; j++) {
-            EXPECT_EQ(x[i][j], expected[i][j]);
-          }
-        }
-
-        cleanup::free(x);
-        cleanup::free(y);
-        cleanup::free(z);
-        cleanup::free(t);
-        cleanup::free(v);
-        cleanup::free(expected);
+  // make sure the 2d collection is now square and it is
+  // small enough
+  int N = 10; // second dimension
+  vecmem::jagged_vector<double> expected(GetParam(), &mr);
+  for (int i = 0; i < GetParam(); i++) {
+    z[i] = -i;
+    t[i] = -2;
+    for (int j = 0; j < N; j++) {
+      x[i].push_back(1);
+      y[i].push_back(i);
+      v[i].push_back(10);
+      expected[i].push_back(a * y[i][j] + x[i][j] - z[i] * t[i] * v[i][j]);
     }
+  }
 
+  start_time = std::chrono::steady_clock::now();
+  vecpar::omp::parallel_map(alg, mr, x, y, z, t, v, a);
+  end_time = std::chrono::steady_clock::now();
+
+  std::chrono::duration<double> diff = end_time - start_time;
+  printf("Parallel map time  = %f s\n", diff.count());
+
+  for (int i = 0; i < GetParam(); i++) {
+    for (int j = 0; j < N; j++) {
+      EXPECT_EQ(x[i][j], expected[i][j]);
+    }
+  }
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
+  cleanup::free(t);
+  cleanup::free(v);
+  cleanup::free(expected);
+}
 
 INSTANTIATE_TEST_SUITE_P(Trivial_HostMemory, CpuHostMemoryTest,
                          testing::ValuesIn(N));

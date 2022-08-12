@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
+#include <vecmem/containers/jagged_device_vector.hpp>
+#include <vecmem/containers/jagged_vector.hpp>
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
-#include <vecmem/containers/jagged_vector.hpp>
-#include <vecmem/containers/jagged_device_vector.hpp>
 
 #include "../../common/infrastructure/TimeTest.hpp"
 #include "../../common/infrastructure/cleanup.hpp"
@@ -15,13 +15,12 @@
 #include "../../common/algorithm/test_algorithm_4.hpp"
 #include "../../common/algorithm/test_algorithm_5.hpp"
 
+#include "../../common/algorithm/test_algorithm_10.hpp"
 #include "../../common/algorithm/test_algorithm_6.hpp"
 #include "../../common/algorithm/test_algorithm_7.hpp"
 #include "../../common/algorithm/test_algorithm_8.hpp"
 #include "../../common/algorithm/test_algorithm_9.hpp"
-#include "../../common/algorithm/test_algorithm_10.hpp"
 #include "vecpar/cuda/cuda_parallelization.hpp"
-
 
 namespace {
 
@@ -70,30 +69,30 @@ TEST_P(GpuManagedMemoryTest, Parallel_Inline_lambda) {
   EXPECT_EQ(vec->at(2), 9.);
 }
 
-    TEST_P(GpuManagedMemoryTest, Parallel_Inline_lambda_jagged) {
-        X x{1, 1.0};
+TEST_P(GpuManagedMemoryTest, Parallel_Inline_lambda_jagged) {
+  X x{1, 1.0};
 
-        vecmem::jagged_vector<int> jvec(3, &mr);
-        for (int i = 0 ; i < 3; i++) {
-            vecmem::vector<int> v(1, &mr);
-            v[0] = i;
-            jvec[i] = v;
-        }
+  vecmem::jagged_vector<int> jvec(3, &mr);
+  for (int i = 0; i < 3; i++) {
+    vecmem::vector<int> v(1, &mr);
+    v[0] = i;
+    jvec[i] = v;
+  }
 
-        vecmem::data::jagged_vector_view<int> jview = vecmem::get_data(jvec);
-        vecpar::cuda::parallel_map(
-                jvec.size(),
-                [=] __device__(int idx,
-                vecmem::data::jagged_vector_view<int> &jvec_view) mutable {
-            vecmem::jagged_device_vector<int> d_jvec(jvec_view);
-            d_jvec[idx][0] = d_jvec[idx][0] * 4 + x.square_a();
-        },
-        jview);
+  vecmem::data::jagged_vector_view<int> jview = vecmem::get_data(jvec);
+  vecpar::cuda::parallel_map(
+      jvec.size(),
+      [=] __device__(int idx,
+                     vecmem::data::jagged_vector_view<int> &jvec_view) mutable {
+        vecmem::jagged_device_vector<int> d_jvec(jvec_view);
+        d_jvec[idx][0] = d_jvec[idx][0] * 4 + x.square_a();
+      },
+      jview);
 
-        EXPECT_EQ(jvec[0][0], 1.);
-        EXPECT_EQ(jvec[1][0], 5.);
-        EXPECT_EQ(jvec[2][0], 9.);
-    }
+  EXPECT_EQ(jvec[0][0], 1.);
+  EXPECT_EQ(jvec[1][0], 5.);
+  EXPECT_EQ(jvec[2][0], 9.);
+}
 
 TEST_P(GpuManagedMemoryTest, Parallel_Map_Time) {
   std::chrono::time_point<std::chrono::steady_clock> start_time;
@@ -301,7 +300,7 @@ TEST_P(GpuManagedMemoryTest, four_collections) {
 
   EXPECT_EQ(result.size(), expected.size());
 
-        // the result can be in a different order
+  // the result can be in a different order
   std::sort(expected.begin(), expected.end());
   std::sort(result.begin(), result.end());
   for (int i = 0; i < result.size(); i++) {
@@ -362,55 +361,55 @@ TEST_P(GpuManagedMemoryTest, five_collections) {
   cleanup::free(result);
 }
 
-    TEST_P(GpuManagedMemoryTest, five_jagged) {
-      std::chrono::time_point<std::chrono::steady_clock> start_time;
-      std::chrono::time_point<std::chrono::steady_clock> end_time;
-      test_algorithm_10 alg;
+TEST_P(GpuManagedMemoryTest, five_jagged) {
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> end_time;
+  test_algorithm_10 alg;
 
-      vecmem::jagged_vector<double> x(GetParam(), &mr);
-      vecmem::jagged_vector<double> y(GetParam(), &mr);
-      vecmem::vector<int> z(GetParam(), &mr);
-      vecmem::vector<int> t(GetParam(), &mr);
-      vecmem::jagged_vector<int> v(GetParam(), &mr);
+  vecmem::jagged_vector<double> x(GetParam(), &mr);
+  vecmem::jagged_vector<double> y(GetParam(), &mr);
+  vecmem::vector<int> z(GetParam(), &mr);
+  vecmem::vector<int> t(GetParam(), &mr);
+  vecmem::jagged_vector<int> v(GetParam(), &mr);
 
-      double a = 2.0;
-      // make sure the 2d collection is now square and it is
-      // small enough
-      int N = 10; // second dimension
+  double a = 2.0;
+  // make sure the 2d collection is now square and it is
+  // small enough
+  int N = 10; // second dimension
 
-      //  start_time = std::chrono::steady_clock::now();
-      vecmem::jagged_vector<double> expected(GetParam(), &mr);
-      for (int i = 0; i < GetParam(); i++) {
-        z[i] = -i;
-        t[i] = -2;
-        for (int j = 0; j < N; j++) {
-          x[i].push_back(1);
-          y[i].push_back(i);
-          v[i].push_back(10);
-          expected[i].push_back(a * y[i][j] + x[i][j] - z[i] * t[i] * v[i][j]);
-        }
-        }
-
-        start_time = std::chrono::steady_clock::now();
-        vecpar::cuda::parallel_map(alg, mr, x, y, z, t, v, a);
-        end_time = std::chrono::steady_clock::now();
-
-        std::chrono::duration<double> diff = end_time - start_time;
-        printf("Parallel map time (kernel only)  = %f s\n", diff.count());
-
-        for (int i = 0; i < GetParam(); i++) {
-          for (int j = 0; j < N; j++) {
-            EXPECT_EQ(x[i][j], expected[i][j]);
-          }
-        }
-
-        cleanup::free(x);
-        cleanup::free(y);
-        cleanup::free(z);
-        cleanup::free(t);
-        cleanup::free(v);
-        cleanup::free(expected);
+  //  start_time = std::chrono::steady_clock::now();
+  vecmem::jagged_vector<double> expected(GetParam(), &mr);
+  for (int i = 0; i < GetParam(); i++) {
+    z[i] = -i;
+    t[i] = -2;
+    for (int j = 0; j < N; j++) {
+      x[i].push_back(1);
+      y[i].push_back(i);
+      v[i].push_back(10);
+      expected[i].push_back(a * y[i][j] + x[i][j] - z[i] * t[i] * v[i][j]);
     }
+  }
+
+  start_time = std::chrono::steady_clock::now();
+  vecpar::cuda::parallel_map(alg, mr, x, y, z, t, v, a);
+  end_time = std::chrono::steady_clock::now();
+
+  std::chrono::duration<double> diff = end_time - start_time;
+  printf("Parallel map time (kernel only)  = %f s\n", diff.count());
+
+  for (int i = 0; i < GetParam(); i++) {
+    for (int j = 0; j < N; j++) {
+      EXPECT_EQ(x[i][j], expected[i][j]);
+    }
+  }
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
+  cleanup::free(t);
+  cleanup::free(v);
+  cleanup::free(expected);
+}
 
 INSTANTIATE_TEST_SUITE_P(CUDA_ManagedMemory, GpuManagedMemoryTest,
                          testing::ValuesIn(N));

@@ -26,8 +26,9 @@ template <class T> struct value_type<T, std::void_t<typename T::value_type>> {
   using type = typename T::value_type;
 };
 
-template <Jagged_vector_type T> struct value_type<T, std::void_t<typename T::value_type>> {
-    using type = typename T::value_type::value_type;
+template <Jagged_vector_type T>
+struct value_type<T, std::void_t<typename T::value_type>> {
+  using type = typename T::value_type::value_type;
 };
 
 template <class T> using value_type_t = typename value_type<T>::type;
@@ -54,18 +55,19 @@ concept jagged_view =
 
 /// retrieve the view from a vector/jagged_vector or object unmodified otherwise
 template <typename... T>
-std::tuple<std::conditional_t<(std::is_object<T>::value && Jagged_vector_type<T>),
-                               vecmem::data::jagged_vector_data<value_type_t<T>>,
-                               std::conditional_t<(std::is_object<T>::value && Vector_type<T>),
-                                            vecmem::data::vector_view<value_type_t<T>>, T>>...>
+std::tuple<std::conditional_t<
+    (std::is_object<T>::value && Jagged_vector_type<T>),
+    vecmem::data::jagged_vector_data<value_type_t<T>>,
+    std::conditional_t<(std::is_object<T>::value && Vector_type<T>),
+                       vecmem::data::vector_view<value_type_t<T>>, T>>...>
 get_view_or_obj(T &...obj) {
   return {([](T &i) {
     if constexpr (Jagged_vector_type<T>) {
-        auto data = vecmem::get_data(i);
-        return data;
+      auto data = vecmem::get_data(i);
+      return data;
     } else if constexpr (Vector_type<T>) {
-        auto view = vecmem::get_data(i);
-        return view;
+      auto view = vecmem::get_data(i);
+      return view;
     } else {
       return i;
     }
