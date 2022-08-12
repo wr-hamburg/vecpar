@@ -18,17 +18,18 @@ public:
     return *this;
   }
 
-  template <typename... Args> chain &with_algorithms(Args... args) {
+  template <typename First, typename... Rest>
+  chain &with_algorithms(First first_alg, Rest... rest_alg) {
     /// cannot call with_algorithms more than once
     assertm(!algorithms_set, ALGORITHMS_ALREADY_SET);
 
-    composition = compose(wrapper(args)...);
+    composition = compose(wrapper_first(first_alg), wrapper(rest_alg)...);
     algorithms_set = true;
 
     return *this;
   }
 
-  R execute(T &coll, OtherInput... rest) {
+  R execute(T &coll, OtherInput &...rest) {
 
     DEBUG_ACTION(printf("[DEFAULT CHAIN EXECUTOR]\n");)
 
@@ -41,8 +42,8 @@ public:
 private:
   template <class Algorithm, class input_t = typename Algorithm::input_t,
             class result_t = typename Algorithm::result_t>
-  auto wrapper(Algorithm &algorithm) {
-    return [&](input_t &coll, OtherInput... otherInput) -> result_t & {
+  auto wrapper_first(Algorithm &algorithm) {
+    return [&](input_t &coll, OtherInput &...otherInput) -> result_t & {
       if constexpr (vecpar::algorithm::is_map<Algorithm, result_t, input_t,
                                               OtherInput...> ||
                     vecpar::algorithm::is_mmap<Algorithm, result_t,
@@ -55,10 +56,18 @@ private:
     };
   }
 
+  template <class Algorithm, class input_t = typename Algorithm::input_t,
+            class result_t = typename Algorithm::result_t>
+  auto wrapper(Algorithm &algorithm) {
+    return [&](input_t &coll) -> result_t & {
+      return vecpar::parallel_algorithm(algorithm, m_mr, m_config, coll);
+    };
+  }
+
 protected:
   MemoryResource &m_mr;
   vecpar::config m_config;
-  std::function<R(T &, OtherInput...)> composition;
+  std::function<R(T &, OtherInput &...)> composition;
   bool algorithms_set = false;
 };
 } // namespace vecpar

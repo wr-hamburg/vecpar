@@ -26,16 +26,16 @@ public:
     TARGET vecmem::vector<double> &map(vecmem::vector<double> &x, const vecmem::vector<double>& y,
                                        const int& z, const int& t, const vecmem::vector<int>& v,
                                        double &a) override {
-        for (int i = 0; i < x.size(); i++)
-            x[i] = a * y[i] + x[i] - z * t * v[i];
-        return x;
+      for (int i = 0; i < static_cast<int>(x.size()); i++)
+        x[i] = a * y[i] + x[i] - z * t * v[i];
+      return x;
     }
 
     TARGET auto map(auto x, auto y, const int& z, const int& t, const auto v,
                                        double &a)  {
-        for (int i = 0; i < x.size(); i++)
-            x[i] = a * y[i] + x[i] - z * t * v[i];
-        return x;
+      for (int i = 0; i < static_cast<int>(x.size()); i++)
+        x[i] = a * y[i] + x[i] - z * t * v[i];
+      return x;
     }
 /*
     TARGET vecmem::device_vector<double> map(vecmem::device_vector<double> x, const vecmem::device_vector<double> y,

@@ -39,6 +39,7 @@ struct parallel_map_two {
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
       const typename T2::value_type &in_2_item, Arguments &...obj) = 0;
+  using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
 };
@@ -49,6 +50,7 @@ struct parallel_mmap_two {
   TARGET virtual typename T1::value_type &
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item, Arguments &...obj) = 0;
+  using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
 };
@@ -62,6 +64,7 @@ struct parallel_map_three {
       const typename T1::value_type &in_1_item,
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item, Arguments &...obj) = 0;
+  using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
 };
@@ -73,6 +76,7 @@ struct parallel_mmap_three {
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item, Arguments &...obj) = 0;
+  using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
 };
@@ -87,6 +91,7 @@ struct parallel_map_four {
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
       const typename T4::value_type &in_4_item, Arguments &...obj) = 0;
+  using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
 };
@@ -100,6 +105,7 @@ struct parallel_mmap_four {
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
       const typename T4::value_type &in_4_item, Arguments &...obj) = 0;
+  using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
 };
@@ -115,6 +121,7 @@ struct parallel_map_five {
       const typename T3::value_type &in_3_item,
       const typename T4::value_type &in_4_item,
       const typename T5::value_type &in_5_item, Arguments &...obj) = 0;
+  using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
 };
@@ -129,6 +136,7 @@ struct parallel_mmap_five {
       const typename T3::value_type &in_3_item,
       const typename T4::value_type &in_4_item,
       const typename T5::value_type &in_5_item, Arguments &...obj) = 0;
+  using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
 };
