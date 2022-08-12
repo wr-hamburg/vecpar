@@ -263,7 +263,7 @@ TEST_P(SingleSourceManagedMemoryTest, Saxpymzr) {
 
   vecmem::vector<double> x(GetParam(), &mr);
   vecmem::vector<int> y(GetParam(), &mr);
-  vecmem::vector<float> z(GetParam(), &mr);
+  vecmem::jagged_vector<float> z(GetParam(), &mr);
 
   double expected_result = 0.0;
 
@@ -271,9 +271,9 @@ TEST_P(SingleSourceManagedMemoryTest, Saxpymzr) {
   for (size_t i = 0; i < x.size(); i++) {
     x[i] = i;
     y[i] = 1;
-    z[i] = -1.0;
+    z[i].push_back(-1.0);
     // as map-reduce is implemented in algorithm 7
-    expected_result += x[i] * a + y[i] * z[i];
+    expected_result += x[i] * a + y[i] * z[i][0];
   }
 
   double result = vecpar::parallel_algorithm(alg, mr, x, y, z, a);

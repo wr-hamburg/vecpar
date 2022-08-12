@@ -310,7 +310,7 @@ TEST_P(CpuHostMemoryTest, three_collections) {
 
   vecmem::vector<double> x(GetParam(), &mr);
   vecmem::vector<int> y(GetParam(), &mr);
-  vecmem::vector<float> z(GetParam(), &mr);
+  vecmem::jagged_vector<float> z(GetParam(), &mr);
 
   double expected_result = 0.0;
 
@@ -318,9 +318,9 @@ TEST_P(CpuHostMemoryTest, three_collections) {
   for (int i = 0; i < x.size(); i++) {
     x[i] = i;
     y[i] = 1;
-    z[i] = -1.0;
+    z[i].push_back(-1.0);
     // as map-reduce is implemented in algorithm 7
-    expected_result += x[i] * a + y[i] * z[i];
+    expected_result += x[i] * a + y[i] * z[i][0];
   }
 
   double result = vecpar::omp::parallel_algorithm(alg, mr, x, y, z, a);
@@ -339,7 +339,7 @@ TEST_P(CpuHostMemoryTest, four_collections) {
   vecmem::vector<double> x(GetParam(), &mr);
   vecmem::vector<int> y(GetParam(), &mr);
   vecmem::vector<float> z(GetParam(), &mr);
-  vecmem::vector<float> t(GetParam(), &mr);
+  vecmem::jagged_vector<float> t(GetParam(), &mr);
 
   vecmem::vector<double> expected;
 
@@ -348,9 +348,9 @@ TEST_P(CpuHostMemoryTest, four_collections) {
     x[i] = i;
     y[i] = 1;
     z[i] = -1.0;
-    t[i] = 4.0 * i;
+    t[i].push_back(4.0 * i);
     // as map is implemented in algorithm 8
-    double tmp = x[i] * a + y[i] * z[i] * t[i];
+    double tmp = x[i] * a + y[i] * z[i] * t[i][0];
     // as filter is implemented in algorithm 8
     if (tmp < 0)
       expected.push_back(tmp);

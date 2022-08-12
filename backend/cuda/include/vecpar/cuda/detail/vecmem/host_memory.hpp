@@ -212,25 +212,40 @@ requires vecpar::algorithm::is_map_reduce<Algorithm, Result, R, T, Arguments...>
     parallel_map_reduce(Algorithm algorithm, vecmem::host_memory_resource &mr,
                         vecpar::config config, T &data, Arguments &...args) {
 
-  //  copy input data from host to device
-  auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
-                                       vecmem::copy::type::host_to_device);
-  auto data_view = vecmem::get_data(data_buffer);
+  auto fn_jagged = [&]<typename... P>(P & ...obj)
+                       ->std::tuple<std::conditional_t<
+                           jagged_view<P>,
+                           vecmem::data::jagged_vector_buffer<
+                               typename extract_value_type<P>::value_type>,
+                           P>...> {
+    return {([&](P &i) {
+      if constexpr (jagged_view<P>) {
+        auto buffer =
+            internal::copy.to(vecmem::get_data(i), internal::d_mem, &mr,
+                              vecmem::copy::type::host_to_device);
+        return buffer;
+      } else {
+        return std::move(i);
+      }
+    }(obj))...};
+  };
 
   // allocate temp map result on host and copy to device
   R *map_result = new R(data.size(), &mr);
-  auto result_buffer =
-      internal::copy.to(vecmem::get_data(*map_result), internal::d_mem,
-                        vecmem::copy::type::host_to_device);
+  auto result_buffer_b = get_buffer_of_copied_container_or_obj(*map_result);
+  auto result_buffer = get<0>(std::apply(fn_jagged, result_buffer_b));
   auto result_view = vecmem::get_data(result_buffer);
-  auto input = get_buffer_of_copied_container_or_obj(args...);
+
+  // input data
+  auto input = get_buffer_of_copied_container_or_obj(data, args...);
+  auto input_j = std::apply(fn_jagged, input);
 
   auto fn = [&]<typename... P>(P & ...params) {
     return internal::parallel_map<Algorithm, R, T, Arguments...>(
-        config, data.size(), algorithm, result_view, data_view, params...);
+        config, data.size(), algorithm, result_view, params...);
   };
 
-  std::apply(fn, input);
+  std::apply(fn, input_j);
 
   Result *result = (Result *)malloc(sizeof(Result));
   Result *d_result;
@@ -267,19 +282,44 @@ requires vecpar::algorithm::is_mmap_reduce<Algorithm, Result, R, Arguments...>
                                 vecmem::host_memory_resource &mr,
                                 vecpar::config config, T &data,
                                 Arguments &...args) {
+  auto fn_jagged =
+      [&]<typename... P>(P & ...obj)
+          ->std::tuple<std::conditional_t<
+              (std::is_same_v<P,
+                              vecmem::data::jagged_vector_data<
+                                  typename extract_value_type<P>::value_type>>),
+              vecmem::data::jagged_vector_buffer<
+                  typename extract_value_type<P>::value_type>,
+              P>...> {
+    return {([&](P &i) {
+      if constexpr (std::is_same_v<
+                        P, vecmem::data::jagged_vector_data<
+                               typename extract_value_type<P>::value_type>>) {
+        auto buffer =
+            internal::copy.to(vecmem::get_data(i), internal::d_mem, &mr,
+                              vecmem::copy::type::host_to_device);
+        return buffer;
+      } else {
+        return std::move(i);
+      }
+    }(obj))...};
+  };
+
   // copy input data from host to device
-  auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
-                                       vecmem::copy::type::host_to_device);
+  // copy input data from host to device
+  auto data_b = get_buffer_of_copied_container_or_obj(data);
+  auto data_buffer = get<0>(std::apply(fn_jagged, data_b));
   auto data_view = vecmem::get_data(data_buffer);
 
   auto input = get_buffer_of_copied_container_or_obj(args...);
+  auto input_j = std::apply(fn_jagged, input);
 
   auto fn = [&]<typename... P>(P & ...params) {
     return internal::parallel_mmap<Algorithm, R, Arguments...>(
         config, data.size(), algorithm, data_view, params...);
   };
 
-  std::apply(fn, input);
+  std::apply(fn, input_j);
 
   Result *result = (Result *)malloc(sizeof(Result));
   Result *d_result;
@@ -313,25 +353,40 @@ requires vecpar::algorithm::is_map_filter<Algorithm, R, T, Arguments...> R &
 parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
                     vecpar::config config, T &data, Arguments &...args) {
   size_t size = data.size();
-  // copy input data from host to device
-  auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
-                                       vecmem::copy::type::host_to_device);
-  auto data_view = vecmem::get_data(data_buffer);
+  auto fn_jagged = [&]<typename... P>(P & ...obj)
+                       ->std::tuple<std::conditional_t<
+                           jagged_view<P>,
+                           vecmem::data::jagged_vector_buffer<
+                               typename extract_value_type<P>::value_type>,
+                           P>...> {
+    return {([&](P &i) {
+      if constexpr (jagged_view<P>) {
+        auto buffer =
+            internal::copy.to(vecmem::get_data(i), internal::d_mem, &mr,
+                              vecmem::copy::type::host_to_device);
+        return buffer;
+      } else {
+        return std::move(i);
+      }
+    }(obj))...};
+  };
 
-  // allocate temp map result on host and copy to device
-  R *map_result = new R(size, &mr);
+  // allocate map result on host and copy to device
+  R *map_result = new R(data.size(), &mr);
 
-  auto map_result_buffer =
-      internal::copy.to(vecmem::get_data(*map_result), internal::d_mem,
-                        vecmem::copy::type::host_to_device);
-  auto map_result_view = vecmem::get_data(map_result_buffer);
-  auto input = get_buffer_of_copied_container_or_obj(args...);
+  auto result_buffer_b = get_buffer_of_copied_container_or_obj(*map_result);
+  auto result_buffer_m = get<0>(std::apply(fn_jagged, result_buffer_b));
+  auto result_view_m = vecmem::get_data(result_buffer_m);
+
+  // input data
+  auto input = get_buffer_of_copied_container_or_obj(data, args...);
+  auto input_j = std::apply(fn_jagged, input);
 
   auto fn = [&]<typename... P>(P & ...params) {
     return internal::parallel_map<Algorithm, R, T, Arguments...>(
-        config, data.size(), algorithm, map_result_view, data_view, params...);
+        config, data.size(), algorithm, result_view_m, params...);
   };
-  std::apply(fn, input);
+  std::apply(fn, input_j);
 
   // allocate result on host and device
   R *result = new R(size, &mr);
@@ -343,7 +398,7 @@ parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
   int *idx; // global index
   CHECK_ERROR(cudaMallocManaged((void **)&idx, sizeof(int)))
   *idx = 0;
-  internal::parallel_filter(size, algorithm, idx, result_view, map_result_view);
+  internal::parallel_filter(size, algorithm, idx, result_view, result_view_m);
 
   // copy back results
   internal::copy(result_buffer, *result, vecmem::copy::type::device_to_host);
@@ -368,17 +423,42 @@ requires vecpar::algorithm::is_mmap_filter<Algorithm, R, Arguments...> R &
 parallel_map_filter(Algorithm algorithm, vecmem::host_memory_resource &mr,
                     vecpar::config config, T &data, Arguments &...args) {
   size_t size = data.size();
+
+  auto fn_jagged =
+      [&]<typename... P>(P & ...obj)
+          ->std::tuple<std::conditional_t<
+              (std::is_same_v<P,
+                              vecmem::data::jagged_vector_data<
+                                  typename extract_value_type<P>::value_type>>),
+              vecmem::data::jagged_vector_buffer<
+                  typename extract_value_type<P>::value_type>,
+              P>...> {
+    return {([&](P &i) {
+      if constexpr (std::is_same_v<
+                        P, vecmem::data::jagged_vector_data<
+                               typename extract_value_type<P>::value_type>>) {
+        auto buffer =
+            internal::copy.to(vecmem::get_data(i), internal::d_mem, &mr,
+                              vecmem::copy::type::host_to_device);
+        return buffer;
+      } else {
+        return std::move(i);
+      }
+    }(obj))...};
+  };
   // copy input data from host to device
-  auto data_buffer = internal::copy.to(vecmem::get_data(data), internal::d_mem,
-                                       vecmem::copy::type::host_to_device);
+  auto data_b = get_buffer_of_copied_container_or_obj(data);
+  auto data_buffer = get<0>(std::apply(fn_jagged, data_b));
   auto data_view = vecmem::get_data(data_buffer);
+
   auto input = get_buffer_of_copied_container_or_obj(args...);
+  auto input_j = std::apply(fn_jagged, input);
 
   auto fn = [&]<typename... P>(P & ...params) {
     return internal::parallel_mmap<Algorithm, R, Arguments...>(
         config, data.size(), algorithm, data_view, params...);
   };
-  std::apply(fn, input);
+  std::apply(fn, input_j);
 
   // allocate result on host and device
   R *result = new R(size, &mr);

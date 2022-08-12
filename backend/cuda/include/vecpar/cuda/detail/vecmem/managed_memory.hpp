@@ -50,7 +50,6 @@ parallel_map(Algorithm algorithm,
              __attribute__((unused)) vecmem::cuda::managed_memory_resource &mr,
              vecpar::config config, T &in_out_1, Arguments &...args) {
 
-  //  auto in_out_1_view = get_view<T>(in_out_1);
   auto input = get_view_or_obj(in_out_1, args...);
 
   auto fn = [&]<typename... P>(P & ...params) {
