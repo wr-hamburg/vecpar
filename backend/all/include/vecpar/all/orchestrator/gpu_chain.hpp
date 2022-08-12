@@ -9,13 +9,16 @@
 
 /// different variants for chains when the code is built for
 /// GPU CUDA and the data is initially in host memory
-/// TODO: currently limited to using only 1 iterable collections as entry point!
+/// TODO: currently limited to using only 1 iterable vecmem::vector as entry
+/// point!
 namespace vecpar {
 
 ///  1. Specialization for host_memory & result as vecmem::vector
 template <typename Ri, typename Ti, typename... OtherInput>
-class chain<vecmem::host_memory_resource, vecmem::vector<Ri>,
-            vecmem::vector<Ti>, OtherInput...> {
+requires(!Jagged_vector_type<vecmem::vector<Ti>> &&
+         !Jagged_vector_type<vecmem::vector<
+             Ri>>) class chain<vecmem::host_memory_resource, vecmem::vector<Ri>,
+                               vecmem::vector<Ti>, OtherInput...> {
 
 public:
   chain(vecmem::host_memory_resource &mem) : m_mr(mem) {}
@@ -112,8 +115,8 @@ private:
 
 ///  Specialization for host_memory & result as an object R
 template <typename R, typename Ti, typename... OtherInput>
-class chain<vecmem::host_memory_resource, R, vecmem::vector<Ti>,
-            OtherInput...> {
+requires(!Jagged_vector_type<vecmem::vector<Ti>>) class chain<
+    vecmem::host_memory_resource, R, vecmem::vector<Ti>, OtherInput...> {
 
 public:
   chain(vecmem::host_memory_resource &mem) : m_mr(mem) {}
