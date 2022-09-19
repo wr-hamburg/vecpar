@@ -23,13 +23,13 @@ public:
   TARGET test_algorithm_9() : parallelizable_mmap_filter() {}
 
   TARGET double &map(double &xi, const int &yi, const float &zi,
-                     const float &ti, const int &vi, float &a) override {
+                     const float &ti, const int &vi, float &a) const override {
     xi = a * xi + yi * zi * ti + vi;
     return xi;
   }
 
   // keep only the positive numbers
-  TARGET bool filter(double &item) override { return (item > 0); }
+  TARGET bool filter(double &item) const override { return (item > 0); }
 };
 
 #endif // VECPAR_TEST_ALGORITHM_9_HPP

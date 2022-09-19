@@ -25,18 +25,18 @@ public:
   TARGET test_algorithm_7() : parallelizable_map_reduce() {}
 
   TARGET double &map(double &result, const double &xi, const int &yi,
-                     const vecmem::vector<float> &zi, float &a) override {
+                     const vecmem::vector<float> &zi, float &a) const override {
     result = a * xi + yi * zi[0];
     return result;
   }
 
   TARGET double &map(double &result, const double &xi, const int &yi, auto zi,
-                     float &a) {
+                     float &a) const {
     result = a * xi + yi * zi[0];
     return result;
   }
 
-  TARGET double *reduce(double *result, double &partial_result) override {
+  TARGET double *reduce(double *result, double &partial_result) const override {
     *result += partial_result;
     return result;
   }

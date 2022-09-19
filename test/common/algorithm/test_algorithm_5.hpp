@@ -18,7 +18,7 @@ class test_algorithm_5
 public:
   TARGET test_algorithm_5() : algorithm(), parallelizable_mmap() {}
 
-  TARGET double &map(double &i, X &second_i) override {
+  TARGET double &map(double &i, X &second_i) const override {
     i = i + second_i.f();
     return i;
   }

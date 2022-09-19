@@ -7,9 +7,9 @@ struct X {
   int a;
   double b;
 
-  TARGET double f() { return a * b; }
+  TARGET double f() const { return a * b; }
 
-  TARGET int square_a() { return a * a; }
+  TARGET int square_a() const { return a * a; }
 };
 
 #endif // VECPAR_DATA_TYPES_HPP

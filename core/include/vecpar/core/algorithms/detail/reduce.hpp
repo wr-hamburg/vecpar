@@ -12,7 +12,7 @@ namespace vecpar::detail {
 template <Iterable R> struct parallel_reduce {
   TARGET virtual typename R::value_type *
   reduce(typename R::value_type *result,
-         typename R::value_type &partial_result) = 0;
+         typename R::value_type &partial_result) const = 0;
 };
 
 /// concepts

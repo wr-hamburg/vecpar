@@ -20,12 +20,12 @@ public:
       : algorithm(), parallelizable_map_reduce(), m_mr(mr) {}
 
   TARGET double &map(double &result_i, const int &first_i,
-                     X &second_i) override {
+                     X &second_i) const override {
     result_i = first_i * second_i.f();
     return result_i;
   }
 
-  TARGET double *reduce(double *result, double &result_i) override {
+  TARGET double *reduce(double *result, double &result_i) const override {
     if (result_i > 0)
       *result += result_i;
     return result;

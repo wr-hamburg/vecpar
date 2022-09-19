@@ -36,7 +36,7 @@ requires detail::is_mmap<Algorithm, T, Arguments...>
   vecpar::cuda::
       kernel<<<config.m_gridSize, config.m_blockSize, config.m_memorySize>>>(
           input.size,
-          [=] __device__(int idx, Arguments... a) mutable {
+          [=] __device__(int idx, Arguments... a) {
             algorithm.map(input.ptr[idx], a...);
           },
           args...);
@@ -70,7 +70,7 @@ requires detail::is_map<Algorithm, R, T, Arguments...>
   vecpar::cuda::
       kernel<<<config.m_gridSize, config.m_blockSize, config.m_memorySize>>>(
           input.size,
-          [=] __device__(int idx, Arguments... a) mutable {
+          [=] __device__(int idx, Arguments... a) {
             algorithm.map(d_result[idx], input.ptr[idx], a...);
           },
           args...);
@@ -101,7 +101,7 @@ void parallel_reduce(Algorithm algorithm, vecpar::config c,
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
 
   vecpar::cuda::rkernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
-      lock, size, [=] __device__(int *lock) mutable {
+      lock, size, [=] __device__(int *lock) {
         extern __shared__ typename R::value_type temp[];
 
         size_t tid = threadIdx.x;
@@ -162,7 +162,7 @@ void parallel_filter(Algorithm algorithm, vecpar::config c, int *idx,
 
   vecpar::cuda::rkernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       lock, size,
-      [=] __device__(int *lock, int *idx) mutable {
+      [=] __device__(int *lock, int *idx) {
         extern __shared__ R temp[];
 
         size_t gidx = threadIdx.x + blockIdx.x * blockDim.x;

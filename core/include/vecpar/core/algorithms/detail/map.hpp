@@ -13,7 +13,7 @@ template <Iterable R, Iterable T, typename... Arguments>
 struct parallel_map_one {
   TARGET virtual typename R::value_type &
   map(typename R::value_type &out_item, const typename T::value_type &in_item,
-      Arguments &...obj) = 0;
+      Arguments &...obj) const = 0;
   using input_t = T;
   using input_ti = typename T::value_type;
   using result_t = R;
@@ -24,7 +24,7 @@ struct parallel_map_one {
 /// 1 iterable and mutable collection
 template <Iterable T, typename... Arguments> struct parallel_mmap_one {
   TARGET virtual typename T::value_type &
-  map(typename T::value_type &in_out_item, Arguments &...obj) = 0;
+  map(typename T::value_type &in_out_item, Arguments &...obj) const = 0;
   using input_t = T;
   using input_ti = typename T::value_type;
   using result_t = T;
@@ -38,7 +38,7 @@ struct parallel_map_two {
   TARGET virtual typename R::value_type &
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
-      const typename T2::value_type &in_2_item, Arguments &...obj) = 0;
+      const typename T2::value_type &in_2_item, Arguments &...obj) const = 0;
   using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
@@ -49,7 +49,7 @@ template <Iterable T1, Iterable T2, typename... Arguments>
 struct parallel_mmap_two {
   TARGET virtual typename T1::value_type &
   map(typename T1::value_type &in_out_item,
-      const typename T2::value_type &in_2_item, Arguments &...obj) = 0;
+      const typename T2::value_type &in_2_item, Arguments &...obj) const = 0;
   using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
@@ -63,7 +63,7 @@ struct parallel_map_three {
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
       const typename T2::value_type &in_2_item,
-      const typename T3::value_type &in_3_item, Arguments &...obj) = 0;
+      const typename T3::value_type &in_3_item, Arguments &...obj) const = 0;
   using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
@@ -75,7 +75,7 @@ struct parallel_mmap_three {
   TARGET virtual typename T1::value_type &
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item,
-      const typename T3::value_type &in_3_item, Arguments &...obj) = 0;
+      const typename T3::value_type &in_3_item, Arguments &...obj) const = 0;
   using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
@@ -90,7 +90,7 @@ struct parallel_map_four {
       const typename T1::value_type &in_1_item,
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
-      const typename T4::value_type &in_4_item, Arguments &...obj) = 0;
+      const typename T4::value_type &in_4_item, Arguments &...obj) const = 0;
   using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
@@ -104,7 +104,7 @@ struct parallel_mmap_four {
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
-      const typename T4::value_type &in_4_item, Arguments &...obj) = 0;
+      const typename T4::value_type &in_4_item, Arguments &...obj) const = 0;
   using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
@@ -120,7 +120,7 @@ struct parallel_map_five {
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
       const typename T4::value_type &in_4_item,
-      const typename T5::value_type &in_5_item, Arguments &...obj) = 0;
+      const typename T5::value_type &in_5_item, Arguments &...obj) const = 0;
   using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
@@ -135,7 +135,7 @@ struct parallel_mmap_five {
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
       const typename T4::value_type &in_4_item,
-      const typename T5::value_type &in_5_item, Arguments &...obj) = 0;
+      const typename T5::value_type &in_5_item, Arguments &...obj) const = 0;
   using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;

@@ -1,6 +1,8 @@
 #ifndef VECPAR_CUDA_INTERNAL_HPP
 #define VECPAR_CUDA_INTERNAL_HPP
 
+#include <functional>
+
 #include <vecmem/containers/data/vector_view.hpp>
 #include <vecmem/containers/device_vector.hpp>
 #include <vecmem/containers/jagged_device_vector.hpp>
@@ -15,6 +17,8 @@
 #include "vecpar/cuda/detail/common/config.hpp"
 #include "vecpar/cuda/detail/common/cuda_utils.hpp"
 #include "vecpar/cuda/detail/common/kernels.hpp"
+
+using namespace std::placeholders;
 
 namespace helper {
 
@@ -91,7 +95,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data = helper::get_device_container<T>(data_view);
         auto dv_result = helper::get_device_container<R>(result_view);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
@@ -125,7 +129,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
         auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
         auto dv_result = helper::get_device_container<R>(result_view);
@@ -160,7 +164,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
         auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
         auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
@@ -199,7 +203,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
         auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
         auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
@@ -241,7 +245,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
         auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
         auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
@@ -261,7 +265,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
 template <typename Algorithm, typename TT, typename... Arguments>
 requires vecpar::detail::is_mmap_1<Algorithm, TT, Arguments...>
-void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
+void parallel_mmap(vecpar::config c, size_t size, const Algorithm algorithm,
                    auto &input_output, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
@@ -277,14 +281,13 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data = helper::get_device_container<TT>(input_output_view);
-        //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
+        //   printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_data[idx], a...);
         //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
       },
       args...);
-
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
 }
@@ -308,7 +311,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
         auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
         algorithm.map(dv_data_1[idx], dv_data_2[idx], a...);
@@ -340,7 +343,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
         auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
         auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
@@ -375,7 +378,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
         auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
         auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
@@ -414,7 +417,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) mutable {
+      [=] __device__(int idx, Arguments... a) {
         auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
         auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
         auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
@@ -451,7 +454,7 @@ void parallel_reduce(vecpar::config c, size_t size, Algorithm algorithm,
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
 
   vecpar::cuda::rkernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
-      lock, size, [=] __device__(int *lock) mutable {
+      lock, size, [=] __device__(int *lock) {
         vecmem::device_vector<R> partial_result(partial_result_view);
         extern __shared__ R temp[];
 
@@ -520,7 +523,7 @@ void parallel_filter(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::rkernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       lock, size,
-      [=] __device__(int *lock, int *idx) mutable {
+      [=] __device__(int *lock, int *idx) {
         vecmem::device_vector<R> d_result(result_view);
         vecmem::device_vector<R> partial_result(partial_result_view);
         extern __shared__ R temp[];

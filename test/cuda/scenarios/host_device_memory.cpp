@@ -64,8 +64,7 @@ TEST_P(GpuHostDeviceMemoryTest, Parallel_Inline_lambda) {
 
   vecpar::cuda::parallel_map(
       vec->size(),
-      [=] __device__(int idx,
-                     vecmem::data::vector_view<int> &vec_view) mutable {
+      [=] __device__(int idx, vecmem::data::vector_view<int> &vec_view) {
         vecmem::device_vector<int> d_vec(vec_view);
         d_vec[idx] = d_vec[idx] * 4 + x.square_a();
       },

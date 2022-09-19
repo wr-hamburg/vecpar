@@ -57,8 +57,7 @@ TEST_P(GpuManagedMemoryTest, Parallel_Inline_lambda) {
 
   vecpar::cuda::parallel_map(
       vec->size(),
-      [=] __device__(int idx,
-                     vecmem::data::vector_view<int> &vec_view) mutable {
+      [=] __device__(int idx, vecmem::data::vector_view<int> &vec_view) {
         vecmem::device_vector<int> d_vec(vec_view);
         d_vec[idx] = d_vec[idx] * 4 + x.square_a();
       },
@@ -83,7 +82,7 @@ TEST_P(GpuManagedMemoryTest, Parallel_Inline_lambda_jagged) {
   vecpar::cuda::parallel_map(
       jvec.size(),
       [=] __device__(int idx,
-                     vecmem::data::jagged_vector_view<int> &jvec_view) mutable {
+                     vecmem::data::jagged_vector_view<int> &jvec_view) {
         vecmem::jagged_device_vector<int> d_jvec(jvec_view);
         d_jvec[idx][0] = d_jvec[idx][0] * 4 + x.square_a();
       },

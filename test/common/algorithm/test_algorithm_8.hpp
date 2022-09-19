@@ -26,19 +26,19 @@ public:
 
   TARGET double &map(double &result, const double &xi, const int &yi,
                      const float &zi, const vecmem::vector<float> &ti,
-                     float &a) override {
+                     float &a) const override {
     result = a * xi + yi * zi * ti[0];
     return result;
   }
 
   TARGET double &map(double &result, const double &xi, const int &yi,
-                     const float &zi, auto ti, float &a) {
+                     const float &zi, auto ti, float &a) const {
     result = a * xi + yi * zi * ti[0];
     return result;
   }
 
   // keep only the negative numbers
-  TARGET bool filter(double &item) override { return (item < 0); }
+  TARGET bool filter(double &item) const override { return (item < 0); }
 };
 
 #endif // VECPAR_TEST_ALGORITHM_8_HPP

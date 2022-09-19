@@ -16,12 +16,12 @@ public:
   TARGET test_algorithm_1(vecmem::memory_resource &mr)
       : parallelizable_map_reduce(), m_mr(mr) {}
 
-  TARGET double &map(double &result_i, const int &data_i) override {
+  TARGET double &map(double &result_i, const int &data_i) const override {
     result_i = data_i * 1.0;
     return result_i;
   }
 
-  TARGET double *reduce(double *result, double &result_i) override {
+  TARGET double *reduce(double *result, double &result_i) const override {
     // printf("%f + %f \n ", *result, result_i);
     *result += result_i;
     return result;
