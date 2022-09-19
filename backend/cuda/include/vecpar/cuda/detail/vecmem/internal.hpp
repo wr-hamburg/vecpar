@@ -3,15 +3,68 @@
 
 #include <vecmem/containers/data/vector_view.hpp>
 #include <vecmem/containers/device_vector.hpp>
+#include <vecmem/containers/jagged_device_vector.hpp>
+#include <vecmem/containers/jagged_vector.hpp>
 #include <vecmem/memory/cuda/device_memory_resource.hpp>
 #include <vecmem/utils/cuda/copy.hpp>
 
 #include "vecpar/core/definitions/common.hpp"
 #include "vecpar/core/definitions/config.hpp"
 #include "vecpar/core/definitions/helper.hpp"
+#include "vecpar/core/definitions/types.hpp"
 #include "vecpar/cuda/detail/common/config.hpp"
 #include "vecpar/cuda/detail/common/cuda_utils.hpp"
 #include "vecpar/cuda/detail/common/kernels.hpp"
+
+namespace helper {
+
+template <Jagged_vector_type T>
+__device__ vecmem::jagged_device_vector<typename T::value_type::value_type>
+get_device_container(auto in) {
+  vecmem::jagged_device_vector<typename T::value_type::value_type> dv_data(in);
+  return dv_data;
+}
+
+template <typename T>
+__device__ vecmem::device_vector<typename T::value_type>
+get_device_container(auto in) {
+  vecmem::device_vector<typename T::value_type> dv_data(in);
+  return dv_data;
+}
+
+template <typename T>
+vecmem::data::jagged_vector_view<value_type_t<T>>
+get_view(vecmem::data::jagged_vector_data<value_type_t<T>> &coll) {
+  //  std::cout << "jagged" << std::endl;
+  return vecmem::get_data(coll);
+}
+
+template <typename T>
+vecmem::data::jagged_vector_view<value_type_t<T>>
+get_view(vecmem::data::jagged_vector_view<value_type_t<T>> &coll) {
+  //  std::cout << "jagged" << std::endl;
+  return coll;
+}
+
+template <typename T>
+vecmem::data::vector_view<value_type_t<T>>
+get_view(vecmem::data::vector_view<value_type_t<T>> &coll) {
+  //  std::cout << "not jagged" << std::endl;
+  return coll;
+}
+
+template <typename T>
+vecmem::data::vector_view<value_type_t<T>>
+get_view(vecmem::data::vector_buffer<value_type_t<T>> &coll) {
+  return vecmem::get_data(coll);
+}
+
+template <typename T>
+vecmem::data::jagged_vector_view<value_type_t<T>>
+get_view(vecmem::data::jagged_vector_buffer<value_type_t<T>> &coll) {
+  return vecmem::get_data(coll);
+}
+} // namespace helper
 
 namespace internal {
 
@@ -22,14 +75,16 @@ template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename T, typename... Arguments>
 requires vecpar::detail::is_map_1<Algorithm, R, T, Arguments...>
 void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
-                  vecmem::data::vector_view<typename R::value_type> &result,
-                  vecmem::data::vector_view<typename T::value_type> &data,
-                  Arguments&... args) {
+                  auto &result, auto &data, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
+
+  // an extra call is needed to get the data when the collection is a jagged one
+  auto result_view = helper::get_view<R>(result);
+  auto data_view = helper::get_view<T>(data);
 
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
@@ -37,8 +92,8 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename T::value_type> dv_data(data);
-        vecmem::device_vector<typename R::value_type> dv_result(result);
+        auto dv_data = helper::get_device_container<T>(data_view);
+        auto dv_result = helper::get_device_container<R>(result_view);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_result[idx], dv_data[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
@@ -53,10 +108,7 @@ template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename T1, typename T2, typename... Arguments>
 requires vecpar::detail::is_map_2<Algorithm, R, T1, T2, Arguments...>
 void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
-                  vecmem::data::vector_view<typename R::value_type> &result,
-                  vecmem::data::vector_view<typename T1::value_type> &in_1,
-                  vecmem::data::vector_view<typename T2::value_type> &in_2,
-                  Arguments&... args) {
+                  auto &result, auto &in_1, auto &in_2, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -66,12 +118,17 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
 
+  // an extra call is needed to get the data when the collection is a jagged one
+  auto result_view = helper::get_view<R>(result);
+  auto in_1_view = helper::get_view<T1>(in_1);
+  auto in_2_view = helper::get_view<T2>(in_2);
+
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename T1::value_type> dv_data_1(in_1);
-        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
-        vecmem::device_vector<typename R::value_type> dv_result(result);
+        auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
+        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
+        auto dv_result = helper::get_device_container<R>(result_view);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
@@ -86,11 +143,8 @@ template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename T1, typename T2, typename T3, typename... Arguments>
 requires vecpar::detail::is_map_3<Algorithm, R, T1, T2, T3, Arguments...>
 void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
-                  vecmem::data::vector_view<typename R::value_type> &result,
-                  vecmem::data::vector_view<typename T1::value_type> &in_1,
-                  vecmem::data::vector_view<typename T2::value_type> &in_2,
-                  vecmem::data::vector_view<typename T3::value_type> &in_3,
-                  Arguments&... args) {
+                  auto &result, auto &in_1, auto &in_2, auto &in_3,
+                  Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -99,14 +153,18 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+  auto result_view = helper::get_view<R>(result);
+  auto in_1_view = helper::get_view<T1>(in_1);
+  auto in_2_view = helper::get_view<T2>(in_2);
+  auto in_3_view = helper::get_view<T3>(in_3);
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename T1::value_type> dv_data_1(in_1);
-        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
-        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
-        vecmem::device_vector<typename R::value_type> dv_result(result);
+        auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
+        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
+        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
+        auto dv_result = helper::get_device_container<R>(result_view);
         //       printf("[mapper] data[%d]=%f\n", idx, dv_data_3[idx]);
         algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
                       dv_data_3[idx], a...);
@@ -123,12 +181,8 @@ template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename... Arguments>
 requires vecpar::detail::is_map_4<Algorithm, R, T1, T2, T3, T4, Arguments...>
 void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
-                  vecmem::data::vector_view<typename R::value_type> &result,
-                  vecmem::data::vector_view<typename T1::value_type> &in_1,
-                  vecmem::data::vector_view<typename T2::value_type> &in_2,
-                  vecmem::data::vector_view<typename T3::value_type> &in_3,
-                  vecmem::data::vector_view<typename T4::value_type> &in_4,
-                  Arguments&... args) {
+                  auto &result, auto &in_1, auto &in_2, auto &in_3, auto &in_4,
+                  Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -137,15 +191,20 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+  auto result_view = helper::get_view<R>(result);
+  auto in_1_view = helper::get_view<T1>(in_1);
+  auto in_2_view = helper::get_view<T2>(in_2);
+  auto in_3_view = helper::get_view<T3>(in_3);
+  auto in_4_view = helper::get_view<T4>(in_4);
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename T1::value_type> dv_data_1(in_1);
-        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
-        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
-        vecmem::device_vector<typename T4::value_type> dv_data_4(in_4);
-        vecmem::device_vector<typename R::value_type> dv_result(result);
+        auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
+        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
+        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
+        auto dv_data_4 = helper::get_device_container<T4>(in_4_view);
+        auto dv_result = helper::get_device_container<R>(result_view);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
                       dv_data_3[idx], dv_data_4[idx], a...);
@@ -163,13 +222,8 @@ template <typename Algorithm, typename R = typename Algorithm::result_t,
 requires vecpar::detail::is_map_5<Algorithm, R, T1, T2, T3, T4, T5,
                                   Arguments...>
 void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
-                  vecmem::data::vector_view<typename R::value_type> &result,
-                  vecmem::data::vector_view<typename T1::value_type> &in_1,
-                  vecmem::data::vector_view<typename T2::value_type> &in_2,
-                  vecmem::data::vector_view<typename T3::value_type> &in_3,
-                  vecmem::data::vector_view<typename T4::value_type> &in_4,
-                  vecmem::data::vector_view<typename T5::value_type> &in_5,
-                  Arguments&... args) {
+                  auto &result, auto &in_1, auto &in_2, auto &in_3, auto &in_4,
+                  auto &in_5, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -178,16 +232,22 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+  auto result_view = helper::get_view<R>(result);
+  auto in_1_view = helper::get_view<T1>(in_1);
+  auto in_2_view = helper::get_view<T2>(in_2);
+  auto in_3_view = helper::get_view<T3>(in_3);
+  auto in_4_view = helper::get_view<T4>(in_4);
+  auto in_5_view = helper::get_view<T5>(in_5);
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename T1::value_type> dv_data_1(in_1);
-        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
-        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
-        vecmem::device_vector<typename T4::value_type> dv_data_4(in_4);
-        vecmem::device_vector<typename T5::value_type> dv_data_5(in_5);
-        vecmem::device_vector<typename R::value_type> dv_result(result);
+        auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
+        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
+        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
+        auto dv_data_4 = helper::get_device_container<T4>(in_4_view);
+        auto dv_data_5 = helper::get_device_container<T5>(in_5_view);
+        auto dv_result = helper::get_device_container<R>(result_view);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
                       dv_data_3[idx], dv_data_4[idx], dv_data_5[idx], a...);
@@ -201,10 +261,8 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
 template <typename Algorithm, typename TT, typename... Arguments>
 requires vecpar::detail::is_mmap_1<Algorithm, TT, Arguments...>
-void parallel_mmap(
-    vecpar::config c, size_t size, Algorithm algorithm,
-    vecmem::data::vector_view<typename TT::value_type> &input_output,
-    Arguments&... args) {
+void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
+                   auto &input_output, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -214,10 +272,13 @@ void parallel_mmap(
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
 
+  // an extra call is needed to get the data when the collection is a jagged one
+  auto input_output_view = helper::get_view<TT>(input_output);
+
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename TT::value_type> dv_data(input_output);
+        auto dv_data = helper::get_device_container<TT>(input_output_view);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_data[idx], a...);
         //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
@@ -230,11 +291,8 @@ void parallel_mmap(
 
 template <typename Algorithm, typename T1, typename T2, typename... Arguments>
 requires vecpar::detail::is_mmap_2<Algorithm, T1, T2, Arguments...>
-void parallel_mmap(
-    vecpar::config c, size_t size, Algorithm algorithm,
-    vecmem::data::vector_view<typename T1::value_type> &input_output,
-    vecmem::data::vector_view<typename T2::value_type> &in_2,
-    Arguments&... args) {
+void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
+                   auto &input_output, auto &in_2, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -244,15 +302,16 @@ void parallel_mmap(
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
 
+  // an extra call is needed to get the data when the collection is a jagged one
+  auto input_output_view = helper::get_view<T1>(input_output);
+  auto in_2_view = helper::get_view<T2>(in_2);
+
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename T1::value_type> dv_data_1(input_output);
-        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
-        //      printf("[mapper] data[%d]=%f \n", idx, dv_data_1[idx]);
-        //    printf("[mapper] data_2[%d]=%f \n", idx, dv_data_2[idx]);
+        auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
+        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
         algorithm.map(dv_data_1[idx], dv_data_2[idx], a...);
-        //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
       },
       args...);
 
@@ -263,12 +322,9 @@ void parallel_mmap(
 template <typename Algorithm, typename T1, typename T2, typename T3,
           typename... Arguments>
 requires vecpar::detail::is_mmap_3<Algorithm, T1, T2, T3, Arguments...>
-void parallel_mmap(
-    vecpar::config c, size_t size, Algorithm algorithm,
-    vecmem::data::vector_view<typename T1::value_type> &input_output,
-    vecmem::data::vector_view<typename T2::value_type> &in_2,
-    vecmem::data::vector_view<typename T3::value_type> &in_3,
-    Arguments&... args) {
+void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
+                   auto &input_output, auto &in_2, auto &in_3,
+                   Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -277,13 +333,17 @@ void parallel_mmap(
 
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
+  // an extra call is needed to get the data when the collection is a jagged one
+  auto input_output_view = helper::get_view<T1>(input_output);
+  auto in_2_view = helper::get_view<T2>(in_2);
+  auto in_3_view = helper::get_view<T3>(in_3);
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename T1::value_type> dv_data_1(input_output);
-        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
-        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
+        auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
+        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
+        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
 
         algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx], a...);
       },
@@ -296,18 +356,19 @@ void parallel_mmap(
 template <typename Algorithm, typename T1, typename T2, typename T3,
           typename T4, typename... Arguments>
 requires vecpar::detail::is_mmap_4<Algorithm, T1, T2, T3, T4, Arguments...>
-void parallel_mmap(
-    vecpar::config c, size_t size, Algorithm algorithm,
-    vecmem::data::vector_view<typename T1::value_type> &input_output,
-    vecmem::data::vector_view<typename T2::value_type> &in_2,
-    vecmem::data::vector_view<typename T3::value_type> &in_3,
-    vecmem::data::vector_view<typename T4::value_type> &in_4,
-    Arguments&... args) {
+void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
+                   auto &input_output, auto &in_2, auto &in_3, auto &in_4,
+                   Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
+  // an extra call is needed to get the data when the collection is a jagged one
+  auto input_output_view = helper::get_view<T1>(input_output);
+  auto in_2_view = helper::get_view<T2>(in_2);
+  auto in_3_view = helper::get_view<T3>(in_3);
+  auto in_4_view = helper::get_view<T4>(in_4);
 
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
@@ -315,10 +376,10 @@ void parallel_mmap(
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename T1::value_type> dv_data_1(input_output);
-        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
-        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
-        vecmem::device_vector<typename T4::value_type> dv_data_4(in_4);
+        auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
+        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
+        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
+        auto dv_data_4 = helper::get_device_container<T4>(in_4_view);
 
         algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
                       dv_data_4[idx], a...);
@@ -332,14 +393,9 @@ void parallel_mmap(
 template <typename Algorithm, typename T1, typename T2, typename T3,
           typename T4, typename T5, typename... Arguments>
 requires vecpar::detail::is_mmap_5<Algorithm, T1, T2, T3, T4, T5, Arguments...>
-void parallel_mmap(
-    vecpar::config c, size_t size, Algorithm algorithm,
-    vecmem::data::vector_view<typename T1::value_type> &input_output,
-    vecmem::data::vector_view<typename T2::value_type> &in_2,
-    vecmem::data::vector_view<typename T3::value_type> &in_3,
-    vecmem::data::vector_view<typename T4::value_type> &in_4,
-    vecmem::data::vector_view<typename T5::value_type> &in_5,
-    Arguments&... args) {
+void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
+                   auto &input_output, auto &in_2, auto &in_3, auto &in_4,
+                   auto &in_5, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
   if (c.isEmpty()) {
@@ -349,14 +405,21 @@ void parallel_mmap(
   DEBUG_ACTION(printf("[MAP] nBlocks:%d, nThreads:%d, memorySize:%zu\n",
                       c.m_gridSize, c.m_blockSize, c.m_memorySize);)
 
+  // an extra call is needed to get the data when the collection is a jagged one
+  auto input_output_view = helper::get_view<T1>(input_output);
+  auto in_2_view = helper::get_view<T2>(in_2);
+  auto in_3_view = helper::get_view<T3>(in_3);
+  auto in_4_view = helper::get_view<T4>(in_4);
+  auto in_5_view = helper::get_view<T5>(in_5);
+
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
       [=] __device__(int idx, Arguments... a) mutable {
-        vecmem::device_vector<typename T1::value_type> dv_data_1(input_output);
-        vecmem::device_vector<typename T2::value_type> dv_data_2(in_2);
-        vecmem::device_vector<typename T3::value_type> dv_data_3(in_3);
-        vecmem::device_vector<typename T4::value_type> dv_data_4(in_4);
-        vecmem::device_vector<typename T5::value_type> dv_data_5(in_5);
+        auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
+        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
+        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
+        auto dv_data_4 = helper::get_device_container<T4>(in_4_view);
+        auto dv_data_5 = helper::get_device_container<T5>(in_5_view);
 
         algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
                       dv_data_4[idx], dv_data_5[idx], a...);

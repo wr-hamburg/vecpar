@@ -53,3 +53,14 @@ To install the library
 ```sh 
 cmake --install <build_directory>
 ```
+## Collection types
+vecpar supports `vecmem::vectors` as input and/or output for all operations. 
+`vecmem::jagged_vectors` are supported for a restricted subset (marked with x):
+
+| Abstraction | `Jagged_vector` as input(s) | `Jagged_vector` as output |
+|-------------|----------------------------|---------------------|
+| map | x                          | x                   |
+| filter |                            |                     |
+| reduce |                            |                     |
+| map-filter | x                          |                     |
+| map-reduce | x                          |                     |

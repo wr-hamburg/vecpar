@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <vecmem/containers/jagged_vector.hpp>
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
 
@@ -15,6 +16,7 @@
 #include "../../common/algorithm/test_algorithm_7.hpp"
 #include "../../common/algorithm/test_algorithm_8.hpp"
 
+#include "../../common/algorithm/test_algorithm_10.hpp"
 #include "../../common/algorithm/test_algorithm_9.hpp"
 #include "../../common/infrastructure/cleanup.hpp"
 #include "vecpar/omp/omp_parallelization.hpp"
@@ -308,7 +310,7 @@ TEST_P(CpuHostMemoryTest, three_collections) {
 
   vecmem::vector<double> x(GetParam(), &mr);
   vecmem::vector<int> y(GetParam(), &mr);
-  vecmem::vector<float> z(GetParam(), &mr);
+  vecmem::jagged_vector<float> z(GetParam(), &mr);
 
   double expected_result = 0.0;
 
@@ -316,9 +318,9 @@ TEST_P(CpuHostMemoryTest, three_collections) {
   for (int i = 0; i < x.size(); i++) {
     x[i] = i;
     y[i] = 1;
-    z[i] = -1.0;
+    z[i].push_back(-1.0);
     // as map-reduce is implemented in algorithm 7
-    expected_result += x[i] * a + y[i] * z[i];
+    expected_result += x[i] * a + y[i] * z[i][0];
   }
 
   double result = vecpar::omp::parallel_algorithm(alg, mr, x, y, z, a);
@@ -337,7 +339,7 @@ TEST_P(CpuHostMemoryTest, four_collections) {
   vecmem::vector<double> x(GetParam(), &mr);
   vecmem::vector<int> y(GetParam(), &mr);
   vecmem::vector<float> z(GetParam(), &mr);
-  vecmem::vector<float> t(GetParam(), &mr);
+  vecmem::jagged_vector<float> t(GetParam(), &mr);
 
   vecmem::vector<double> expected;
 
@@ -346,11 +348,11 @@ TEST_P(CpuHostMemoryTest, four_collections) {
     x[i] = i;
     y[i] = 1;
     z[i] = -1.0;
-    t[i] = 4.0 * i;
+    t[i].push_back(4.0 * i);
     // as map is implemented in algorithm 8
-    double tmp = x[i] * a + y[i] * z[i] * t[i];
+    double tmp = x[i] * a + y[i] * z[i] * t[i][0];
     // as filter is implemented in algorithm 8
-    if (tmp > 0)
+    if (tmp < 0)
       expected.push_back(tmp);
   }
 
@@ -418,6 +420,56 @@ TEST_P(CpuHostMemoryTest, five_collections) {
   cleanup::free(v);
   cleanup::free(expected);
   cleanup::free(result);
+}
+
+TEST_P(CpuHostMemoryTest, five_jagged) {
+  std::chrono::time_point<std::chrono::steady_clock> start_time;
+  std::chrono::time_point<std::chrono::steady_clock> end_time;
+
+  test_algorithm_10 alg;
+
+  vecmem::jagged_vector<double> x(GetParam(), &mr);
+  vecmem::jagged_vector<double> y(GetParam(), &mr);
+  vecmem::vector<int> z(GetParam(), &mr);
+  vecmem::vector<int> t(GetParam(), &mr);
+  vecmem::jagged_vector<int> v(GetParam(), &mr);
+
+  double a = 2.0;
+
+  // make sure the 2d collection is now square and it is
+  // small enough
+  int N = 10; // second dimension
+  vecmem::jagged_vector<double> expected(GetParam(), &mr);
+  for (int i = 0; i < GetParam(); i++) {
+    z[i] = -i;
+    t[i] = -2;
+    for (int j = 0; j < N; j++) {
+      x[i].push_back(1);
+      y[i].push_back(i);
+      v[i].push_back(10);
+      expected[i].push_back(a * y[i][j] + x[i][j] - z[i] * t[i] * v[i][j]);
+    }
+  }
+
+  start_time = std::chrono::steady_clock::now();
+  vecpar::omp::parallel_map(alg, mr, x, y, z, t, v, a);
+  end_time = std::chrono::steady_clock::now();
+
+  std::chrono::duration<double> diff = end_time - start_time;
+  printf("Parallel map time  = %f s\n", diff.count());
+
+  for (int i = 0; i < GetParam(); i++) {
+    for (int j = 0; j < N; j++) {
+      EXPECT_EQ(x[i][j], expected[i][j]);
+    }
+  }
+
+  cleanup::free(x);
+  cleanup::free(y);
+  cleanup::free(z);
+  cleanup::free(t);
+  cleanup::free(v);
+  cleanup::free(expected);
 }
 
 INSTANTIATE_TEST_SUITE_P(Trivial_HostMemory, CpuHostMemoryTest,
