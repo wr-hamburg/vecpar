@@ -6,7 +6,7 @@
 namespace vecpar::cuda {
 
 template <typename Function, typename... Arguments>
-__global__ void kernel(size_t size, Function f, Arguments... args) {
+__global__ void kernel(const size_t size, const Function f, Arguments... args) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx >= size)
     return;
@@ -14,7 +14,9 @@ __global__ void kernel(size_t size, Function f, Arguments... args) {
 }
 
 template <typename Function, typename... Arguments>
-__global__ void rkernel(int *lock, size_t size, Function f, Arguments... args) {
+__global__ void rkernel(int *lock, const size_t size,
+                        const /*__grid_constant__*/ Function f,
+                        Arguments... args) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx >= size)
     return;

@@ -95,14 +95,15 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data = helper::get_device_container<T>(data_view);
-        auto dv_result = helper::get_device_container<R>(result_view);
+      [algorithm] __device__(int idx, auto &d_result, const auto &d_in,
+                             Arguments... a) {
+        auto dv_data = helper::get_device_container<T>(d_in);
+        auto dv_result = helper::get_device_container<R>(d_result);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_result[idx], dv_data[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
-      args...);
+      result_view, data_view, args...);
 
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
@@ -129,15 +130,16 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
-        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
-        auto dv_result = helper::get_device_container<R>(result_view);
+      [algorithm] __device__(int idx, auto &d_result, const auto &d_in_1,
+                             const auto &d_in_2, Arguments... a) {
+        auto dv_data_1 = helper::get_device_container<T1>(d_in_1);
+        auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
+        auto dv_result = helper::get_device_container<R>(d_result);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
-      args...);
+      result_view, in_1_view, in_2_view, args...);
 
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
@@ -164,17 +166,19 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
-        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
-        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
-        auto dv_result = helper::get_device_container<R>(result_view);
+      [algorithm] __device__(int idx, auto &d_result, const auto &d_in_1,
+                             const auto &d_in_2, const auto &d_in_3,
+                             Arguments... a) {
+        auto dv_data_1 = helper::get_device_container<T1>(d_in_1);
+        auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
+        auto dv_data_3 = helper::get_device_container<T3>(d_in_3);
+        auto dv_result = helper::get_device_container<R>(d_result);
         //       printf("[mapper] data[%d]=%f\n", idx, dv_data_3[idx]);
         algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
                       dv_data_3[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
-      args...);
+      result_view, in_1_view, in_2_view, in_3_view, args...);
 
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
@@ -203,18 +207,20 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
-        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
-        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
-        auto dv_data_4 = helper::get_device_container<T4>(in_4_view);
-        auto dv_result = helper::get_device_container<R>(result_view);
+      [algorithm] __device__(int idx, auto &d_result, const auto &d_in_1,
+                             const auto &d_in_2, const auto &d_in_3,
+                             const auto &d_in_4, Arguments... a) {
+        auto dv_data_1 = helper::get_device_container<T1>(d_in_1);
+        auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
+        auto dv_data_3 = helper::get_device_container<T3>(d_in_3);
+        auto dv_data_4 = helper::get_device_container<T4>(d_in_4);
+        auto dv_result = helper::get_device_container<R>(d_result);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
                       dv_data_3[idx], dv_data_4[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
-      args...);
+      result_view, in_1_view, in_2_view, in_3_view, in_4_view, args...);
 
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
@@ -245,18 +251,22 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data_1 = helper::get_device_container<T1>(in_1_view);
-        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
-        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
-        auto dv_data_4 = helper::get_device_container<T4>(in_4_view);
-        auto dv_data_5 = helper::get_device_container<T5>(in_5_view);
-        auto dv_result = helper::get_device_container<R>(result_view);
+      [algorithm] __device__(int idx, auto &d_result, const auto &d_in_1,
+                             const auto &d_in_2, const auto &d_in_3,
+                             const auto &d_in_4, const auto &d_in_5,
+                             Arguments... a) {
+        auto dv_data_1 = helper::get_device_container<T1>(d_in_1);
+        auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
+        auto dv_data_3 = helper::get_device_container<T3>(d_in_3);
+        auto dv_data_4 = helper::get_device_container<T4>(d_in_4);
+        auto dv_data_5 = helper::get_device_container<T5>(d_in_5);
+        auto dv_result = helper::get_device_container<R>(d_result);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
                       dv_data_3[idx], dv_data_4[idx], dv_data_5[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
+      result_view, in_1_view, in_2_view, in_3_view, in_4_view, in_5_view,
       args...);
 
   CHECK_ERROR(cudaGetLastError())
@@ -281,13 +291,13 @@ void parallel_mmap(vecpar::config c, size_t size, const Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data = helper::get_device_container<TT>(input_output_view);
+      [algorithm] __device__(int idx, auto &d_in_out_view, Arguments... a) {
+        auto dv_data = helper::get_device_container<TT>(d_in_out_view);
         //   printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_data[idx], a...);
         //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
       },
-      args...);
+      input_output_view, args...);
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
 }
@@ -311,12 +321,13 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
-        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
+      [algorithm] __device__(int idx, auto &d_in_out, const auto &d_in_2,
+                             Arguments... a) {
+        auto dv_data_1 = helper::get_device_container<T1>(d_in_out);
+        auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
         algorithm.map(dv_data_1[idx], dv_data_2[idx], a...);
       },
-      args...);
+      input_output_view, in_2_view, args...);
 
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
@@ -343,14 +354,15 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
-        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
-        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
+      [algorithm] __device__(int idx, auto &d_in_out, const auto &d_in_2,
+                             const auto &d_in_3, Arguments... a) {
+        auto dv_data_1 = helper::get_device_container<T1>(d_in_out);
+        auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
+        auto dv_data_3 = helper::get_device_container<T3>(d_in_3);
 
         algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx], a...);
       },
-      args...);
+      input_output_view, in_2_view, in_3_view, args...);
 
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
@@ -378,16 +390,18 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
-        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
-        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
-        auto dv_data_4 = helper::get_device_container<T4>(in_4_view);
+      [algorithm] __device__(int idx, auto &d_in_out, const auto &d_in_2,
+                             const auto &d_in_3, const auto &d_in_4,
+                             Arguments... a) {
+        auto dv_data_1 = helper::get_device_container<T1>(d_in_out);
+        auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
+        auto dv_data_3 = helper::get_device_container<T3>(d_in_3);
+        auto dv_data_4 = helper::get_device_container<T4>(d_in_4);
 
         algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
                       dv_data_4[idx], a...);
       },
-      args...);
+      input_output_view, in_2_view, in_3_view, in_4_view, args...);
 
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
@@ -417,17 +431,18 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
 
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [=] __device__(int idx, Arguments... a) {
-        auto dv_data_1 = helper::get_device_container<T1>(input_output_view);
-        auto dv_data_2 = helper::get_device_container<T2>(in_2_view);
-        auto dv_data_3 = helper::get_device_container<T3>(in_3_view);
-        auto dv_data_4 = helper::get_device_container<T4>(in_4_view);
-        auto dv_data_5 = helper::get_device_container<T5>(in_5_view);
+      [algorithm] __device__(int idx, auto &view_1, auto &view_2, auto &view_3,
+                             auto &view_4, auto &view_5, Arguments... a) {
+        auto dv_data_1 = helper::get_device_container<T1>(view_1);
+        auto dv_data_2 = helper::get_device_container<T2>(view_2);
+        auto dv_data_3 = helper::get_device_container<T3>(view_3);
+        auto dv_data_4 = helper::get_device_container<T4>(view_4);
+        auto dv_data_5 = helper::get_device_container<T5>(view_5);
 
         algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
                       dv_data_4[idx], dv_data_5[idx], a...);
       },
-      args...);
+      input_output_view, in_2_view, in_3_view, in_4_view, in_5_view, args...);
 
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
