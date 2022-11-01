@@ -97,7 +97,7 @@ TEST_P(GpuManagedMemoryTest, Parallel_Map_Time) {
   std::chrono::time_point<std::chrono::steady_clock> start_time;
   std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   start_time = std::chrono::steady_clock::now();
   vecmem::vector<double> result = vecpar::cuda::parallel_map(alg, mr, *vec);
@@ -108,7 +108,7 @@ TEST_P(GpuManagedMemoryTest, Parallel_Map_Time) {
 }
 
 TEST_P(GpuManagedMemoryTest, Parallel_Map_Correctness) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
   vecmem::vector<double> result = vecpar::cuda::parallel_map(alg, mr, *vec);
 
   for (int i = 0; i < vec->size(); i++)
@@ -119,7 +119,7 @@ TEST_P(GpuManagedMemoryTest, Parallel_Reduce_Time) {
   std::chrono::time_point<std::chrono::steady_clock> start_time;
   std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   start_time = std::chrono::steady_clock::now();
   double result = vecpar::cuda::parallel_reduce(alg, mr, *vec_d);
@@ -130,7 +130,7 @@ TEST_P(GpuManagedMemoryTest, Parallel_Reduce_Time) {
 }
 
 TEST_P(GpuManagedMemoryTest, Parallel_Reduce_Correctness) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
   double result = vecpar::cuda::parallel_reduce(alg, mr, *vec_d);
   EXPECT_EQ(result, expectedReduceResult);
 }
@@ -168,7 +168,7 @@ TEST_P(GpuManagedMemoryTest, Parallel_Filter_Correctness) {
 }
 
 TEST_P(GpuManagedMemoryTest, Parallel_MapReduce_Grouped) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   // parallel execution
   double par_reduced = vecpar::cuda::parallel_algorithm(alg, mr, *vec);
@@ -176,7 +176,7 @@ TEST_P(GpuManagedMemoryTest, Parallel_MapReduce_Grouped) {
 }
 
 TEST_P(GpuManagedMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
-  test_algorithm_2 alg(mr);
+  test_algorithm_2 alg;
 
   X x{1, 1.0};
   // parallel execution

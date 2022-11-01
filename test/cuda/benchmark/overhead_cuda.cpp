@@ -22,7 +22,7 @@ void run_test_for_N(vecmem::host_memory_resource mem, int n) {
 
   std::cout << "Test for N = " << vec->size() << std::endl;
 
-  test_algorithm_2 alg(mem);
+  test_algorithm_2 alg;
   test_algorithm_2_cuda_hm alg_cuda(mem);
   X x{1, 1.0};
 
@@ -56,7 +56,7 @@ void run_test_for_N(vecmem::cuda::managed_memory_resource mem, int n) {
 
   std::cout << "Test for N = " << vec->size() << std::endl;
 
-  test_algorithm_2 alg(mem);
+  test_algorithm_2 alg;
   test_algorithm_2_cuda_mm alg_cuda(mem);
   X x{1, 1.0};
 

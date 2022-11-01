@@ -55,7 +55,7 @@ TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Time) {
   std::chrono::time_point<std::chrono::steady_clock> start_time;
   std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   start_time = std::chrono::steady_clock::now();
   vecpar::parallel_algorithm(alg, mr, *vec);
@@ -66,7 +66,7 @@ TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Time) {
 }
 
 TEST_P(SingleSourceManagedMemoryTest, Parallel_Map_Correctness) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
   vecmem::vector<double> result = vecpar::parallel_map(alg, mr, *vec);
 
   for (size_t i = 0; i < vec->size(); i++)
@@ -77,7 +77,7 @@ TEST_P(SingleSourceManagedMemoryTest, Parallel_Reduce_Time) {
   std::chrono::time_point<std::chrono::steady_clock> start_time;
   std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   start_time = std::chrono::steady_clock::now();
   vecpar::parallel_reduce(alg, mr, *vec_d);
@@ -118,7 +118,7 @@ TEST_P(SingleSourceManagedMemoryTest, Parallel_Filter_Correctness) {
 }
 
 TEST_P(SingleSourceManagedMemoryTest, Parallel_MapReduce_Separately) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   // parallel execution
   double result =
@@ -128,7 +128,7 @@ TEST_P(SingleSourceManagedMemoryTest, Parallel_MapReduce_Separately) {
 }
 
 TEST_P(SingleSourceManagedMemoryTest, Parallel_MapReduce_Grouped) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   // parallel execution
   double par_reduced = vecpar::parallel_algorithm(alg, mr, *vec);
@@ -137,7 +137,7 @@ TEST_P(SingleSourceManagedMemoryTest, Parallel_MapReduce_Grouped) {
 
 TEST_P(SingleSourceManagedMemoryTest,
        Parallel_Extra_Params_MapReduce_Separately) {
-  test_algorithm_2 alg(mr);
+  test_algorithm_2 alg;
 
   X x{1, 1.0};
 
@@ -149,7 +149,7 @@ TEST_P(SingleSourceManagedMemoryTest,
 }
 
 TEST_P(SingleSourceManagedMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
-  test_algorithm_2 alg(mr);
+  test_algorithm_2 alg;
 
   X x{1, 1.0};
   // parallel execution

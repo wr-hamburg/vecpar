@@ -16,11 +16,11 @@ class test_algorithm_2
           vecmem::vector<int>, X> {
 
 public:
-  test_algorithm_2(vecmem::memory_resource &mr)
-      : algorithm(), parallelizable_map_reduce(), m_mr(mr) {}
+  test_algorithm_2()
+      : algorithm(), parallelizable_map_reduce() {}
 
   TARGET double &map(double &result_i, const int &first_i,
-                     X &second_i) const override {
+                     X &second_i) const {
     result_i = first_i * second_i.f();
     return result_i;
   }
@@ -32,7 +32,7 @@ public:
   }
 
   double *operator()(vecmem::vector<int> &data, X &x, double *result) {
-    vecmem::vector<double> result_tmp(data.size(), &m_mr);
+    vecmem::vector<double> result_tmp(data.size());
     for (size_t i = 0; i < data.size(); i++)
       reduce(result, map(result_tmp[i], data[i], x));
     return result;
@@ -43,9 +43,6 @@ public:
     this->operator()(data, more_data, result);
     return result;
   }
-
-private:
-  vecmem::memory_resource &m_mr;
 };
 
 #endif

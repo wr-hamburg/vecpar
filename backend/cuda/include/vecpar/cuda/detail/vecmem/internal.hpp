@@ -82,7 +82,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   auto &result, auto &data, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -116,7 +116,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   auto &result, auto &in_1, auto &in_2, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -153,7 +153,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -193,7 +193,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -236,7 +236,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   auto &in_5, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -272,14 +272,65 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
 }
+/*
+    extern "C" __device__ void __cxa_pure_virtual() { __trap(); }
 
+    template <typename Algorithm>
+    __global__ void create_algorithm(Algorithm **alg) {
+        (*alg) = new Algorithm();
+    }
+
+    template <typename Algorithm, typename TT, typename... Arguments>
+    __global__ void k1(size_t size,
+                       Algorithm** d_algorithm,
+                       vecmem::data::vector_view<typename TT::value_type> input_output,
+                       Arguments... args) {
+        size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx >= size)
+            return;
+        vecmem::device_vector<typename TT::value_type> dv_data(input_output);
+        (*d_algorithm)->map(dv_data[idx], args...);
+    }
+
+    template<typename Algorithm>
+    __global__ void destroy_algorithm(Algorithm **d_alg) {
+        delete *d_alg;
+    }
+
+//__device__ __constant__ unsigned long mmap_one_wrapper[1024];
+
+
+    template <typename Function, typename TT, typename... Arguments>
+    inline TARGET void k_map(int idx, Function& f, auto &d_in_out_view, Arguments... a) {
+        auto dv_data = helper::get_device_container<TT>(d_in_out_view);
+        //   printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
+        (f)(dv_data[idx], a...);
+        //   (*d_alg)->map(dv_data[idx], a...);
+        //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
+    }
+
+    template <typename Function, typename TT, typename... Arguments>
+    __global__ void k1(const __grid_constant__ size_t size,
+                       //const _grid_constant__ Function f,
+                       Function f,
+                       auto& view,
+                       Arguments... args) {
+        size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx >= size)
+            return;
+        k_map<Function, TT, Arguments...>(idx, f, view, args...);
+    }
+
+*/
 template <typename Algorithm, typename TT, typename... Arguments>
 requires vecpar::detail::is_mmap_1<Algorithm, TT, Arguments...>
 void parallel_mmap(vecpar::config c, size_t size, const Algorithm algorithm,
                    auto &input_output, Arguments &...args) {
 
+ // using func_t = typename Algorithm::func_t;
+
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -289,17 +340,89 @@ void parallel_mmap(vecpar::config c, size_t size, const Algorithm algorithm,
   // an extra call is needed to get the data when the collection is a jagged one
   auto input_output_view = helper::get_view<TT>(input_output);
 
-  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+ // const typename Algorithm::func_t* device_fn = &algorithm.redirect;
+//  CHECK_ERROR(cudaHostAlloc((void**)&device_fn, sizeof(algorithm.redirect), cudaHostAllocPortable))
+
+   // auto dv_data = helper::get_device_container<TT>(input_output_view);
+  //  std::function<value_type_t<TT>&(const Algorithm&, value_type_t<TT>&, Arguments&...)> f = &Algorithm::map;
+  //  f(algorithm, dv_data[0], args...);
+
+
+  // CHECK_ERROR(cudaMemcpy(device_fn, &algorithm.redirect,
+                 //        sizeof(algorithm.redirect)))
+/*
+    vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       size,
-      [algorithm] __device__(int idx, auto &d_in_out_view, Arguments... a) {
+      [] __device__(int idx, auto& d_fn, auto &d_in_out_view, Arguments... a) {
+        auto dv_data = helper::get_device_container<TT>(d_in_out_view);
+        //   printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
+        //algorithm.map(dv_data[idx], a...);
+        (d_fn)(dv_data[idx], a...);
+        //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
+      },
+      algorithm.redirect,
+      input_output_view, args...);
+      */
+/*
+   auto lambda1 = [algorithm]{return algorithm.redirect;};
+    CHECK_ERROR(cudaMemcpyToSymbol(mmap_one_wrapper, &lambda1,
+                                   sizeof(lambda1), 0, cudaMemcpyHostToDevice))
+    typedef value_type_t<TT>& (*F)(value_type_t<TT>&, Arguments&...);
+
+    auto lambda = [] __device__ (int idx, auto &d_in_out_view, Arguments... a) {
+        auto dv_data = helper::get_device_container<TT>(d_in_out_view);
+        //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
+        F& f = *(reinterpret_cast< F*>(mmap_one_wrapper));
+        f(dv_data.at(idx), a...);
+        //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
+    };
+
+    CHECK_ERROR(cudaMemcpyToSymbol(vecpar::cuda::gpu_constant_memory, &lambda,
+                                   sizeof(lambda), 0, cudaMemcpyHostToDevice))
+
+    vecpar::cuda::kernel_ct<decltype(lambda), decltype(input_output_view), Arguments...><<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+    size,
+    input_output_view,
+    args...);
+
+
+  Algorithm** d_alg;
+  CHECK_ERROR(cudaMalloc(&d_alg, sizeof(Algorithm**)))
+  create_algorithm<Algorithm><<<1,1>>>(d_alg);
+  CHECK_ERROR(cudaDeviceSynchronize())
+
+  vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+            size,
+            [algorithm] __device__ (int idx, Algorithm** d_alg, auto &d_in_out_view, Arguments... a) {
         auto dv_data = helper::get_device_container<TT>(d_in_out_view);
         //   printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
         algorithm.map(dv_data[idx], a...);
+     //   (*d_alg)->map(dv_data[idx], a...);
         //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
-      },
-      input_output_view, args...);
+    },
+  //  d_alg,
+    input_output_view, args...);
+
+
+
+  k1<func_t, TT, Arguments...><<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(size, ptof, input_output_view, args...);
   CHECK_ERROR(cudaGetLastError())
   CHECK_ERROR(cudaDeviceSynchronize())
+
+  destroy_algorithm<Algorithm><<<1,1>>>(d_alg);
+  CHECK_ERROR(cudaDeviceSynchronize())
+  */
+        vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
+                size,
+        [algorithm] __device__(int idx, auto &d_in_out_view, Arguments... a) {
+            auto dv_data = helper::get_device_container<TT>(d_in_out_view);
+            //   printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
+            algorithm.map(dv_data[idx], a...);
+            //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
+        },
+        input_output_view, args...);
+        CHECK_ERROR(cudaGetLastError())
+        CHECK_ERROR(cudaDeviceSynchronize())
 }
 
 template <typename Algorithm, typename T1, typename T2, typename... Arguments>
@@ -308,7 +431,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
                    auto &input_output, auto &in_2, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -341,7 +464,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
                    Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -376,7 +499,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
                    Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
   // an extra call is needed to get the data when the collection is a jagged one
@@ -415,7 +538,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
                    auto &in_5, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -461,7 +584,7 @@ void parallel_reduce(vecpar::config c, size_t size, Algorithm algorithm,
   *lock = 0;
 
   // make sure that an empty config ends up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getReduceConfig<R>(size);
   }
 
@@ -529,7 +652,7 @@ void parallel_filter(vecpar::config c, size_t size, Algorithm algorithm,
   *lock = 0;
 
   // make sure that an empty config ends up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getReduceConfig<R>(size);
   }
 

@@ -14,7 +14,7 @@
 #include "native_algorithms/test_algorithm_2_seq.hpp"
 
 vecmem::host_memory_resource mr;
-test_algorithm_2 alg_lib(mr);
+test_algorithm_2 alg_lib;
 test_algorithm_2_omp alg_test(mr);
 test_algorithm_2_omp_optimized alg_opt_test(mr);
 test_algorithm_2_seq alg_seq(mr);

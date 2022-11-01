@@ -2,6 +2,7 @@
 #define VECPAR_ALG1_HPP
 
 #include <vecmem/memory/memory_resource.hpp>
+#include <omp.h>
 
 #include "vecpar/core/algorithms/parallelizable_map_reduce.hpp"
 #include "vecpar/core/definitions/config.hpp"
@@ -13,11 +14,14 @@ class test_algorithm_1 : public vecpar::algorithm::parallelizable_map_reduce<
                              vecmem::vector<double>, vecmem::vector<int>> {
 
 public:
-  TARGET test_algorithm_1(vecmem::memory_resource &mr)
-      : parallelizable_map_reduce(), m_mr(mr) {}
+  TARGET test_algorithm_1()
+      : parallelizable_map_reduce(){}
 
-  TARGET double &map(double &result_i, const int &data_i) const override {
+  TARGET double &map(double &result_i, const int &data_i) const  {
     result_i = data_i * 1.0;
+#ifdef _OPENMP
+    DEBUG_ACTION(printf("Running on device? = %d\n", !omp_is_initial_device());)
+#endif
     return result_i;
   }
 
@@ -28,7 +32,7 @@ public:
   }
 
   double *operator()(vecmem::vector<int> data, double *result) {
-    vecmem::vector<double> result_tmp(data.size(), &m_mr);
+    vecmem::vector<double> result_tmp(data.size());
     for (size_t i = 0; i < data.size(); i++)
       reduce(result, map(result_tmp[i], data[i]));
     return result;
@@ -40,8 +44,5 @@ public:
     return result;
   }
 
-private:
-  vecmem::memory_resource &m_mr;
 };
-
 #endif // VECPAR_ALG1_HPP

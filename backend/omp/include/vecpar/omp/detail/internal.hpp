@@ -10,9 +10,8 @@ template <typename Function, typename... Arguments>
 void offload_map(vecpar::config config, int size, Function f,
                  Arguments &...args) {
   int threadsNum = 0;
-
-  if (config.isEmpty()) {
-#pragma omp parallel for
+  if (vecpar::config::isEmpty(config)) {
+#pragma omp parallel for //shared(args...)
     for (int i = 0; i < size; i++) {
       f(i, args...);
       DEBUG_ACTION(threadsNum = omp_get_num_threads();)

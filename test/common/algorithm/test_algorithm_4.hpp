@@ -17,7 +17,7 @@ class test_algorithm_4
 public:
   TARGET test_algorithm_4() : algorithm(), parallelizable_mmap_reduce() {}
 
-  TARGET double &map(double &i) const override {
+  TARGET double &map(double &i) const {
     i = i * 2;
     return i;
   }

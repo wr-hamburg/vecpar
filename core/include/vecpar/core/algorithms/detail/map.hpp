@@ -11,9 +11,9 @@ namespace vecpar::detail {
 /// 1 iterable collection
 template <Iterable R, Iterable T, typename... Arguments>
 struct parallel_map_one {
-  TARGET virtual typename R::value_type &
+  inline TARGET typename R::value_type &
   map(typename R::value_type &out_item, const typename T::value_type &in_item,
-      Arguments &...obj) const = 0;
+      Arguments &...obj) const;
   using input_t = T;
   using input_ti = typename T::value_type;
   using result_t = R;
@@ -23,13 +23,16 @@ struct parallel_map_one {
 
 /// 1 iterable and mutable collection
 template <Iterable T, typename... Arguments> struct parallel_mmap_one {
-  TARGET virtual typename T::value_type &
-  map(typename T::value_type &in_out_item, Arguments &...obj) const = 0;
+  inline TARGET typename T::value_type &
+  map(typename T::value_type &in_out_item, Arguments &...obj) const;
   using input_t = T;
   using input_ti = typename T::value_type;
   using result_t = T;
   using result_ti = typename T::value_type;
   using intermediate_result_t = T;
+
+        //typedef input_ti& (parallel_mmap_one::*func_t)(input_ti&, Arguments&...) const;
+  //DEVICE_ONLY func_t redirect = &parallel_mmap_one::map;
 };
 
 /// 2 iterable collections
