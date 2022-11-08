@@ -195,7 +195,8 @@ TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Grouped) {
 
   // parallel execution
  // double par_reduced =
-  vecmem::vector<double> result = vecpar::ompt::parallel_map(alg, mr, *vec);
+  vecpar::config c{1, 10};
+  vecmem::vector<double> result = vecpar::ompt::parallel_map(alg, mr, c, *vec);
   for (int i = 0; i < vec->size(); i++)
       EXPECT_EQ(result[i], 1.0 * vec->at(i));
   //EXPECT_EQ(par_reduced, expectedReduceResult);
@@ -285,7 +286,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
   EXPECT_EQ(result.size(), vec_d->size());
   for (int i = 0; i < result.size(); i++) {
     EXPECT_EQ(result.at(i), vec_d->at(i));
-    EXPECT_EQ(result.at(i), (vec->at(i) + x.a) * x.b);
+    EXPECT_EQ(result.at(i), vec->at(i) + x.f());
   }
 }
 /*

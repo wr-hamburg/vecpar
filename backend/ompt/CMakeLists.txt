@@ -6,9 +6,8 @@ target_include_directories(vecpar_ompt INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-#string(APPEND CMAKE_EXE_LINKER_FLAGS "-fopenmp")
 target_link_libraries(vecpar_ompt INTERFACE
-        vecpar_core vecmem::core OpenMP::OpenMP_CXX) # CUDA::cudart)
+        vecpar_core vecmem::core OpenMP::OpenMP_CXX)
 
 set_target_properties(vecpar_ompt PROPERTIES EXPORT_NAME ompt)
 add_library(vecpar::ompt ALIAS vecpar_ompt)
