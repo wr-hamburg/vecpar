@@ -67,9 +67,11 @@ namespace ompt {
     template<class MemoryResource, class Algorithm,
             class R = typename Algorithm::intermediate_result_t, class T,
             typename... Arguments>
-    R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
-                          vecpar::config config, T &data,
-                          Arguments &...args) {
+    R &parallel_algorithm(__attribute__((unused))  Algorithm algorithm,
+                          __attribute__((unused))  MemoryResource &mr,
+                          __attribute__((unused))  vecpar::config config,
+                          __attribute__((unused))  T &data,
+                          __attribute__((unused))  Arguments &...args) {
         throw std::logic_error("Not implemented yet");
     }
 }

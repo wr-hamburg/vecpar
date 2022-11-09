@@ -25,7 +25,7 @@ public:
     return result_i;
   }
 
-  TARGET double *reduce(double *result, double &result_i) const override {
+  TARGET double *reduce(double *result, double &result_i) const  {
     if (result_i > 0)
       *result += result_i;
     return result;

@@ -17,13 +17,8 @@ class test_algorithm_5
 
 public:
   TARGET test_algorithm_5() : algorithm(), parallelizable_mmap() {}
-/*
-  TARGET double &map(double &i, X &second_i) const override {
-    i = i + second_i.f();
-    return i;
-  }
-*/
-    TARGET double &map(double &i, X &second_i) const {
+
+  TARGET double &map(double &i, X &second_i) const {
         i = i + second_i.f();
 #ifdef _OPENMP
         DEBUG_ACTION(printf("Running on device? = %d\n", !omp_is_initial_device());)

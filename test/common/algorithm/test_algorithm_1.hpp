@@ -25,7 +25,7 @@ public:
     return result_i;
   }
 
-  TARGET double *reduce(double *result, double &result_i) const override {
+  TARGET double *reduce(double *result, double &result_i) const {
     // printf("%f + %f \n ", *result, result_i);
     *result += result_i;
     return result;

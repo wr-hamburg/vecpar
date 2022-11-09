@@ -7,7 +7,7 @@
 namespace vecpar::detail {
 
 template <vecpar::collection::Iterable R> struct parallel_filter {
-  TARGET virtual bool filter(typename R::value_type &item) const = 0;
+  TARGET bool filter(typename R::value_type &item) const;
 };
 
 /// concepts

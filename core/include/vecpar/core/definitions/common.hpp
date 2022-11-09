@@ -2,9 +2,9 @@
 #define VECPAR_COMMON_HPP
 
 #ifdef __CUDA__
-#define TARGET __host__ __device__
+#define TARGET __host__ __device__ __forceinline__
 #else
-#define TARGET
+#define TARGET inline
 #endif
 
 #ifndef NDEBUG

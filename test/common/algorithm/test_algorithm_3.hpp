@@ -21,7 +21,7 @@ public:
     return result_i;
   }
 
-  TARGET bool filter(double &result_i) const override {
+  TARGET bool filter(double &result_i) const {
     return (int(result_i) % 2 == 0);
   };
 

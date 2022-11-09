@@ -1,0 +1,27 @@
+find_package( CUDAToolkit REQUIRED )
+enable_language(CUDA)
+set(CMAKE_CXX_COMPILER "/home/maniageo/tools/spack/opt/spack/linux-fedora35-skylake/gcc-11.2.1/llvm-15.0.0-xbginxwojs4nyehmo3leuvo5n4o7efiq/bin/clang++")
+set(CMAKE_CUDA_COMPILER "/home/maniageo/tools/spack/opt/spack/linux-fedora35-skylake/gcc-11.2.1/cuda-11.8.0-hq3zx55y5rj5ah5lkri3mnlvkikb5er2/bin/nvcc")
+set(CMAKE_CUDA_HOST_COMPILER  "/home/maniageo/tools/spack/opt/spack/linux-fedora35-skylake/gcc-11.2.1/llvm-15.0.0-xbginxwojs4nyehmo3leuvo5n4o7efiq/bin/clang++")
+
+#message(STATUS "${CMAKE_CUDA_HOST_COMPILER}")
+set( CMAKE_CXX_FLAGS "-std=c++20 -DVECMEM_HAVE_PMR_MEMORY_RESOURCE" )
+#message(STATUS "______ ${CMAKE_CUDA_COMPILER_ID}")
+if( "${CMAKE_CUDA_COMPILER_ID}" MATCHES "NVIDIA" )
+    add_executable(cuda_nvcc "scenarios/managed_memory.cu")
+
+    target_include_directories(cuda_nvcc PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/common)
+
+  #  target_compile_options(cuda_nvcc PUBLIC
+   #     $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE -std=c++17>)
+
+    # Allow to use functions in device code that are constexpr, even if they are
+    # not marked with __device__.
+
+    set( CMAKE_CUDA_FLAGS "-DVECMEM_HAVE_PMR_MEMORY_RESOURCE --expt-relaxed-constexpr -fmad=false -std=c++20" )
+    set_property(TARGET cuda_nvcc PROPERTY CUDA_STANDARD 20)
+    set_property(TARGET cuda_nvcc PROPERTY CUDA_ARCHITECTURES 86)
+    target_link_libraries(cuda_nvcc GTest::gtest_main vecpar_cuda)
+
+endif()

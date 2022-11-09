@@ -11,7 +11,7 @@ namespace vecpar::detail {
 /// 1 iterable collection
 template <Iterable R, Iterable T, typename... Arguments>
 struct parallel_map_one {
-  inline TARGET typename R::value_type &
+   TARGET typename R::value_type &
   map(typename R::value_type &out_item, const typename T::value_type &in_item,
       Arguments &...obj) const;
   using input_t = T;
@@ -23,25 +23,22 @@ struct parallel_map_one {
 
 /// 1 iterable and mutable collection
 template <Iterable T, typename... Arguments> struct parallel_mmap_one {
-  inline TARGET typename T::value_type &
+   TARGET typename T::value_type &
   map(typename T::value_type &in_out_item, Arguments &...obj) const;
   using input_t = T;
   using input_ti = typename T::value_type;
   using result_t = T;
   using result_ti = typename T::value_type;
   using intermediate_result_t = T;
-
-        //typedef input_ti& (parallel_mmap_one::*func_t)(input_ti&, Arguments&...) const;
-  //DEVICE_ONLY func_t redirect = &parallel_mmap_one::map;
 };
 
 /// 2 iterable collections
 template <Iterable R, Iterable T1, Iterable T2, typename... Arguments>
 struct parallel_map_two {
-  TARGET virtual typename R::value_type &
+   TARGET typename R::value_type &
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
-      const typename T2::value_type &in_2_item, Arguments &...obj) const = 0;
+      const typename T2::value_type &in_2_item, Arguments &...obj) const;
   using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
@@ -50,9 +47,9 @@ struct parallel_map_two {
 /// 2 iterable collections; result in first collection
 template <Iterable T1, Iterable T2, typename... Arguments>
 struct parallel_mmap_two {
-  TARGET virtual typename T1::value_type &
+   TARGET typename T1::value_type &
   map(typename T1::value_type &in_out_item,
-      const typename T2::value_type &in_2_item, Arguments &...obj) const = 0;
+      const typename T2::value_type &in_2_item, Arguments &...obj) const;
   using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
@@ -62,11 +59,11 @@ struct parallel_mmap_two {
 template <typename R, typename T1, typename T2, typename T3,
           typename... Arguments>
 struct parallel_map_three {
-  TARGET virtual typename R::value_type &
+   TARGET typename R::value_type &
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
       const typename T2::value_type &in_2_item,
-      const typename T3::value_type &in_3_item, Arguments &...obj) const = 0;
+      const typename T3::value_type &in_3_item, Arguments &...obj) const;
   using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
@@ -75,10 +72,10 @@ struct parallel_map_three {
 /// 3 iterable collections; result in first collection
 template <typename T1, typename T2, typename T3, typename... Arguments>
 struct parallel_mmap_three {
-  TARGET virtual typename T1::value_type &
+   TARGET typename T1::value_type &
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item,
-      const typename T3::value_type &in_3_item, Arguments &...obj) const = 0;
+      const typename T3::value_type &in_3_item, Arguments &...obj) const;
   using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
@@ -88,12 +85,12 @@ struct parallel_mmap_three {
 template <typename R, typename T1, typename T2, typename T3, typename T4,
           typename... Arguments>
 struct parallel_map_four {
-  TARGET virtual typename R::value_type &
+   TARGET typename R::value_type &
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
-      const typename T4::value_type &in_4_item, Arguments &...obj) const = 0;
+      const typename T4::value_type &in_4_item, Arguments &...obj) const;
   using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
@@ -103,11 +100,11 @@ struct parallel_map_four {
 template <typename T1, typename T2, typename T3, typename T4,
           typename... Arguments>
 struct parallel_mmap_four {
-  TARGET virtual typename T1::value_type &
+   TARGET typename T1::value_type &
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
-      const typename T4::value_type &in_4_item, Arguments &...obj) const = 0;
+      const typename T4::value_type &in_4_item, Arguments &...obj) const;
   using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
@@ -117,13 +114,13 @@ struct parallel_mmap_four {
 template <typename R, typename T1, typename T2, typename T3, typename T4,
           typename T5, typename... Arguments>
 struct parallel_map_five {
-  TARGET virtual typename R::value_type &
+   TARGET typename R::value_type &
   map(typename R::value_type &out_item,
       const typename T1::value_type &in_1_item,
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
       const typename T4::value_type &in_4_item,
-      const typename T5::value_type &in_5_item, Arguments &...obj) const = 0;
+      const typename T5::value_type &in_5_item, Arguments &...obj) const;
   using input_t = T1;
   using result_t = R;
   using intermediate_result_t = R;
@@ -133,12 +130,12 @@ struct parallel_map_five {
 template <typename T1, typename T2, typename T3, typename T4, typename T5,
           typename... Arguments>
 struct parallel_mmap_five {
-  TARGET virtual typename T1::value_type &
+   TARGET typename T1::value_type &
   map(typename T1::value_type &in_out_item,
       const typename T2::value_type &in_2_item,
       const typename T3::value_type &in_3_item,
       const typename T4::value_type &in_4_item,
-      const typename T5::value_type &in_5_item, Arguments &...obj) const = 0;
+      const typename T5::value_type &in_5_item, Arguments &...obj) const;
   using input_t = T1;
   using result_t = T1;
   using intermediate_result_t = T1;
