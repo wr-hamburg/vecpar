@@ -51,8 +51,8 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
         set(LINK_FLAGS -fopenmp)
 
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-                set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64 -foffload-lto)
-                set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64 -foffload-lto)
+                set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64 )
+                set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64 )
         elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
                 set(COMPILE_FLAGS ${COMPILE_FLAGS} -foffload=nvptx-none)
                 set(LINK_FLAGS ${LINK_FLAGS} -foffload=nvptx-none)
@@ -67,6 +67,11 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
 
         target_link_libraries(tests_ompt_gpu GTest::gtest_main
                 vecpar_ompt OpenMP::OpenMP_CXX)
+
+        if (VECPAR_BUILD_WITH_CLANG)
+                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -foffload-lto")
+                target_link_options(tests_ompt_cpu PRIVATE -foffload-lto)
+        endif()
 endif()
 
 # TODO: clean up before merging to MAIN branch
