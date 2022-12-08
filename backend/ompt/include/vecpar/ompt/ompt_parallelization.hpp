@@ -41,7 +41,7 @@ namespace vecpar::ompt {
         value_type_t<R> *map_result = new value_type_t<R>[size];
         value_type_t<T> *d_data = data.data();
 
-        int device = omp_get_device_num();
+        int device = omp_get_num_devices();
         if (device >= 1) {
             DEBUG_ACTION(printf("[OMPT][map]Attempt to run on device with user config \n");)
 #pragma omp target map(alloc:map_result[0:size]) map(from:map_result[0:size]) map(to:d_data[0:size], rest)
@@ -67,6 +67,8 @@ namespace vecpar::ompt {
         return *vecmem_result;
     }
 
+// if the compiler supports OpenMP 5.0
+#if _OPENMP >= 201811
     template<class Algorithm,
             typename R = typename Algorithm::intermediate_result_t, typename T,
             typename... Rest>
@@ -81,7 +83,7 @@ namespace vecpar::ompt {
         value_type_t<T> *d_data = data.data();
 
         // check if GPU is available at runtime
-        int device = omp_get_device_num();
+        int device = omp_get_num_devices();
 
         if (device >= 1) {  // if a GPU is available, use it for the computations
             DEBUG_ACTION(printf("[OMPT][map]Attempt to run on device with default config \n");)
@@ -126,6 +128,43 @@ namespace vecpar::ompt {
         vecmem_result->assign(map_result, map_result + size);
         return *vecmem_result;
     }
+#else
+    template<class Algorithm,
+            typename R = typename Algorithm::intermediate_result_t, typename T,
+            typename... Rest>
+    requires detail::is_map<Algorithm, R, T, Rest...> R &
+    parallel_map(__attribute__((unused)) Algorithm &algorithm,
+                 __attribute__((unused)) vecmem::memory_resource &mr,
+                 T &data,
+                 Rest &... rest) {
+        int size = static_cast<int>(data.size());
+        value_type_t<R> *map_result = new value_type_t<R>[size];
+        value_type_t<T> *d_data = data.data();
+
+        int device = omp_get_num_devices();
+        if (device >= 1) {
+            DEBUG_ACTION(printf("[OMPT][map]Attempt to run on device with user config \n");)
+#pragma omp target map(tofrom:map_result[0:size]) map(to:d_data[0:size], algorithm)
+#pragma omp teams distribute parallel for
+            for (int i = 0; i < size; i++) {
+                algorithm.map(map_result[i], d_data[i], rest...);
+                //      printf("Running on device? = %d\n", !omp_is_initial_device());
+                //DEBUG_ACTION(printf("Running on device? = %d\n", !omp_is_initial_device());)
+                DEBUG_ACTION(printf("Current: team %d, thread %d \n", omp_get_team_num(), omp_get_thread_num());)
+            }
+        } else { // no GPU available, compute the results on the CPU
+            DEBUG_ACTION(printf("[OMPT][map]Running on host with user config \n");)
+#pragma omp parallel for
+            for (int i = 0; i < size; i++) {
+                algorithm.map(map_result[i], data[i], rest...);
+            }
+        }
+
+        R *vecmem_result = new R(size, &mr);
+        vecmem_result->assign(map_result, map_result + size);
+        return *vecmem_result;
+    }
+#endif
 
 template<class Algorithm,
         typename R = typename Algorithm::intermediate_result_t, typename T,
@@ -141,7 +180,7 @@ parallel_map(Algorithm& algorithm,
     int size = static_cast<int>(data.size());
     value_type_t<T> *d_data = data.data();
 
-    int device = omp_get_device_num();
+    int device = omp_get_num_devices();
     if (device >= 1) { // if a GPU is available, use it for the computations
         DEBUG_ACTION(printf("[OMPT][mmap]Attempt to run on device with user config \n");)
 #pragma omp target map(tofrom:d_data[0:size]) map(to:rest)
@@ -166,6 +205,8 @@ parallel_map(Algorithm& algorithm,
     return data;
 }
 
+// if the compiler supports OpenMP 5.0
+#if _OPENMP >= 201811
 template<class Algorithm,
         typename R = typename Algorithm::intermediate_result_t, typename T,
         typename... Rest>
@@ -179,7 +220,7 @@ parallel_map(Algorithm &algorithm,
     value_type_t<T> *d_data = data.data();
 
     // check if GPU is available at runtime
-    int device = omp_get_device_num();
+    int device = omp_get_num_devices();
     if (device >= 1) {
         // if a GPU is available, use it for the computations
         DEBUG_ACTION(printf("[OMPT][mmap]Attempt to run on device with default config \n");)
@@ -232,6 +273,41 @@ parallel_map(Algorithm &algorithm,
     data.assign(d_data, d_data + size);
     return data;
 }
+#else
+    template<class Algorithm,
+            typename R = typename Algorithm::intermediate_result_t, typename T,
+            typename... Rest>
+    requires detail::is_mmap<Algorithm, T, Rest...>  R &
+    parallel_map(Algorithm &algorithm,
+                 __attribute__((unused)) vecmem::memory_resource &mr,
+                 T &data,
+                 Rest&... rest) {
+        int size = static_cast<int>(data.size());
+        value_type_t<T> *d_data = data.data();
+
+        int device = omp_get_num_devices();
+        if (device >= 1) { // if a GPU is available, use it for the computations
+            DEBUG_ACTION(printf("[OMPT][mmap]Attempt to run on device with user config \n");)
+#pragma omp target map(tofrom:d_data[0:size])
+#pragma omp teams distribute parallel for
+            for (int i = 0; i < size; i++) {
+                algorithm.map(d_data[i], rest...);
+                //      printf("Running on device? = %d\n", !omp_is_initial_device());
+                //   DEBUG_ACTION(printf("Running on device? = %d\n", !omp_is_initial_device());)
+                DEBUG_ACTION(printf("Current: team %d, thread %d \n", omp_get_team_num(), omp_get_thread_num());)
+            }
+        } else { // no GPU available, compute the results on the CPU
+            DEBUG_ACTION(printf("[OMPT][mmap]Running on host with user config \n");)
+#pragma omp parallel for
+            for (int i = 0; i < size; i++) {
+                algorithm.map(data[i], rest...);
+            }
+        }
+
+        data.assign(d_data, d_data + size);
+        return data;
+    }
+#endif
 
 template <class Algorithm, typename R>
 requires detail::is_reduce<Algorithm, R>
