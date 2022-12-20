@@ -3,6 +3,7 @@
 
 namespace {
 const int N[] = {10, 100, 133, 1000, 10000, 100000, 1000000};
+//        {32, 1024, 32768, 1048576, 33554432};
 }
 
 #endif // VECPAR_INFRA_CONFIG_HPP

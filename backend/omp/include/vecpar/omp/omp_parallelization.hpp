@@ -43,7 +43,7 @@ template <class Algorithm,
           typename... Rest>
 requires detail::is_map<Algorithm, R, T, Rest...> R &
 parallel_map(Algorithm &algorithm,
-             __attribute__((unused)) vecmem::memory_resource &mr,
+             vecmem::memory_resource &mr,
              vecpar::config config, T &data, Rest &...rest) {
   R *map_result = new R(data.size(), &mr);
   internal::offload_map(config, data.size(), [&](int idx) {
