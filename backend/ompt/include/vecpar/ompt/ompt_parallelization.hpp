@@ -317,7 +317,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
 
   using data_value_type = typename R::value_type;
 
-  std::size_t num_target_teams = 20;
+  constexpr std::size_t num_target_teams = 20;
   std::size_t num_target_threads = 32;
 
   printf("***** OMPT library (variant 1) ***** \n");
@@ -415,7 +415,8 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
 
 template <typename Algorithm, typename T>
 requires detail::is_filter<Algorithm, T>
-T &parallel_filter(Algorithm algorithm, vecmem::memory_resource &mr, T &data) {
+T &parallel_filter(__attribute__((unused))Algorithm algorithm,
+                   vecmem::memory_resource &mr, T &data) {
 
   std::size_t num_target_teams = 5;
   std::size_t num_target_threads = 32;
