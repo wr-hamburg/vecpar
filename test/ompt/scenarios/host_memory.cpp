@@ -1,5 +1,7 @@
+#include <cstddef>
 #include <gtest/gtest.h>
 
+#include <iterator>
 #include <vecmem/containers/jagged_vector.hpp>
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -30,7 +32,7 @@ public:
     vec = new vecmem::vector<int>(GetParam(), &mr);
     vec_d = new vecmem::vector<double>(GetParam(), &mr);
 
-    for (int i = 0; i < vec->size(); i++) {
+    for (std::size_t i = 0; i < vec->size(); i++) {
       vec->at(i) = i;
       vec_d->at(i) = i * 1.0;
       expectedReduceResult += vec_d->at(i);
@@ -107,7 +109,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Correctness) {
   test_algorithm_1 alg;
   vecmem::vector<double> result = vecpar::ompt::parallel_map(alg, mr, *vec);
 
-  for (int i = 0; i < vec->size(); i++)
+  for (std::size_t i = 0; i < vec->size(); i++)
     EXPECT_EQ(vec->at(i) * 1.0, result.at(i));
 }
 /*
@@ -158,7 +160,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Filter_Correctness) {
 
   // the order can be different
   std::sort(result.begin(), result.end());
-  for (int i = 0; i < result.size(); i++) {
+  for (std::size_t i = 0; i < result.size(); i++) {
     EXPECT_EQ(vec_d->at(2 * i), result.at(i));
   }
 }
@@ -201,7 +203,7 @@ TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Grouped) {
   vecmem::vector<double> result = vecpar::ompt::parallel_map(alg, mr,
                                                              // c,
                                                              *vec);
-  for (int i = 0; i < vec->size(); i++)
+  for (std::size_t i = 0; i < vec->size(); i++)
     EXPECT_EQ(result[i], 1.0 * vec->at(i));
   // EXPECT_EQ(par_reduced, expectedReduceResult);
 }
@@ -290,7 +292,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
       vecpar::ompt::parallel_map(alg, mr, /* c,*/ *vec_d, x);
   EXPECT_EQ(result.size(), vec_d->size());
   int count = 0;
-  for (int i = 0; i < result.size(); i++) {
+  for (std::size_t i = 0; i < result.size(); i++) {
     EXPECT_EQ(result.at(i), vec_d->at(i));
     EXPECT_EQ(result.at(i), vec->at(i) + x.f());
     //  printf("%f\n", result.at(i));
