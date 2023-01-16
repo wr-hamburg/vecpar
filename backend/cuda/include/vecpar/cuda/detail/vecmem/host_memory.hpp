@@ -166,7 +166,7 @@ typename R::value_type &parallel_reduce(Algorithm algorithm,
   cudaMallocManaged(&d_result, sizeof(typename R::value_type));
   memset(d_result, 0, sizeof(typename R::value_type));
 
-  internal::parallel_reduce(data.size(), algorithm, d_result, data_view);
+  internal::parallel_reduce<Algorithm, typename R::value_type>(data.size(), algorithm, d_result, data_view);
   return *d_result;
 }
 
@@ -327,7 +327,7 @@ requires vecpar::algorithm::is_mmap_reduce<Algorithm, Result, R, Arguments...>
   CHECK_ERROR(cudaMalloc((void **)&d_result, sizeof(Result)))
   CHECK_ERROR(cudaMemset(d_result, 0, sizeof(Result)))
 
-  internal::parallel_reduce(data.size(), algorithm, d_result, data_view);
+  internal::parallel_reduce<Algorithm, Result>(data.size(), algorithm, d_result, data_view);
 
   CHECK_ERROR(
       cudaMemcpy(result, d_result, sizeof(Result), cudaMemcpyDeviceToHost))

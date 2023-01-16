@@ -265,6 +265,9 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
 
   using data_value_type = typename R::value_type;
   data_value_type *result = new data_value_type();
+
+  constexpr std::size_t num_target_teams = 20;
+
   std::size_t size = data.size();
 
   int device = omp_get_num_devices();
@@ -370,7 +373,8 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
 // filter without user config
 template <typename Algorithm, typename T>
 requires detail::is_filter<Algorithm, T>
-T &parallel_filter(Algorithm algorithm, vecmem::memory_resource &mr, T &data) {
+T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
+                   vecmem::memory_resource &mr, T &data) {
 
   std::size_t num_target_teams = 5;
 

@@ -85,7 +85,7 @@ parallel_reduce(Algorithm algorithm,
   cudaMallocManaged(&d_result, sizeof(typename T::value_type));
   memset(d_result, 0, sizeof(typename T::value_type));
 
-  internal::parallel_reduce(data.size(), algorithm, d_result,
+  internal::parallel_reduce<Algorithm, typename T::value_type>(data.size(), algorithm, d_result,
                             vecmem::get_data(data));
 
   return *d_result;
@@ -118,7 +118,7 @@ Result &parallel_map_reduce(Algorithm algorithm,
                             vecpar::config config, T &data,
                             Arguments &...args) {
 
-  return parallel_reduce(algorithm, mr,
+  return parallel_reduce<Algorithm, R>(algorithm, mr,
                          parallel_map<Algorithm, R, T, Arguments...>(
                              algorithm, mr, config, data, args...));
 }
