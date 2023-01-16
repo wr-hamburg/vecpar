@@ -196,10 +196,10 @@ TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Grouped) {
   test_algorithm_1 alg;
 
   // parallel execution
- // double par_reduced =
-//  vecpar::config c{1, 10};
+  // double par_reduced =
+  //  vecpar::config c{1, 10};
   vecmem::vector<double> result = vecpar::ompt::parallel_map(alg, mr,
-                                                             //c,
+                                                             // c,
                                                              *vec);
   for (int i = 0; i < vec->size(); i++)
     EXPECT_EQ(result[i], 1.0 * vec->at(i));
@@ -285,16 +285,17 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
 
   X x{1, 5.0};
   // parallel execution + destructive change on the input!!!
-//  vecpar::config c(2,5);
-  vecmem::vector<double> result = vecpar::ompt::parallel_map(alg, mr, /* c,*/ *vec_d, x);
+  //  vecpar::config c(2,5);
+  vecmem::vector<double> result =
+      vecpar::ompt::parallel_map(alg, mr, /* c,*/ *vec_d, x);
   EXPECT_EQ(result.size(), vec_d->size());
-  int count=0;
+  int count = 0;
   for (int i = 0; i < result.size(); i++) {
     EXPECT_EQ(result.at(i), vec_d->at(i));
     EXPECT_EQ(result.at(i), vec->at(i) + x.f());
-  //  printf("%f\n", result.at(i));
+    //  printf("%f\n", result.at(i));
     if (result.at(i) != vec->at(i) + x.f())
-        count++;
+      count++;
   }
   printf("mismatched values %d\n", count);
 }
