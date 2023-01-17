@@ -37,7 +37,7 @@ requires detail::is_mmap<Algorithm, T, Arguments...>
       kernel<<<config.m_gridSize, config.m_blockSize, config.m_memorySize>>>(
           input.size,
           [=] __device__(int idx, Arguments... a) {
-            algorithm.map(input.ptr[idx], a...);
+        algorithm.mapping_function(input.ptr[idx], a...);
           },
           args...);
 
@@ -71,7 +71,7 @@ requires detail::is_map<Algorithm, R, T, Arguments...>
       kernel<<<config.m_gridSize, config.m_blockSize, config.m_memorySize>>>(
           input.size,
           [=] __device__(int idx, Arguments... a) {
-            algorithm.map(d_result[idx], input.ptr[idx], a...);
+        algorithm.mapping_function(d_result[idx], input.ptr[idx], a...);
           },
           args...);
 
@@ -121,7 +121,7 @@ void parallel_reduce(Algorithm algorithm, vecpar::config c,
           if (tid < d && within_array) {
             //    printf("thread *%d*: read from index %d, %f + %f\n", gidx,
             //    tid+d, temp[tid], temp[tid+d]);
-            algorithm.reduce(&temp[tid], temp[tid + d]);
+              algorithm.reducing_function(&temp[tid], temp[tid + d]);
           }
         }
 
@@ -129,7 +129,7 @@ void parallel_reduce(Algorithm algorithm, vecpar::config c,
           do {
           } while (atomicCAS(lock, 0, 1)); // lock
           //     printf("thread %d: %f + %f \n", gidx, *result, temp[0]);
-          algorithm.reduce(result.ptr, temp[0]);
+            algorithm.reducing_function(result.ptr, temp[0]);
           __threadfence();       // wait for write completion
           atomicCAS(lock, 1, 0); // release lock
         }
@@ -182,7 +182,7 @@ void parallel_filter(Algorithm algorithm, vecpar::config c, int *idx,
           for (size_t i = 0; i < static_cast<size_t>(c.m_blockSize) &&
                              tid + i < blockDim.x && gidx + i < size;
                i++) {
-            if (algorithm.filter(temp[tid + i])) {
+            if (algorithm.filtering_function(temp[tid + i])) {
               temp_result[count] = temp[tid + i];
               count++;
             }

@@ -53,7 +53,7 @@ R &parallel_map(Algorithm &algorithm, vecmem::memory_resource &mr,
     num_threads(config.m_blockSize)
     for (int i = 0; i < size; i++) {
       Algorithm d_alg;
-      d_alg.map(map_result[i], d_data[i], rest...);
+        d_alg.mapping_function(map_result[i], d_data[i], rest...);
       //      printf("Running on device? = %d\n", !omp_is_initial_device());
       // DEBUG_ACTION(printf("Running on device? = %d\n",
       // !omp_is_initial_device());)
@@ -64,7 +64,7 @@ R &parallel_map(Algorithm &algorithm, vecmem::memory_resource &mr,
     DEBUG_ACTION(printf("[OMPT][map]Running on host with user config \n");)
 #pragma omp parallel for num_threads(config.m_blockSize)
     for (int i = 0; i < size; i++) {
-      algorithm.map(map_result[i], data[i], rest...);
+        algorithm.mapping_function(map_result[i], data[i], rest...);
     }
   }
 
@@ -120,10 +120,10 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
           DEBUG_ACTION(printf("Current: team %d, thread %d; %f \n",
                               omp_get_team_num(), omp_get_thread_num(),
                               buffer[omp_get_thread_num()]);)
-          d_alg.map(
-              buffer[omp_get_thread_num()],
-              d_data[omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num()],
-              rest...);
+            d_alg.mapping_function(
+                    buffer[omp_get_thread_num()],
+                    d_data[omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num()],
+                    rest...);
         }
       }
 
@@ -139,7 +139,7 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
     DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
 #pragma omp parallel for
     for (int i = 0; i < size; i++) {
-      algorithm.map(map_result[i], data[i], rest...);
+        algorithm.mapping_function(map_result[i], data[i], rest...);
     }
   }
 
@@ -170,7 +170,7 @@ inline R &parallel_map(Algorithm &algorithm,
     num_threads(config.m_blockSize)
     for (int i = 0; i < size; i++) {
       Algorithm d_alg;
-      d_alg.map(d_data[i], rest...);
+        d_alg.mapping_function(d_data[i], rest...);
       //      printf("Running on device? = %d\n", !omp_is_initial_device());
       //   DEBUG_ACTION(printf("Running on device? = %d\n",
       //   !omp_is_initial_device());)
@@ -181,7 +181,7 @@ inline R &parallel_map(Algorithm &algorithm,
     DEBUG_ACTION(printf("[OMPT][mmap]Running on host with user config \n");)
 #pragma omp parallel for num_threads(config.m_blockSize)
     for (int i = 0; i < size; i++) {
-      algorithm.map(data[i], rest...);
+        algorithm.mapping_function(data[i], rest...);
     }
   }
 
@@ -232,7 +232,7 @@ R &parallel_map(Algorithm &algorithm,
 
         // all threads use the shared memory for computing the output result
         if (omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num() < size) {
-          d_alg.map(buffer[omp_get_thread_num()], rest...);
+            d_alg.mapping_function(buffer[omp_get_thread_num()], rest...);
         }
       }
       // thread 0 from each block copies the results from shared memory to
@@ -247,7 +247,7 @@ R &parallel_map(Algorithm &algorithm,
     DEBUG_ACTION(printf("[OMPT][mmap]Running on host with deault config \n");)
 #pragma omp parallel for
     for (int i = 0; i < size; i++) {
-      algorithm.map(data[i], rest...);
+        algorithm.mapping_function(data[i], rest...);
     }
   }
 
@@ -279,10 +279,10 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
 
 #pragma omp for nowait
       for (std::size_t i = 0; i < size; i++)
-        algorithm.reduce(temp_result, data[i]);
+          algorithm.reducing_function(temp_result, data[i]);
 
 #pragma omp critical
-      algorithm.reduce(result, *temp_result);
+          algorithm.reducing_function(result, *temp_result);
     }
 
   } else {
@@ -321,7 +321,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
         //      printf("%d %f \n", d_data[i], map_result[i]);
         // printf("%d %f %f\n", omp_get_thread_num(), temp_result[i],
         // d_data[i]);
-        algorithm.reduce(temp_result + omp_get_thread_num(), d_data[i]);
+          algorithm.reducing_function(temp_result + omp_get_thread_num(), d_data[i]);
         // printf("%d %f %f\n", omp_get_thread_num(), temp_result[i],
         // d_data[i]);
         //  printf("Running on device? = %d\n", !omp_is_initial_device());
@@ -350,7 +350,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
                      "%ld,i: %ld, %ld\n",
                      omp_get_team_num(), omp_get_thread_num(), temp_result[i],
                      temp_result[j - (j / 2) + i], j, i, j - (j / 2) + i);*/
-              algorithm.reduce(temp_result + i, temp_result[j - (j / 2) + i]);
+                algorithm.reducing_function(temp_result + i, temp_result[j - (j / 2) + i]);
             }
           }
           j = (j + 1) / 2;
@@ -363,7 +363,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
          i < std::min(num_target_teams, (size + BLOCK_SIZE - 1) / BLOCK_SIZE);
          i++) {
       // printf("t: %f\n", team_temp_result[i]);
-      algorithm.reduce(result, team_temp_result[i]);
+        algorithm.reducing_function(result, team_temp_result[i]);
       // printf("r: %f\n", *result);
     }
   }
@@ -415,7 +415,7 @@ T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
       std::size_t count = 0;
       for (std::size_t i = start; i < end; i++) {
 
-        bool temp = algorithm.filter(d_data[i]);
+        bool temp = algorithm.filtering_function(d_data[i]);
         filter_result[i] = temp;
 
         if (temp) {

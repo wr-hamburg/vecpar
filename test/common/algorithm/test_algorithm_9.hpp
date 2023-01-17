@@ -22,14 +22,14 @@ class test_algorithm_9
 public:
   TARGET test_algorithm_9() : parallelizable_mmap_filter() {}
 
-  TARGET double &map(double &xi, const int &yi, const float &zi,
+  TARGET double &mapping_function(double &xi, const int &yi, const float &zi,
                      const float &ti, const int &vi, float &a) const {
     xi = a * xi + yi * zi * ti + vi;
     return xi;
   }
 
   // keep only the positive numbers
-  TARGET bool filter(double &item) const { return (item > 0); }
+  TARGET bool filtering_function(double &item) const { return (item > 0); }
 };
 
 #endif // VECPAR_TEST_ALGORITHM_9_HPP

@@ -18,7 +18,7 @@ class test_algorithm_5
 public:
   TARGET test_algorithm_5() : algorithm(), parallelizable_mmap() {}
 
-  TARGET double &map(double &i, X &second_i) const {
+  TARGET double &mapping_function(double &i, X &second_i) const {
         i = i + second_i.f();
 #ifdef _OPENMP
         DEBUG_ACTION(printf("Running on device? = %d\n", !omp_is_initial_device());)
@@ -29,7 +29,7 @@ public:
   vecmem::vector<double> operator()(vecmem::vector<double> &data,
                                     X &more_data) override {
     for (size_t i = 0; i < data.size(); i++)
-      map(data[i], more_data);
+      mapping_function(data[i], more_data);
     return data;
   }
 };

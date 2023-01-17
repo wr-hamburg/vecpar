@@ -23,14 +23,14 @@ public:
   TARGET test_algorithm_10() : parallelizable_mmap() {}
 
   TARGET vecmem::vector<double> &
-  map(vecmem::vector<double> &x, const vecmem::vector<double> &y, const int &z,
+  mapping_function(vecmem::vector<double> &x, const vecmem::vector<double> &y, const int &z,
       const int &t, const vecmem::vector<int> &v, double &a) const {
     for (int i = 0; i < static_cast<int>(x.size()); i++)
       x[i] = a * y[i] + x[i] - z * t * v[i];
     return x;
   }
 
-  TARGET auto map(auto x, auto y, const int &z, const int &t, const auto v,
+  TARGET auto mapping_function(auto x, auto y, const int &z, const int &t, const auto v,
                   double &a) const {
     for (int i = 0; i < static_cast<int>(x.size()); i++)
       x[i] = a * y[i] + x[i] - z * t * v[i];

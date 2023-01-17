@@ -24,21 +24,21 @@ class test_algorithm_8
 public:
   TARGET test_algorithm_8() : parallelizable_map_filter() {}
 
-  TARGET double &map(double &result, const double &xi, const int &yi,
+  TARGET double &mapping_function(double &result, const double &xi, const int &yi,
                      const float &zi, const vecmem::vector<float> &ti,
                      float &a) const {
     result = a * xi + yi * zi * ti[0];
     return result;
   }
 
-  TARGET double &map(double &result, const double &xi, const int &yi,
+  TARGET double &mapping_function(double &result, const double &xi, const int &yi,
                      const float &zi, auto ti, float &a) const {
     result = a * xi + yi * zi * ti[0];
     return result;
   }
 
   // keep only the negative numbers
-  TARGET bool filter(double &item) const { return (item < 0); }
+  TARGET bool filtering_function(double &item) const { return (item < 0); }
 };
 
 #endif // VECPAR_TEST_ALGORITHM_8_HPP

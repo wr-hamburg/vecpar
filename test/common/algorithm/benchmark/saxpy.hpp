@@ -11,7 +11,7 @@ class saxpy :
 public:
     TARGET saxpy() : parallelizable_mmap() {}
 
-    TARGET float &map(float &yi, const float &xi, float &a) const {
+    TARGET float &mapping_function(float &yi, const float &xi, float &a) const {
         yi = a * xi + yi;
         return yi;
     }

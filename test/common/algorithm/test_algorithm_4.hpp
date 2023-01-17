@@ -17,19 +17,19 @@ class test_algorithm_4
 public:
   TARGET test_algorithm_4() : algorithm(), parallelizable_mmap_reduce() {}
 
-  TARGET double &map(double &i) const {
+  TARGET double &mapping_function(double &i) const {
     i = i * 2;
     return i;
   }
 
-  TARGET double *reduce(double *result, double &result_i) const {
+  TARGET double *reducing_function(double *result, double &result_i) const {
     *result += result_i;
     return result;
   }
 
   double *operator()(vecmem::vector<double> &data, double *result) {
     for (size_t i = 0; i < data.size(); i++)
-      reduce(result, map(data[i]));
+      reducing_function(result, mapping_function(data[i]));
     return result;
   }
 

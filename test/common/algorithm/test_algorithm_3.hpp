@@ -16,12 +16,12 @@ public:
   TARGET test_algorithm_3(vecmem::memory_resource &mr)
       : parallelizable_map_filter(), m_mr(mr) {}
 
-  TARGET double &map(double &result_i, const int &data_i) const {
+  TARGET double &mapping_function(double &result_i, const int &data_i) const {
     result_i = data_i * 1.0;
     return result_i;
   }
 
-  TARGET bool filter(double &result_i) const {
+  TARGET bool filtering_function(double &result_i) const {
     return (int(result_i) % 2 == 0);
   };
 
@@ -30,8 +30,8 @@ public:
     vecmem::vector<double> result_tmp(data.size(), &m_mr);
     int idx = 0;
     for (size_t i = 0; i < data.size(); i++) {
-      map(result_tmp[i], data[i]);
-      if (filter(result_tmp[i])) {
+      mapping_function(result_tmp[i], data[i]);
+      if (filtering_function(result_tmp[i])) {
         result[idx] = result_tmp[i];
         idx++;
       }

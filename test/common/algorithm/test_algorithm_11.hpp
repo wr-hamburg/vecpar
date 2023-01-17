@@ -17,13 +17,13 @@ class test_algorithm_11 : public vecpar::algorithm::parallelizable_mmap<
 public:
   TARGET test_algorithm_11() : parallelizable_mmap() {}
 
-  TARGET vecmem::vector<double> &map(vecmem::vector<double> &x) const {
+  TARGET vecmem::vector<double> &mapping_function(vecmem::vector<double> &x) const {
     for (int i = 0; i < static_cast<int>(x.size()); i++)
       x[i] += 5.0;
     return x;
   }
 
-  TARGET auto map(auto x) const {
+  TARGET auto mapping_function(auto x) const {
     for (int i = 0; i < static_cast<int>(x.size()); i++)
       x[i] += 5.0;
     return x;

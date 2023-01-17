@@ -18,7 +18,7 @@ class test_algorithm_6
 public:
   TARGET test_algorithm_6() : algorithm(), parallelizable_mmap() {}
 
-  TARGET float &map(float &yi, const float &xi, float &a) const {
+  TARGET float &mapping_function(float &yi, const float &xi, float &a) const {
     yi = a * xi + yi;
     return yi;
   }
@@ -27,7 +27,7 @@ public:
                                    vecmem::vector<float> &x,
                                    float &a) override {
     for (size_t i = 0; i < y.size(); i++)
-      map(y[i], x[i], a);
+      mapping_function(y[i], x[i], a);
     return y;
   }
 };

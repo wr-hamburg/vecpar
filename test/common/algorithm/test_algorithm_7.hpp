@@ -24,19 +24,19 @@ class test_algorithm_7 : public vecpar::algorithm::parallelizable_map_reduce<
 public:
   TARGET test_algorithm_7() : parallelizable_map_reduce() {}
 
-  TARGET double &map(double &result, const double &xi, const int &yi,
+  TARGET double &mapping_function(double &result, const double &xi, const int &yi,
                      const vecmem::vector<float> &zi, float &a) const {
     result = a * xi + yi * zi[0];
     return result;
   }
 
-  TARGET double &map(double &result, const double &xi, const int &yi, auto zi,
+  TARGET double &mapping_function(double &result, const double &xi, const int &yi, auto zi,
                      float &a) const {
     result = a * xi + yi * zi[0];
     return result;
   }
 
-  TARGET double *reduce(double *result, double &partial_result) const {
+  TARGET double *reducing_function(double *result, double &partial_result) const {
     *result += partial_result;
     return result;
   }

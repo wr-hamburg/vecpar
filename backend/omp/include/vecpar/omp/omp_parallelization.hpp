@@ -47,7 +47,7 @@ parallel_map(Algorithm &algorithm,
              vecpar::config config, T &data, Rest &...rest) {
   R *map_result = new R(data.size(), &mr);
   internal::offload_map(config, data.size(), [&](int idx) {
-    algorithm.map(map_result->at(idx), data[idx], get(idx, rest)...);
+      algorithm.mapping_function(map_result->at(idx), data[idx], get(idx, rest)...);
   });
   return *map_result;
 }
@@ -71,7 +71,7 @@ parallel_map(Algorithm &algorithm,
              __attribute__((unused)) vecmem::memory_resource &mr,
              vecpar::config config, T &data, Rest &...rest) {
   internal::offload_map(config, data.size(), [&](int idx) {
-    algorithm.map(data[idx], get(idx, rest)...);
+      algorithm.mapping_function(data[idx], get(idx, rest)...);
   });
   return data;
 }
@@ -97,7 +97,7 @@ typename R::value_type &parallel_reduce(Algorithm algorithm,
   internal::offload_reduce(
       data.size(), result,
       [&](typename R::value_type *r, typename R::value_type tmp) {
-        algorithm.reduce(r, tmp);
+          algorithm.reducing_function(r, tmp);
       },
       data);
 
@@ -110,7 +110,7 @@ parallel_filter(Algorithm algorithm, vecmem::memory_resource &mr, T &data) {
   T *result = new T(data.size(), &mr);
   internal::offload_filter(data.size(), result,
                            [&](int idx, int &result_index, T &local_result) {
-                             if (algorithm.filter(data[idx])) {
+                             if (algorithm.filtering_function(data[idx])) {
                                local_result[result_index] = data[idx];
                                result_index++;
                              }

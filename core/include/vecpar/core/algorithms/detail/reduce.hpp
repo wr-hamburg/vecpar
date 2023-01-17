@@ -11,8 +11,8 @@ namespace vecpar::detail {
  */
 template <Iterable R> struct parallel_reduce {
   TARGET typename R::value_type *
-  reduce(typename R::value_type *result,
-         typename R::value_type &partial_result) const;
+  reducing_function(typename R::value_type *result,
+                    typename R::value_type &partial_result) const;
 };
 
 /// concepts

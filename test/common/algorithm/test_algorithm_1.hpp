@@ -17,7 +17,7 @@ public:
   TARGET test_algorithm_1()
       : parallelizable_map_reduce(){}
 
-  TARGET double &map(double &result_i, const int &data_i) const  {
+  TARGET double &mapping_function(double &result_i, const int &data_i) const  {
     result_i = data_i * 1.0;
 #ifdef _OPENMP
     DEBUG_ACTION(printf("Running on device? = %d\n", !omp_is_initial_device());)
@@ -25,7 +25,7 @@ public:
     return result_i;
   }
 
-  TARGET double *reduce(double *result, double &result_i) const {
+  TARGET double *reducing_function(double *result, double &result_i) const {
     // printf("%f + %f \n ", *result, result_i);
     *result += result_i;
     return result;
@@ -34,7 +34,7 @@ public:
   double *operator()(vecmem::vector<int> data, double *result) {
     vecmem::vector<double> result_tmp(data.size());
     for (size_t i = 0; i < data.size(); i++)
-      reduce(result, map(result_tmp[i], data[i]));
+      reducing_function(result, mapping_function(result_tmp[i], data[i]));
     return result;
   }
 

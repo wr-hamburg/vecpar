@@ -100,7 +100,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
         auto dv_data = helper::get_device_container<T>(d_in);
         auto dv_result = helper::get_device_container<R>(d_result);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
-        algorithm.map(dv_result[idx], dv_data[idx], a...);
+        algorithm.mapping_function(dv_result[idx], dv_data[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
       result_view, data_view, args...);
@@ -136,7 +136,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
         auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
         auto dv_result = helper::get_device_container<R>(d_result);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
-        algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx], a...);
+        algorithm.mapping_function(dv_result[idx], dv_data_1[idx], dv_data_2[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
       result_view, in_1_view, in_2_view, args...);
@@ -174,8 +174,8 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
         auto dv_data_3 = helper::get_device_container<T3>(d_in_3);
         auto dv_result = helper::get_device_container<R>(d_result);
         //       printf("[mapper] data[%d]=%f\n", idx, dv_data_3[idx]);
-        algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
-                      dv_data_3[idx], a...);
+        algorithm.mapping_function(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
+                                   dv_data_3[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
       result_view, in_1_view, in_2_view, in_3_view, args...);
@@ -216,8 +216,8 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
         auto dv_data_4 = helper::get_device_container<T4>(d_in_4);
         auto dv_result = helper::get_device_container<R>(d_result);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
-        algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
-                      dv_data_3[idx], dv_data_4[idx], a...);
+        algorithm.mapping_function(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
+                                   dv_data_3[idx], dv_data_4[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
       result_view, in_1_view, in_2_view, in_3_view, in_4_view, args...);
@@ -262,8 +262,8 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
         auto dv_data_5 = helper::get_device_container<T5>(d_in_5);
         auto dv_result = helper::get_device_container<R>(d_result);
         //     printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
-        algorithm.map(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
-                      dv_data_3[idx], dv_data_4[idx], dv_data_5[idx], a...);
+        algorithm.mapping_function(dv_result[idx], dv_data_1[idx], dv_data_2[idx],
+                                   dv_data_3[idx], dv_data_4[idx], dv_data_5[idx], a...);
         //   printf("[mapper] result[%d]=%f\n", idx, dv_result[idx]);
       },
       result_view, in_1_view, in_2_view, in_3_view, in_4_view, in_5_view,
@@ -295,7 +295,7 @@ void parallel_mmap(vecpar::config c, size_t size, const Algorithm algorithm,
             [algorithm] __device__(int idx, auto &d_in_out_view, Arguments... a) {
                 auto dv_data = helper::get_device_container<TT>(d_in_out_view);
                 //   printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
-                algorithm.map(dv_data[idx], a...);
+        algorithm.mapping_function(dv_data[idx], a...);
                 //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
             },
             input_output_view, args...);
@@ -326,7 +326,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
                              Arguments... a) {
         auto dv_data_1 = helper::get_device_container<T1>(d_in_out);
         auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
-        algorithm.map(dv_data_1[idx], dv_data_2[idx], a...);
+        algorithm.mapping_function(dv_data_1[idx], dv_data_2[idx], a...);
       },
       input_output_view, in_2_view, args...);
 
@@ -361,7 +361,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
         auto dv_data_2 = helper::get_device_container<T2>(d_in_2);
         auto dv_data_3 = helper::get_device_container<T3>(d_in_3);
 
-        algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx], a...);
+        algorithm.mapping_function(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx], a...);
       },
       input_output_view, in_2_view, in_3_view, args...);
 
@@ -399,8 +399,8 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
         auto dv_data_3 = helper::get_device_container<T3>(d_in_3);
         auto dv_data_4 = helper::get_device_container<T4>(d_in_4);
 
-        algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
-                      dv_data_4[idx], a...);
+        algorithm.mapping_function(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
+                                   dv_data_4[idx], a...);
       },
       input_output_view, in_2_view, in_3_view, in_4_view, args...);
 
@@ -440,8 +440,8 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
         auto dv_data_4 = helper::get_device_container<T4>(view_4);
         auto dv_data_5 = helper::get_device_container<T5>(view_5);
 
-        algorithm.map(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
-                      dv_data_4[idx], dv_data_5[idx], a...);
+        algorithm.mapping_function(dv_data_1[idx], dv_data_2[idx], dv_data_3[idx],
+                                   dv_data_4[idx], dv_data_5[idx], a...);
       },
       input_output_view, in_2_view, in_3_view, in_4_view, in_5_view, args...);
 
@@ -494,7 +494,7 @@ void parallel_reduce(vecpar::config c, size_t size, Algorithm algorithm,
           if (tid < d && within_array) {
             //    printf("thread *%d*: read from index %d, %f + %f\n", gidx,
             //    tid+d, temp[tid], temp[tid+d]);
-            algorithm.reduce(&temp[tid], temp[tid + d]);
+              algorithm.reducing_function(&temp[tid], temp[tid + d]);
           }
         }
 
@@ -502,7 +502,7 @@ void parallel_reduce(vecpar::config c, size_t size, Algorithm algorithm,
           do {
           } while (atomicCAS(lock, 0, 1)); // lock
           //     printf("thread %d: %f + %f \n", gidx, *result, temp[0]);
-          algorithm.reduce(result, temp[0]);
+            algorithm.reducing_function(result, temp[0]);
           __threadfence();       // wait for write completion
           atomicCAS(lock, 1, 0); // release lock
         }
@@ -565,7 +565,7 @@ void parallel_filter(vecpar::config c, size_t size, Algorithm algorithm,
           for (size_t i = 0; i < static_cast<size_t>(c.m_blockSize) &&
                              tid + i < blockDim.x && gidx + i < size;
                i++) {
-            if (algorithm.filter(temp[tid + i])) {
+            if (algorithm.filtering_function(temp[tid + i])) {
               temp_result[count] = temp[tid + i];
               count++;
               //            printf("%f added to temp\n", temp[tid+i]);

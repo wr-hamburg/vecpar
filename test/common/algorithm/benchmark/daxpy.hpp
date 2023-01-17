@@ -11,7 +11,7 @@ class daxpy :
 public:
     TARGET daxpy() : parallelizable_mmap() {}
 
-    TARGET double &map(double &yi, const double &xi, double &a) const {
+    TARGET double &mapping_function(double &yi, const double &xi, double &a) const {
         yi = a * xi + yi;
         return yi;
     }
