@@ -227,12 +227,12 @@ R &parallel_map(Algorithm &algorithm,
 #pragma omp parallel num_threads(BLOCK_SIZE)
       {
 
-        // Algorithm d_alg;
+        Algorithm d_alg;
         //  #pragma omp allocate(d_alg) allocator(omp_thread_mem_alloc)
 
         // all threads use the shared memory for computing the output result
         if (omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num() < size) {
-          algorithm.map(buffer[omp_get_thread_num()], rest...);
+          d_alg.map(buffer[omp_get_thread_num()], rest...);
         }
       }
       // thread 0 from each block copies the results from shared memory to
@@ -266,7 +266,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
   using data_value_type = typename R::value_type;
   data_value_type *result = new data_value_type();
 
-  constexpr std::size_t num_target_teams = 20;
+//  constexpr std::size_t num_target_teams = 20;
 
   std::size_t size = data.size();
 
@@ -287,7 +287,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
 
   } else {
 
-    std::size_t num_target_teams = 1;
+    constexpr std::size_t num_target_teams = 1;
 
     printf("***** OMPT library (variant 1) ***** \n");
 

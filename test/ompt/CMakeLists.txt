@@ -47,12 +47,14 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
         set_target_properties(tests_ompt_gpu PROPERTIES CXX_STANDARD 20)
 
         ### Target options GPU
-        set(COMPILE_FLAGS "-DVECMEM_HAVE_PMR_MEMORY_RESOURCE -fopenmp")
+        set(COMPILE_FLAGS "-fopenmp")
         set(LINK_FLAGS -fopenmp)
 
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-            #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx65 )
+                # NVIDIA flags
+                #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64 )
                 #set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64 )
+                # AMD flags
                 set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
                 set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
         elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -75,18 +77,3 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
                 target_link_options(tests_ompt_cpu PRIVATE -foffload-lto)
         endif()
 endif()
-
-# TODO: clean up before merging to MAIN branch
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -gline-tables-only -fopenmp-target-debug=3")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -foffload-lto")
-#target_compile_options(tests_ompt_gpu PUBLIC        $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE -target x86_64-pc-linux-gnu -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031 -v>) # -foffload-options=nvptx-none=-latomic>)
-# gcc -foffload=disable -foffload-options=nvptx-none=-latomic
-# clang -fopenmp-targets=nvptx64 -fdebug-default-version=3 -v
-#target_link_options(tests_ompt_gpu PRIVATE ${CMAKE_EXE_LINKER_FLAGS} -target x86_64-pc-linux-gnu -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -target x86_64-pc-linux-gnu -fopenmp -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031")# -foffload-options=nvptx-none=-latomic") # -foffload=disable
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -fopenmp-targets=nvptx64 -foffload-lto")
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fopenmp -fopenmp-targets=nvptx64 ") #-Rpass=openmp-opt -gline-tables-only -fopenmp-target-debug=3
-
-#target_link_options(tests_ompt_gpu PRIVATE ${CMAKE_EXE_LINKER_FLAGS} -fopenmp -fopenmp-targets=nvptx64 -foffload-lto)
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -fopenmp-targets=nvptx64 ") #-foffload-lto -O3 ") #-Rpass=openmp-opt ")
-#-Rpass=openmp-opt -Rpass-missed=openmp-opt -Rpass-analysis=openmp-opt

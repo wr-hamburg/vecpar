@@ -81,10 +81,10 @@ TEST_P(CpuHostMemoryTest, Parallel_ReduceOnly) {
 }
 
 TEST_P(CpuHostMemoryTest, Parallel_Inline_lambda) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
-  vecpar::omp::parallel_map(
-      vec->size(), [&] TARGET(int idx) { vec->at(idx) *= 4.0; });
+  vecpar::ompt::parallel_map( vecpar::config(),
+      vec->size(), [=] (int idx) { vec->at(idx) *= 4.0; });
 
   EXPECT_EQ(vec->at(0), 0);
   EXPECT_EQ(vec->at(1), 4.);
