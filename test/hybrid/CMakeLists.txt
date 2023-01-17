@@ -11,5 +11,5 @@ if (CUDAToolkit_FOUND)
         $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE>)
 
     target_link_libraries(tests_hybrid GTest::gtest_main
-                      vecpar_omp vecmem::cuda)
+                      vecpar_core vecpar_omp vecmem::cuda)
 endif()

@@ -1,6 +1,7 @@
 ### Test OMP code ###
 if (VECPAR_BUILD_OMP_BACKEND)
     add_subdirectory(omp)
+    add_subdirectory(ompt)
 endif()
 
 ### Test CUDA code ###

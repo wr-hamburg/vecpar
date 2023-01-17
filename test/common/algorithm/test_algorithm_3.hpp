@@ -16,12 +16,12 @@ public:
   TARGET test_algorithm_3(vecmem::memory_resource &mr)
       : parallelizable_map_filter(), m_mr(mr) {}
 
-  TARGET double &map(double &result_i, const int &data_i) const override {
+  TARGET double &map(double &result_i, const int &data_i) const {
     result_i = data_i * 1.0;
     return result_i;
   }
 
-  TARGET bool filter(double &result_i) const override {
+  TARGET bool filter(double &result_i) const {
     return (int(result_i) % 2 == 0);
   };
 

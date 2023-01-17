@@ -18,7 +18,7 @@ class test_algorithm_6
 public:
   TARGET test_algorithm_6() : algorithm(), parallelizable_mmap() {}
 
-  TARGET float &map(float &yi, const float &xi, float &a) const override {
+  TARGET float &map(float &yi, const float &xi, float &a) const {
     yi = a * xi + yi;
     return yi;
   }

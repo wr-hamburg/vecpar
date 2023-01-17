@@ -82,7 +82,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   auto &result, auto &data, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -116,7 +116,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   auto &result, auto &in_1, auto &in_2, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -153,7 +153,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -193,7 +193,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -236,7 +236,7 @@ void parallel_map(vecpar::config c, size_t size, Algorithm algorithm,
                   auto &in_5, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -278,8 +278,10 @@ requires vecpar::detail::is_mmap_1<Algorithm, TT, Arguments...>
 void parallel_mmap(vecpar::config c, size_t size, const Algorithm algorithm,
                    auto &input_output, Arguments &...args) {
 
+ // using func_t = typename Algorithm::func_t;
+
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -288,18 +290,17 @@ void parallel_mmap(vecpar::config c, size_t size, const Algorithm algorithm,
 
   // an extra call is needed to get the data when the collection is a jagged one
   auto input_output_view = helper::get_view<TT>(input_output);
-
   vecpar::cuda::kernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
-      size,
-      [algorithm] __device__(int idx, auto &d_in_out_view, Arguments... a) {
-        auto dv_data = helper::get_device_container<TT>(d_in_out_view);
-        //   printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
-        algorithm.map(dv_data[idx], a...);
-        //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
-      },
-      input_output_view, args...);
-  CHECK_ERROR(cudaGetLastError())
-  CHECK_ERROR(cudaDeviceSynchronize())
+                    size,
+            [algorithm] __device__(int idx, auto &d_in_out_view, Arguments... a) {
+                auto dv_data = helper::get_device_container<TT>(d_in_out_view);
+                //   printf("[mapper] data[%d]=%f\n", idx, dv_data[idx]);
+                algorithm.map(dv_data[idx], a...);
+                //     printf("[mapper] result[%d]=%f\n", idx, dv_data[idx]);
+            },
+            input_output_view, args...);
+        CHECK_ERROR(cudaGetLastError())
+        CHECK_ERROR(cudaDeviceSynchronize())
 }
 
 template <typename Algorithm, typename T1, typename T2, typename... Arguments>
@@ -308,7 +309,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
                    auto &input_output, auto &in_2, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -341,7 +342,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
                    Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -376,7 +377,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
                    Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
   // an extra call is needed to get the data when the collection is a jagged one
@@ -415,7 +416,7 @@ void parallel_mmap(vecpar::config c, size_t size, Algorithm algorithm,
                    auto &in_5, Arguments &...args) {
 
   // make sure that an empty config doesn't end up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getDefaultConfig(size);
   }
 
@@ -461,7 +462,7 @@ void parallel_reduce(vecpar::config c, size_t size, Algorithm algorithm,
   *lock = 0;
 
   // make sure that an empty config ends up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getReduceConfig<R>(size);
   }
 
@@ -471,7 +472,10 @@ void parallel_reduce(vecpar::config c, size_t size, Algorithm algorithm,
   vecpar::cuda::rkernel<<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(
       lock, size, [=] __device__(int *lock) {
         vecmem::device_vector<R> partial_result(partial_result_view);
-        extern __shared__ R temp[];
+
+        extern __shared__ char smem[];
+        R* temp = reinterpret_cast<R*>(smem);
+        //extern __shared__ R temp[];
 
         size_t tid = threadIdx.x;
         temp[tid] = partial_result[tid + blockIdx.x * blockDim.x];
@@ -515,7 +519,7 @@ template <typename Algorithm, typename R>
 void parallel_reduce(size_t size, Algorithm algorithm, R *result,
                      vecmem::data::vector_view<R> partial_result) {
 
-  parallel_reduce(vecpar::cuda::getReduceConfig<R>(size), size, algorithm,
+  parallel_reduce<Algorithm, R>(vecpar::cuda::getReduceConfig<R>(size), size, algorithm,
                   result, partial_result);
 }
 
@@ -529,7 +533,7 @@ void parallel_filter(vecpar::config c, size_t size, Algorithm algorithm,
   *lock = 0;
 
   // make sure that an empty config ends up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getReduceConfig<R>(size);
   }
 
@@ -541,7 +545,10 @@ void parallel_filter(vecpar::config c, size_t size, Algorithm algorithm,
       [=] __device__(int *lock, int *idx) {
         vecmem::device_vector<R> d_result(result_view);
         vecmem::device_vector<R> partial_result(partial_result_view);
-        extern __shared__ R temp[];
+
+        extern __shared__ char smem[];
+        R* temp = reinterpret_cast<R*>(smem);
+       // extern __shared__ R temp[];
 
         size_t gidx = threadIdx.x + blockIdx.x * blockDim.x;
         if (gidx > size)

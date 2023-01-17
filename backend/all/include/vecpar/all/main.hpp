@@ -12,6 +12,10 @@
 
 #include "internal.hpp"
 
+#if defined(_OPENMP)
+#include "ompt.hpp"
+#endif
+
 namespace vecpar {
 
 template <class MemoryResource, class Algorithm,

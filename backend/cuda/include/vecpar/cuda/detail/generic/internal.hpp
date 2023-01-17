@@ -25,7 +25,7 @@ requires detail::is_mmap<Algorithm, T, Arguments...>
     parallel_map(Algorithm algorithm, vecpar::config config,
                  cuda_data<typename T::value_type> input, Arguments... args) {
 
-  if (config.isEmpty()) {
+  if (vecpar::config::isEmpty(config)) {
     config = vecpar::cuda::getDefaultConfig(input.size);
   }
 
@@ -55,7 +55,7 @@ requires detail::is_map<Algorithm, R, T, Arguments...>
     parallel_map(Algorithm algorithm, vecpar::config config,
                  cuda_data<typename T::value_type> input, Arguments... args) {
 
-  if (config.isEmpty()) {
+  if (vecpar::config::isEmpty(config)) {
     config = vecpar::cuda::getDefaultConfig(input.size);
   }
 
@@ -93,7 +93,7 @@ void parallel_reduce(Algorithm algorithm, vecpar::config c,
   *lock = 0;
 
   // make sure that an empty config ends up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getReduceConfig<typename R::value_type>(size);
   }
 
@@ -153,7 +153,7 @@ void parallel_filter(Algorithm algorithm, vecpar::config c, int *idx,
   *lock = 0;
 
   // make sure that an empty config ends up to be used
-  if (c.isEmpty()) {
+  if (vecpar::config::isEmpty(c)) {
     c = vecpar::cuda::getReduceConfig<R>(size);
   }
 

@@ -53,11 +53,11 @@ protected:
 };
 
 TEST_P(CpuHostMemoryTest, Parallel_MapOnly) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   vecmem::vector<double> par_result(vec->size(), &mr);
 
-  vecpar::omp::parallel_map(vec->size(), [&] TARGET(int idx) mutable {
+  vecpar::omp::parallel_map(vec->size(), [&] (int idx)  {
     alg.map(par_result[idx], vec->at(idx));
   });
 
@@ -67,22 +67,22 @@ TEST_P(CpuHostMemoryTest, Parallel_MapOnly) {
 }
 
 TEST_P(CpuHostMemoryTest, Parallel_ReduceOnly) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   double *result = new double();
   vecpar::omp::parallel_reduce(
       vec->size(), result,
-      [&] TARGET(double *r, double tmp) mutable { alg.reduce(r, tmp); },
+      [&] (double *r, double tmp)  { alg.reduce(r, tmp); },
       *vec_d);
 
   EXPECT_EQ(*result, expectedReduceResult);
 }
 
 TEST_P(CpuHostMemoryTest, Parallel_Inline_lambda) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   vecpar::omp::parallel_map(
-      vec->size(), [&] TARGET(int idx) mutable { vec->at(idx) *= 4.0; });
+      vec->size(), [&] (int idx)  { vec->at(idx) *= 4.0; });
 
   EXPECT_EQ(vec->at(0), 0);
   EXPECT_EQ(vec->at(1), 4.);
@@ -93,7 +93,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Time) {
   std::chrono::time_point<std::chrono::steady_clock> start_time;
   std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   start_time = std::chrono::steady_clock::now();
   vecmem::vector<double> result = vecpar::omp::parallel_map(alg, mr, *vec);
@@ -104,7 +104,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Time) {
 }
 
 TEST_P(CpuHostMemoryTest, Parallel_Map_Correctness) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
   vecmem::vector<double> result = vecpar::omp::parallel_map(alg, mr, *vec);
 
   for (int i = 0; i < vec->size(); i++)
@@ -115,7 +115,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Reduce_Time) {
   std::chrono::time_point<std::chrono::steady_clock> start_time;
   std::chrono::time_point<std::chrono::steady_clock> end_time;
 
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   start_time = std::chrono::steady_clock::now();
   double result = vecpar::omp::parallel_reduce(alg, mr, *vec_d);
@@ -126,7 +126,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Reduce_Time) {
 }
 
 TEST_P(CpuHostMemoryTest, Parallel_Reduce_Correctness) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
   double result = vecpar::omp::parallel_reduce(alg, mr, *vec_d);
   EXPECT_EQ(result, expectedReduceResult);
 }
@@ -162,7 +162,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Filter_Correctness) {
 }
 
 TEST_P(CpuHostMemoryTest, Serial_MapReduce) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   // serial execution
   double *result = alg(*vec);
@@ -170,26 +170,26 @@ TEST_P(CpuHostMemoryTest, Serial_MapReduce) {
 }
 
 TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Separately) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   // parallel execution
   vecmem::vector<double> par_result(vec->size(), &mr);
 
-  vecpar::omp::parallel_map(vec->size(), [&] TARGET(int idx) mutable {
+  vecpar::omp::parallel_map(vec->size(), [&] (int idx)  {
     alg.map(par_result[idx], vec->at(idx));
   });
 
   double *result = new double();
   vecpar::omp::parallel_reduce(
       vec->size(), result,
-      [&] TARGET(double *r, double tmp) mutable { alg.reduce(r, tmp); },
+      [&] (double *r, double tmp)  { alg.reduce(r, tmp); },
       par_result);
 
   EXPECT_EQ(*result, expectedReduceResult);
 }
 
 TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Grouped) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   // parallel execution
   double par_reduced = vecpar::omp::parallel_algorithm(alg, mr, *vec);
@@ -197,7 +197,7 @@ TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Grouped) {
 }
 
 TEST_P(CpuHostMemoryTest, Serial_Extra_Params_MapReduce) {
-  test_algorithm_2 alg(mr);
+  test_algorithm_2 alg;
   X x{1, 1.0};
 
   // serial execution
@@ -206,28 +206,28 @@ TEST_P(CpuHostMemoryTest, Serial_Extra_Params_MapReduce) {
 }
 
 TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_Separately) {
-  test_algorithm_2 alg(mr);
+  test_algorithm_2 alg;
 
   X x{1, 1.0};
 
   // parallel execution
   vecmem::vector<double> par_result(vec->size(), &mr);
 
-  vecpar::omp::parallel_map(vec->size(), [&] TARGET(int idx) mutable {
+  vecpar::omp::parallel_map(vec->size(), [&] (int idx)  {
     alg.map(par_result[idx], vec->at(idx), x);
   });
 
   double *result = new double();
   vecpar::omp::parallel_reduce(
       vec->size(), result,
-      [&] TARGET(double *r, double tmp) mutable { alg.reduce(r, tmp); },
+      [&] (double *r, double tmp)  { alg.reduce(r, tmp); },
       par_result);
 
   EXPECT_EQ(*result, expectedReduceResult);
 }
 
 TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
-  test_algorithm_2 alg(mr);
+  test_algorithm_2 alg;
 
   X x{1, 1.0};
   // parallel execution
@@ -274,8 +274,9 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
   test_algorithm_5 alg;
 
   X x{1, 1.0};
+  vecpar::config c(2,5);
   // parallel execution + destructive change on the input!!!
-  vecmem::vector<double> result = vecpar::omp::parallel_map(alg, mr, *vec_d, x);
+  vecmem::vector<double> result = vecpar::omp::parallel_map(alg, mr, c, *vec_d, x);
   EXPECT_EQ(result.size(), vec_d->size());
   for (int i = 0; i < result.size(); i++) {
     EXPECT_EQ(result.at(i), vec_d->at(i));

@@ -16,7 +16,7 @@ public:
       : m_gridSize(grid_size), m_blockSize(block_size),
         m_memorySize(ext_memory) {}
 
-  bool isEmpty() { return (m_gridSize == 0 || m_blockSize == 0); }
+  static constexpr bool isEmpty(config c) { return (c.m_gridSize == 0 || c.m_blockSize == 0); }
 
   int m_gridSize = 0;
   int m_blockSize = 0;
