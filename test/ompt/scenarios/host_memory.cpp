@@ -282,6 +282,7 @@ TEST_P(CpuHostMemoryTest, Parallel_MapFilter_MapReduce_Chained_With_Config) {
   EXPECT_EQ(second_result, expectedFilterReduceResult);
 }
 */
+
 TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
   test_algorithm_5 alg;
 
@@ -289,7 +290,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
   // parallel execution + destructive change on the input!!!
   //  vecpar::config c(2,5);
   vecmem::vector<double> result =
-      vecpar::ompt::parallel_map(alg, mr, /* c,*/ *vec_d, x);
+      vecpar::ompt::parallel_map(alg, mr, *vec_d, x);
   EXPECT_EQ(result.size(), vec_d->size());
   int count = 0;
   for (std::size_t i = 0; i < result.size(); i++) {
@@ -301,6 +302,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
   }
   printf("mismatched values %d\n", count);
 }
+
 /*
 TEST_P(CpuHostMemoryTest, two_collections) {
   test_algorithm_6 alg;
