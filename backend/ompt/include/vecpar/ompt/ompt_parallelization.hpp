@@ -28,6 +28,7 @@
 namespace vecpar::ompt {
 
 // map with user config
+/*
 template <class Algorithm,
           typename R = typename Algorithm::intermediate_result_t, typename T,
           typename... Rest>
@@ -53,7 +54,7 @@ R &parallel_map(Algorithm &algorithm, vecmem::memory_resource &mr,
     num_threads(config.m_blockSize)
     for (int i = 0; i < size; i++) {
       Algorithm d_alg;
-        d_alg.mapping_function(map_result[i], d_data[i], rest...);
+      d_alg.mapping_function(map_result[i], d_data[i], rest...);
       //      printf("Running on device? = %d\n", !omp_is_initial_device());
       // DEBUG_ACTION(printf("Running on device? = %d\n",
       // !omp_is_initial_device());)
@@ -64,7 +65,7 @@ R &parallel_map(Algorithm &algorithm, vecmem::memory_resource &mr,
     DEBUG_ACTION(printf("[OMPT][map]Running on host with user config \n");)
 #pragma omp parallel for num_threads(config.m_blockSize)
     for (int i = 0; i < size; i++) {
-        algorithm.mapping_function(map_result[i], data[i], rest...);
+      algorithm.mapping_function(map_result[i], data[i], rest...);
     }
   }
 
@@ -72,6 +73,7 @@ R &parallel_map(Algorithm &algorithm, vecmem::memory_resource &mr,
   vecmem_result->assign(map_result, map_result + size);
   return *vecmem_result;
 }
+*/
 
 // map without user config
 template <class Algorithm,
@@ -82,7 +84,7 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, T &data,
                 Rest &...rest) {
 
-  printf("test 2\n");
+  // printf("test 2\n");
   int size = static_cast<int>(data.size());
   value_type_t<R> *map_result = new value_type_t<R>[size];
   value_type_t<T> *d_data = data.data();
@@ -94,7 +96,7 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
     DEBUG_ACTION(
         printf("[OMPT][map]Attempt to run on device with default config \n");)
     const int grid_size = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    printf("%d\n", grid_size);
+    // printf("%d\n", grid_size);
 
 #pragma omp target teams map(to                                                \
                              : d_data [0:size], rest)                          \
@@ -120,10 +122,10 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
           DEBUG_ACTION(printf("Current: team %d, thread %d; %f \n",
                               omp_get_team_num(), omp_get_thread_num(),
                               buffer[omp_get_thread_num()]);)
-            d_alg.mapping_function(
-                    buffer[omp_get_thread_num()],
-                    d_data[omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num()],
-                    rest...);
+          d_alg.mapping_function(
+              buffer[omp_get_thread_num()],
+              d_data[omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num()],
+              rest...);
         }
       }
 
@@ -139,7 +141,7 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
     DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
 #pragma omp parallel for
     for (int i = 0; i < size; i++) {
-        algorithm.mapping_function(map_result[i], data[i], rest...);
+      algorithm.mapping_function(map_result[i], data[i], rest...);
     }
   }
 
@@ -149,6 +151,7 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
 }
 
 // mmap with user config
+/*
 template <class Algorithm,
           typename R = typename Algorithm::intermediate_result_t, typename T,
           typename... Rest>
@@ -170,7 +173,7 @@ inline R &parallel_map(Algorithm &algorithm,
     num_threads(config.m_blockSize)
     for (int i = 0; i < size; i++) {
       Algorithm d_alg;
-        d_alg.mapping_function(d_data[i], rest...);
+      d_alg.mapping_function(d_data[i], rest...);
       //      printf("Running on device? = %d\n", !omp_is_initial_device());
       //   DEBUG_ACTION(printf("Running on device? = %d\n",
       //   !omp_is_initial_device());)
@@ -181,13 +184,14 @@ inline R &parallel_map(Algorithm &algorithm,
     DEBUG_ACTION(printf("[OMPT][mmap]Running on host with user config \n");)
 #pragma omp parallel for num_threads(config.m_blockSize)
     for (int i = 0; i < size; i++) {
-        algorithm.mapping_function(data[i], rest...);
+      algorithm.mapping_function(data[i], rest...);
     }
   }
 
   data.assign(d_data, d_data + size);
   return data;
 }
+*/
 
 // mmap without user config
 template <class Algorithm,
@@ -198,7 +202,7 @@ R &parallel_map(Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, T &data,
                 Rest &...rest) {
 
-  printf("test 5\n");
+  // printf("test 5\n");
   int size = static_cast<int>(data.size());
   value_type_t<T> *d_data = data.data();
 
@@ -232,7 +236,7 @@ R &parallel_map(Algorithm &algorithm,
 
         // all threads use the shared memory for computing the output result
         if (omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num() < size) {
-            d_alg.mapping_function(buffer[omp_get_thread_num()], rest...);
+          d_alg.mapping_function(buffer[omp_get_thread_num()], rest...);
         }
       }
       // thread 0 from each block copies the results from shared memory to
@@ -247,7 +251,7 @@ R &parallel_map(Algorithm &algorithm,
     DEBUG_ACTION(printf("[OMPT][mmap]Running on host with deault config \n");)
 #pragma omp parallel for
     for (int i = 0; i < size; i++) {
-        algorithm.mapping_function(data[i], rest...);
+      algorithm.mapping_function(data[i], rest...);
     }
   }
 
@@ -266,7 +270,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
   using data_value_type = typename R::value_type;
   data_value_type *result = new data_value_type();
 
-//  constexpr std::size_t num_target_teams = 20;
+  //  constexpr std::size_t num_target_teams = 20;
 
   std::size_t size = data.size();
 
@@ -279,17 +283,17 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
 
 #pragma omp for nowait
       for (std::size_t i = 0; i < size; i++)
-          algorithm.reducing_function(temp_result, data[i]);
+        algorithm.reducing_function(temp_result, data[i]);
 
 #pragma omp critical
-          algorithm.reducing_function(result, *temp_result);
+      algorithm.reducing_function(result, *temp_result);
     }
 
   } else {
 
     constexpr std::size_t num_target_teams = 1;
 
-    printf("***** OMPT library (variant 1) ***** \n");
+    // printf("***** OMPT library (variant 1) ***** \n");
 
     value_type_t<R> *d_data = data.data();
 
@@ -321,7 +325,8 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
         //      printf("%d %f \n", d_data[i], map_result[i]);
         // printf("%d %f %f\n", omp_get_thread_num(), temp_result[i],
         // d_data[i]);
-          algorithm.reducing_function(temp_result + omp_get_thread_num(), d_data[i]);
+        algorithm.reducing_function(temp_result + omp_get_thread_num(),
+                                    d_data[i]);
         // printf("%d %f %f\n", omp_get_thread_num(), temp_result[i],
         // d_data[i]);
         //  printf("Running on device? = %d\n", !omp_is_initial_device());
@@ -350,7 +355,8 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
                      "%ld,i: %ld, %ld\n",
                      omp_get_team_num(), omp_get_thread_num(), temp_result[i],
                      temp_result[j - (j / 2) + i], j, i, j - (j / 2) + i);*/
-                algorithm.reducing_function(temp_result + i, temp_result[j - (j / 2) + i]);
+              algorithm.reducing_function(temp_result + i,
+                                          temp_result[j - (j / 2) + i]);
             }
           }
           j = (j + 1) / 2;
@@ -363,7 +369,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
          i < std::min(num_target_teams, (size + BLOCK_SIZE - 1) / BLOCK_SIZE);
          i++) {
       // printf("t: %f\n", team_temp_result[i]);
-        algorithm.reducing_function(result, team_temp_result[i]);
+      algorithm.reducing_function(result, team_temp_result[i]);
       // printf("r: %f\n", *result);
     }
   }
@@ -377,136 +383,151 @@ T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
                    vecmem::memory_resource &mr, T &data) {
 
   std::size_t num_target_teams = 5;
+  T *result;
+  int device = omp_get_num_devices();
+  if (device == 0) {
 
-  std::size_t size = data.size();
-  value_type_t<T> *d_data = data.data();
+    result = new T(data.size(), &mr);
 
-  std::size_t data_per_thread = size / (num_target_teams * BLOCK_SIZE);
-  std::size_t data_per_thread_remainder =
-      size % (num_target_teams * BLOCK_SIZE);
+    std::size_t result_index = 0;
+    for (std::size_t i = 0; i < data.size(); i++) {
 
-  std::size_t *thread_offset = new std::size_t[num_target_teams * BLOCK_SIZE];
-  bool *filter_result = new bool[size];
+      if (algorithm.filtering_function(data[i])) {
 
-  std::size_t *team_offset = new std::size_t[num_target_teams];
+        result->data()[result_index] = data.data()[i];
+        result_index++;
+      }
+    }
+
+    result->resize(result_index);
+
+  } else {
+
+    std::size_t size = data.size();
+    value_type_t<T> *d_data = data.data();
+
+    std::size_t data_per_thread = size / (num_target_teams * BLOCK_SIZE);
+    std::size_t data_per_thread_remainder =
+        size % (num_target_teams * BLOCK_SIZE);
+
+    std::size_t *thread_offset = new std::size_t[num_target_teams * BLOCK_SIZE];
+    bool *filter_result = NULL;
+
+    std::size_t *team_offset = new std::size_t[num_target_teams];
+
+#pragma omp target data map(alloc                                              \
+                            : filter_result [0:size],                          \
+                              thread_offset [0:num_target_teams * BLOCK_SIZE])
+    {
 
 #pragma omp target teams map(to                                                \
                              : d_data [0:size])                                \
     map(from                                                                   \
-        : team_offset [0:num_target_teams],                                    \
-          thread_offset [0:num_target_teams * BLOCK_SIZE],                     \
-          filter_result [0:size]) num_teams(num_target_teams)
-  {
+        : team_offset [0:num_target_teams]) num_teams(num_target_teams)
+      {
 
 #pragma omp parallel num_threads(BLOCK_SIZE)
-    {
-      // exececute filter function
-      std::size_t global_id =
-          omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num();
+        {
+          // exececute filter function
+          std::size_t global_id =
+              omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num();
 
-      std::size_t start = data_per_thread * global_id +
-                          std::min(data_per_thread_remainder, global_id);
-      std::size_t end = data_per_thread * (global_id + 1) +
-                        std::min(data_per_thread_remainder, global_id + 1);
+          std::size_t start = data_per_thread * global_id +
+                              std::min(data_per_thread_remainder, global_id);
+          std::size_t end = data_per_thread * (global_id + 1) +
+                            std::min(data_per_thread_remainder, global_id + 1);
 
-      // printf("1: %d, %d, %ld, %ld, %ld\n", omp_get_team_num(),
-      //        omp_get_thread_num(), global_id, start, end);
+          // printf("1: %d, %d, %ld, %ld, %ld\n", omp_get_team_num(),
+          //        omp_get_thread_num(), global_id, start, end);
 
-      std::size_t count = 0;
-      for (std::size_t i = start; i < end; i++) {
+          std::size_t count = 0;
+          for (std::size_t i = start; i < end; i++) {
 
-        bool temp = algorithm.filtering_function(d_data[i]);
-        filter_result[i] = temp;
+            bool temp = algorithm.filtering_function(d_data[i]);
+            filter_result[i] = temp;
 
-        if (temp) {
-          count++;
+            if (temp) {
+              count++;
+            }
+          }
+
+          // printf("2: %d, %d, %ld, %ld\n", omp_get_team_num(),
+          // omp_get_thread_num(),
+          //        global_id, count);
+          thread_offset[global_id] = count;
         }
+
+        // claculate size and offset in each team
+
+        std::size_t count = 0;
+
+        for (std::size_t i = 0; i < BLOCK_SIZE; i++) {
+
+          std::size_t t = thread_offset[omp_get_team_num() * BLOCK_SIZE + i];
+
+          // printf("3: %d, %d, %ld, %ld\n", omp_get_team_num(),
+          //        omp_get_team_num() * BLOCK_SIZE + i, i, count);
+          thread_offset[omp_get_team_num() * BLOCK_SIZE + i] = count;
+          count += t;
+        }
+
+        team_offset[omp_get_team_num()] = count;
       }
 
-      // printf("2: %d, %d, %ld, %ld\n", omp_get_team_num(),
-      // omp_get_thread_num(),
-      //        global_id, count);
-      thread_offset[global_id] = count;
-    }
+      // calculate size and offset on host
+      std::size_t count = 0;
+      for (std::size_t i = 0; i < num_target_teams; i++) {
+        std::size_t t = team_offset[i];
+        team_offset[i] = count;
+        count += t;
+      }
 
-    // claculate size and offset in each team
+      // allocate buffer for result
+      result = new T(count, &mr);
 
-    std::size_t count = 0;
-
-    for (std::size_t i = 0; i < BLOCK_SIZE; i++) {
-
-      std::size_t t = thread_offset[omp_get_team_num() * BLOCK_SIZE + i];
-
-      // printf("3: %d, %d, %ld, %ld\n", omp_get_team_num(),
-      //        omp_get_team_num() * BLOCK_SIZE + i, i, count);
-      thread_offset[omp_get_team_num() * BLOCK_SIZE + i] = count;
-      count += t;
-    }
-
-    team_offset[omp_get_team_num()] = count;
-  }
-
-  // calculate size and offset on host
-  std::size_t count = 0;
-  for (std::size_t i = 0; i < num_target_teams; i++) {
-    std::size_t t = team_offset[i];
-    team_offset[i] = count;
-    count += t;
-  }
-  /*
-    for (std::size_t i = 0; i < num_target_teams * BLOCK_SIZE; i++) {
-
-      printf("n: %ld %ld\n", i, thread_offset[i]);
-    }
-  */
-  printf("%ld\n", count);
-
-  // allocate buffer for result
-  T *result = new T(count, &mr);
-
-  value_type_t<T> *d_result = result->data();
-  // move stuff to buffer
+      value_type_t<T> *d_result = result->data();
+      // move stuff to buffer
 
 #pragma omp target teams map(to                                                \
                              : team_offset [0:num_target_teams])               \
     map(to                                                                     \
-        : d_data [0:size], thread_offset [0:num_target_teams * BLOCK_SIZE],    \
-          filter_result [0:size]) map(from                                     \
-                                      : d_result [0:count])                    \
+        : d_data [0:size]) map(from                                            \
+                               : d_result [0:count])                           \
         num_teams(num_target_teams)
-  {
+      {
 
 #pragma omp parallel num_threads(BLOCK_SIZE)
-    {
-      std::size_t global_id =
-          omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num();
+        {
+          std::size_t global_id =
+              omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num();
 
-      std::size_t start = data_per_thread * global_id +
-                          std::min(data_per_thread_remainder, global_id);
-      std::size_t end = data_per_thread * (global_id + 1) +
-                        std::min(data_per_thread_remainder, global_id + 1);
+          std::size_t start = data_per_thread * global_id +
+                              std::min(data_per_thread_remainder, global_id);
+          std::size_t end = data_per_thread * (global_id + 1) +
+                            std::min(data_per_thread_remainder, global_id + 1);
 
-      std::size_t offset =
-          team_offset[omp_get_team_num()] + thread_offset[global_id];
+          std::size_t offset =
+              team_offset[omp_get_team_num()] + thread_offset[global_id];
 
-      /*
-      printf("4: %d, %d, %ld, %ld, %ld, %ld\n", omp_get_team_num(),
-             omp_get_thread_num(), global_id, offset,
-             team_offset[omp_get_team_num()], thread_offset[global_id]);*/
-      for (std::size_t i = start; i < end; i++) {
+          /*
+          printf("4: %d, %d, %ld, %ld, %ld, %ld\n", omp_get_team_num(),
+                 omp_get_thread_num(), global_id, offset,
+                 team_offset[omp_get_team_num()], thread_offset[global_id]);*/
+          for (std::size_t i = start; i < end; i++) {
 
-        if (filter_result[i]) {
+            if (filter_result[i]) {
 
-          // printf("5: %d, %d, %ld, %ld, %ld\n", omp_get_team_num(),
-          //       omp_get_thread_num(), global_id, i, offset);
-          d_result[offset] = d_data[i];
+              // printf("5: %d, %d, %ld, %ld, %ld\n", omp_get_team_num(),
+              //       omp_get_thread_num(), global_id, i, offset);
+              d_result[offset] = d_data[i];
 
-          offset++;
+              offset++;
+            }
+          }
         }
       }
     }
   }
-
   return *result;
 }
 } // namespace vecpar::ompt
