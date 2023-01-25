@@ -28,11 +28,9 @@ public:
 
   vecmem::vector<double> operator()(vecmem::vector<double> &data,
                                     X &more_data) override {
-    /*
-          for (size_t i = 0; i < data.size(); i++)
-            mapping_function(data[i], more_data);
-          return data;
-        */
+    for (size_t i = 0; i < data.size(); i++)
+      mapping_function(data[i], more_data);
+    return data;
   }
 };
 

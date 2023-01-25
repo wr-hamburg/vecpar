@@ -1,20 +1,23 @@
 ### OMP target for CPU
 add_executable(tests_ompt_cpu "OmptTests.cpp")
+target_compile_definitions(tests_ompt_cpu PRIVATE COMPILE_FOR_HOST)
 
 target_include_directories(tests_ompt_cpu PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/common)
 
 set_target_properties(tests_ompt_cpu PROPERTIES CXX_STANDARD 20)
 
-target_compile_options(tests_ompt_cpu PUBLIC
-        $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE -fopenmp>)
-
 target_link_libraries(tests_ompt_cpu GTest::gtest_main
         vecpar_ompt OpenMP::OpenMP_CXX)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        target_compile_options(tests_ompt_cpu PUBLIC
+                $<$<COMPILE_LANGUAGE:CXX>:-fopenmp -fopenmp-targets=x86_64>)
         target_link_options(tests_ompt_cpu PRIVATE -fopenmp -fopenmp-targets=x86_64 )
+      #  target_link_options(tests_ompt_cpu PRIVATE -foffload-lto)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        target_compile_options(tests_ompt_cpu PUBLIC
+                $<$<COMPILE_LANGUAGE:CXX>:-fopenmp -foffload=disable>)
         target_link_options(tests_ompt_cpu PRIVATE -fopenmp -foffload=disable)
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AOMP")
         target_link_options(tests_ompt_cpu PRIVATE -fopenmp)
@@ -49,14 +52,15 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
         ### Target options GPU
         set(COMPILE_FLAGS "-fopenmp")
         set(LINK_FLAGS -fopenmp)
+        target_compile_definitions(tests_ompt_gpu PRIVATE COMPILE_FOR_DEVICE)
 
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
                 # NVIDIA flags
-                #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64 )
-                #set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64 )
+                set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64 )
+                set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64 )
                 # AMD flags
-                set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
-                set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
+                #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
+                #set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
         elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
                 set(COMPILE_FLAGS ${COMPILE_FLAGS} -foffload=nvptx-none)
                 set(LINK_FLAGS ${LINK_FLAGS} -foffload=nvptx-none)
@@ -74,6 +78,6 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
 
         if (VECPAR_BUILD_WITH_CLANG)
                 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -foffload-lto")
-                target_link_options(tests_ompt_cpu PRIVATE -foffload-lto)
+                target_link_options(tests_ompt_gpu PRIVATE -foffload-lto)
         endif()
 endif()

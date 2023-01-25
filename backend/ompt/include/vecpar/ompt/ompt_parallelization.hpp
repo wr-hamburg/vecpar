@@ -27,107 +27,51 @@
 
 namespace vecpar::ompt {
 
-// map with user config
-/*
 template <class Algorithm,
           typename R = typename Algorithm::intermediate_result_t, typename T,
           typename... Rest>
 requires detail::is_map<Algorithm, R, T, Rest...>
-R &parallel_map(Algorithm &algorithm, vecmem::memory_resource &mr,
-                vecpar::config config, T &data, Rest &...rest) {
-
-  printf("Map \n");
-  int size = static_cast<int>(data.size());
-  value_type_t<R> *map_result = new value_type_t<R>[size];
-  value_type_t<T> *d_data = data.data();
-
-  int device = omp_get_num_devices();
-  if (device >= 1) {
-    DEBUG_ACTION(
-        printf("[OMPT][map]Attempt to run on device with user config \n");)
-#pragma omp target map(alloc                                                   \
-                       : map_result [0:size]) map(from                         \
-                                                  : map_result [0:size])       \
-    map(to                                                                     \
-        : d_data [0:size], rest)
-#pragma omp teams distribute parallel for num_teams(config.m_gridSize)         \
-    num_threads(config.m_blockSize)
-    for (int i = 0; i < size; i++) {
-      Algorithm d_alg;
-      d_alg.mapping_function(map_result[i], d_data[i], rest...);
-      //      printf("Running on device? = %d\n", !omp_is_initial_device());
-      // DEBUG_ACTION(printf("Running on device? = %d\n",
-      // !omp_is_initial_device());)
-      DEBUG_ACTION(printf("Current: team %d, thread %d \n", omp_get_team_num(),
-                          omp_get_thread_num());)
-    }
-  } else { // no GPU available, compute the results on the CPU
-    DEBUG_ACTION(printf("[OMPT][map]Running on host with user config \n");)
-#pragma omp parallel for num_threads(config.m_blockSize)
-    for (int i = 0; i < size; i++) {
-      algorithm.mapping_function(map_result[i], data[i], rest...);
-    }
-  }
-
-  R *vecmem_result = new R(size, &mr);
-  vecmem_result->assign(map_result, map_result + size);
-  return *vecmem_result;
-}
-*/
-
-// map without user config
-template <class Algorithm,
-          typename R = typename Algorithm::intermediate_result_t, typename T,
-          typename... Rest>
-requires detail::is_map<Algorithm, R, T, Rest...>
-R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
+R &parallel_map(Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, T &data,
                 Rest &...rest) {
 
-  // printf("test 2\n");
   int size = static_cast<int>(data.size());
   value_type_t<R> *map_result = new value_type_t<R>[size];
   value_type_t<T> *d_data = data.data();
 
-  // check if GPU is available at runtime
-  int device = omp_get_num_devices();
+#if defined(COMPILE_FOR_DEVICE)
+  DEBUG_ACTION(
+      printf("[OMPT][map]Attempt to run on device with default config \n");)
+  Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
+  // if possible use shared memory
 
-  if (device >= 1) { // if a GPU is available, use it for the computations
-    DEBUG_ACTION(
-        printf("[OMPT][map]Attempt to run on device with default config \n");)
-    const int grid_size = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
-    // printf("%d\n", grid_size);
-
-#pragma omp target teams map(to                                                \
-                             : d_data [0:size], rest)                          \
-    map(from                                                                   \
-        : map_result [0:size]) num_teams(grid_size)
-    {
-      value_type_t<R> buffer[BLOCK_SIZE];
-      // #pragma omp allocate(buffer) allocator(omp_pteam_mem_alloc)
+#if _OPENMP >= 202111 or (__clang__ == 1 and __clang_major__ >= 16)
+  const int grid_size = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+#pragma omp target teams is_device_ptr(d_alg) map(to : d_data[0 : size])       \
+    map(from : map_result[0 : size]) num_teams(grid_size)
+  {
+    value_type_t<R> buffer[BLOCK_SIZE];
+// if the compiler supports OpenMP 5.2 allocators
+#pragma omp allocate(buffer) allocator(omp_pteam_mem_alloc)
 
 #pragma omp parallel num_threads(BLOCK_SIZE)
-      {
+    {
+      DEBUG_ACTION(printf("Current: team %d, thread %d; %f \n",
+                          omp_get_team_num(), omp_get_thread_num(),
+                          buffer[omp_get_thread_num()]);)
+      // printf("Running on device? = %d\n", !omp_is_initial_device());
 
-        Algorithm d_alg;
-        // #pragma omp allocate(d_alg) allocator(omp_thread_mem_alloc)
-
+      // all threads use the shared memory for computing the output result
+      if (omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num() < size) {
         DEBUG_ACTION(printf("Current: team %d, thread %d; %f \n",
                             omp_get_team_num(), omp_get_thread_num(),
                             buffer[omp_get_thread_num()]);)
-        // printf("Running on device? = %d\n", !omp_is_initial_device());
-
-        // all threads use the shared memory for computing the output result
-        if (omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num() < size) {
-          DEBUG_ACTION(printf("Current: team %d, thread %d; %f \n",
-                              omp_get_team_num(), omp_get_thread_num(),
-                              buffer[omp_get_thread_num()]);)
-          d_alg.mapping_function(
-              buffer[omp_get_thread_num()],
-              d_data[omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num()],
-              rest...);
-        }
+        d_alg->mapping_function(
+            buffer[omp_get_thread_num()],
+            d_data[omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num()],
+            rest...);
       }
+    }
 
       // thread 0 from each block copies the results from shared memory to
       // global memory
@@ -137,61 +81,24 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
         }
       }
     }
-  } else { // no GPU available, compute the results on the CPU
-    DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
+#else // no shared memory
+#pragma omp target teams distribute parallel for is_device_ptr(d_alg)          \
+    map(to : d_data[0 : size]) map(from : map_result[0 : size])
+  for (int i = 0; i < size; i++) {
+    d_alg->mapping_function(map_result[i], d_data[i], rest...);
+  }
+#endif
+#else // defined(COMPILE_FOR_HOST)
+  DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
 #pragma omp parallel for
     for (int i = 0; i < size; i++) {
       algorithm.mapping_function(map_result[i], data[i], rest...);
     }
-  }
-
-  R *vecmem_result = new R(size, &mr);
-  vecmem_result->assign(map_result, map_result + size);
-  return *vecmem_result;
+#endif
+    R *vecmem_result = new R(size, &mr);
+    vecmem_result->assign(map_result, map_result + size);
+    return *vecmem_result;
 }
-
-// mmap with user config
-/*
-template <class Algorithm,
-          typename R = typename Algorithm::intermediate_result_t, typename T,
-          typename... Rest>
-requires detail::is_mmap<Algorithm, T, Rest...>
-inline R &parallel_map(Algorithm &algorithm,
-                       __attribute__((unused)) vecmem::memory_resource &mr,
-                       vecpar::config config, T &data, Rest &...rest) {
-  printf("test 4\n");
-  //    printf("***** OMPT library ***** \n");
-  int size = static_cast<int>(data.size());
-  value_type_t<T> *d_data = data.data();
-
-  int device = omp_get_num_devices();
-  if (device >= 1) { // if a GPU is available, use it for the computations
-    DEBUG_ACTION(
-        printf("[OMPT][mmap]Attempt to run on device with user config \n");)
-#pragma omp target map(tofrom : d_data [0:size]) map(to : rest)
-#pragma omp teams distribute parallel for num_teams(config.m_gridSize)         \
-    num_threads(config.m_blockSize)
-    for (int i = 0; i < size; i++) {
-      Algorithm d_alg;
-      d_alg.mapping_function(d_data[i], rest...);
-      //      printf("Running on device? = %d\n", !omp_is_initial_device());
-      //   DEBUG_ACTION(printf("Running on device? = %d\n",
-      //   !omp_is_initial_device());)
-      DEBUG_ACTION(printf("Current: team %d, thread %d \n", omp_get_team_num(),
-                          omp_get_thread_num());)
-    }
-  } else { // no GPU available, compute the results on the CPU
-    DEBUG_ACTION(printf("[OMPT][mmap]Running on host with user config \n");)
-#pragma omp parallel for num_threads(config.m_blockSize)
-    for (int i = 0; i < size; i++) {
-      algorithm.mapping_function(data[i], rest...);
-    }
-  }
-
-  data.assign(d_data, d_data + size);
-  return data;
-}
-*/
 
 // mmap without user config
 template <class Algorithm,
@@ -202,26 +109,27 @@ R &parallel_map(Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, T &data,
                 Rest &...rest) {
 
-  // printf("test 5\n");
   int size = static_cast<int>(data.size());
   value_type_t<T> *d_data = data.data();
 
-  // check if GPU is available at runtime
-  int device = omp_get_num_devices();
-  if (device >= 1) {
-    // if a GPU is available, use it for the computations
-    DEBUG_ACTION(
-        printf("[OMPT][mmap]Attempt to run on device with default config \n");)
-    const int grid_size = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+#if defined(COMPILE_FOR_DEVICE)
+  // if a GPU is available, use it for the computations
+  DEBUG_ACTION(
+      printf("[OMPT][mmap]Attempt to run on device with default config \n");)
 
-#pragma omp target teams num_teams(grid_size) map(tofrom                       \
-                                                  : d_data [0:size])           \
-    map(to                                                                     \
-        : rest)
-    {
+  Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
 
+#if _OPENMP >= 202111 or (__clang__ == 1 and __clang_major__ >= 16)
+  // use shared memory
+  const int grid_size = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
+#pragma omp target teams num_teams(grid_size) is_device_ptr(d_alg)             \
+    map(tofrom : d_data[0 : size])
+  // map(to  : rest)
+  {
       value_type_t<T> buffer[BLOCK_SIZE];
-      // #pragma omp allocate(buffer) allocator(omp_pteam_mem_alloc)
+      // if the compiler supports OpenMP 5.2 allocators
+#pragma omp allocate(buffer) allocator(omp_pteam_mem_alloc)
+
       // thread 0 from each block loads data into shared memory
       for (int i = 0; i < BLOCK_SIZE; i++) {
         if (omp_get_team_num() * BLOCK_SIZE + i < size) {
@@ -230,13 +138,9 @@ R &parallel_map(Algorithm &algorithm,
       }
 #pragma omp parallel num_threads(BLOCK_SIZE)
       {
-
-        Algorithm d_alg;
-        //  #pragma omp allocate(d_alg) allocator(omp_thread_mem_alloc)
-
         // all threads use the shared memory for computing the output result
         if (omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num() < size) {
-          d_alg.mapping_function(buffer[omp_get_thread_num()], rest...);
+          d_alg->mapping_function(buffer[omp_get_thread_num()], rest...);
         }
       }
       // thread 0 from each block copies the results from shared memory to
@@ -246,16 +150,23 @@ R &parallel_map(Algorithm &algorithm,
           d_data[omp_get_team_num() * BLOCK_SIZE + i] = buffer[i];
         }
       }
-    }
-  } else { // no GPU available, compute the results on the CPU
-    DEBUG_ACTION(printf("[OMPT][mmap]Running on host with deault config \n");)
+  }
+#else // no shared memory
+#pragma omp target teams distribute parallel for is_device_ptr(d_alg)          \
+    map(tofrom : d_data[0 : size])
+  for (int i = 0; i < size; i++) {
+    d_alg->mapping_function(d_data[i], rest...);
+  }
+#endif
+#else // defined(COMPILE_FOR_HOST)
+  DEBUG_ACTION(printf("[OMPT][mmap]Running on host with default config \n");)
 #pragma omp parallel for
     for (int i = 0; i < size; i++) {
       algorithm.mapping_function(data[i], rest...);
     }
-  }
+#endif
 
-  // update the input vectorauf
+  // update the input vector
   data.assign(d_data, d_data + size);
   return data;
 }
@@ -270,38 +181,17 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
   using data_value_type = typename R::value_type;
   data_value_type *result = new data_value_type();
 
-  //  constexpr std::size_t num_target_teams = 20;
-
   std::size_t size = data.size();
+#if defined(COMPILE_FOR_DEVICE)
+  constexpr std::size_t num_target_teams = 1;
 
-  int device = omp_get_num_devices();
-  if (device == 0) {
+  value_type_t<R> *d_data = data.data();
 
-#pragma omp parallel
-    {
-      data_value_type *temp_result = new data_value_type();
+  // data_value_type *temp_result = (data_value_type *)omp_target_alloc(
+  //     sizeof(data_value_type) * num_target_teams * BLOCK_SIZE, 0);
 
-#pragma omp for nowait
-      for (std::size_t i = 0; i < size; i++)
-        algorithm.reducing_function(temp_result, data[i]);
-
-#pragma omp critical
-      algorithm.reducing_function(result, *temp_result);
-    }
-
-  } else {
-
-    constexpr std::size_t num_target_teams = 1;
-
-    // printf("***** OMPT library (variant 1) ***** \n");
-
-    value_type_t<R> *d_data = data.data();
-
-    // data_value_type *temp_result = (data_value_type *)omp_target_alloc(
-    //     sizeof(data_value_type) * num_target_teams * BLOCK_SIZE, 0);
-
-    data_value_type team_temp_result[num_target_teams];
-    // memset(team_temp_result, 0, sizeof(typename R::value_type) * 2);
+  data_value_type team_temp_result[num_target_teams];
+  // memset(team_temp_result, 0, sizeof(typename R::value_type) * 2);
 
 #pragma omp target teams map(to                                                \
                              : d_data [0:size])                                \
@@ -372,8 +262,22 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
       algorithm.reducing_function(result, team_temp_result[i]);
       // printf("r: %f\n", *result);
     }
+    // }
+#else // defined(COMPILE_FOR_HOST)
+#pragma omp parallel
+  {
+      data_value_type *temp_result = new data_value_type();
+
+#pragma omp for nowait
+      for (std::size_t i = 0; i < size; i++)
+        algorithm.reducing_function(temp_result, data[i]);
+
+#pragma omp critical
+      algorithm.reducing_function(result, *temp_result);
   }
-  return *result;
+#endif
+
+    return *result;
 }
 
 // filter without user config
@@ -382,27 +286,10 @@ requires detail::is_filter<Algorithm, T>
 T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
                    vecmem::memory_resource &mr, T &data) {
 
-  std::size_t num_target_teams = 5;
-  T *result;
-  int device = omp_get_num_devices();
-  if (device == 0) {
+    T *result;
 
-    result = new T(data.size(), &mr);
-
-    std::size_t result_index = 0;
-    for (std::size_t i = 0; i < data.size(); i++) {
-
-      if (algorithm.filtering_function(data[i])) {
-
-        result->data()[result_index] = data.data()[i];
-        result_index++;
-      }
-    }
-
-    result->resize(result_index);
-
-  } else {
-
+#if defined(COMPILE_FOR_DEVICE)
+    std::size_t num_target_teams = 5;
     std::size_t size = data.size();
     value_type_t<T> *d_data = data.data();
 
@@ -527,8 +414,23 @@ T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
         }
       }
     }
+#else // defined(COMPILE_FOR_HOST)
+  result = new T(data.size(), &mr);
+
+  std::size_t result_index = 0;
+  for (std::size_t i = 0; i < data.size(); i++) {
+
+      if (algorithm.filtering_function(data[i])) {
+
+        result->data()[result_index] = data.data()[i];
+        result_index++;
+      }
   }
-  return *result;
+
+  result->resize(result_index);
+#endif
+
+    return *result;
 }
 } // namespace vecpar::ompt
 #endif // VECPAR_OMPT_PARALLELIZATION_HPP
