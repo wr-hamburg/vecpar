@@ -8,7 +8,7 @@
 #endif
 
 #ifndef NDEBUG
-#define DBG 1
+#define DBG 0
 #else
 #define DBG 0
 #endif
