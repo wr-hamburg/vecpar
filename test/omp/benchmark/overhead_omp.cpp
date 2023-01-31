@@ -43,6 +43,8 @@ void run_test_for_N(int n) {
   double seq = alg_seq(*vec, x);
   end_time = std::chrono::steady_clock::now();
 
+  printf("%f\n", seq);
+
   std::chrono::duration<double> diff_seq = end_time - start_time;
   std::cout << "Time for seq  = " << diff_seq.count() << " s\n";
 
