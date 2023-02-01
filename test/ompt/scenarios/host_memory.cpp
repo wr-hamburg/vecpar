@@ -14,7 +14,7 @@
 #include "../../common/algorithm/test_algorithm_3.hpp"
 // #include "../../common/algorithm/test_algorithm_4.hpp"
 #include "../../common/algorithm/test_algorithm_5.hpp"
-// #include "../../common/algorithm/test_algorithm_6.hpp"
+#include "../../common/algorithm/test_algorithm_6.hpp"
 // #include "../../common/algorithm/test_algorithm_7.hpp"
 // #include "../../common/algorithm/test_algorithm_8.hpp"
 
@@ -165,7 +165,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Filter_Correctness) {
   }
 }
 
-/*
+
  TEST_P(CpuHostMemoryTest, Serial_MapReduce) {
   test_algorithm_1 alg;
 
@@ -173,9 +173,9 @@ TEST_P(CpuHostMemoryTest, Parallel_Filter_Correctness) {
   double *result = alg(*vec);
   EXPECT_EQ(*result, expectedReduceResult);
 }
-
+/*
 TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Separately) {
-  test_algorithm_1 alg(mr);
+  test_algorithm_1 alg;
 
   // parallel execution
   vecmem::vector<double> par_result(vec->size(), &mr);
@@ -198,16 +198,10 @@ TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Grouped) {
   test_algorithm_1 alg;
 
   // parallel execution
-  // double par_reduced =
-  //  vecpar::config c{1, 10};
-  vecmem::vector<double> result = vecpar::ompt::parallel_map(alg, mr,
-                                                             // c,
-                                                             *vec);
-  for (std::size_t i = 0; i < vec->size(); i++)
-    EXPECT_EQ(result[i], 1.0 * vec->at(i));
-  // EXPECT_EQ(par_reduced, expectedReduceResult);
+  double par_reduced = vecpar::ompt::parallel_algorithm(alg, mr, *vec);
+  EXPECT_EQ(par_reduced, expectedReduceResult);
 }
-/*
+
 TEST_P(CpuHostMemoryTest, Serial_Extra_Params_MapReduce) {
   test_algorithm_2 alg;
   X x{1, 1.0};
@@ -216,9 +210,9 @@ TEST_P(CpuHostMemoryTest, Serial_Extra_Params_MapReduce) {
   double *result = alg(*vec, x);
   EXPECT_EQ(*result, expectedReduceResult);
 }
-
+/*
 TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_Separately) {
-  test_algorithm_2 alg(mr);
+  test_algorithm_2 alg;
 
   X x{1, 1.0};
 
@@ -237,16 +231,16 @@ TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_Separately) {
 
   EXPECT_EQ(*result, expectedReduceResult);
 }
-
+*/
 TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
-  test_algorithm_2 alg(mr);
+  test_algorithm_2 alg;
 
   X x{1, 1.0};
   // parallel execution
-  double par_reduced = vecpar::omp::parallel_algorithm(alg, mr, *vec, x);
+  double par_reduced = vecpar::ompt::parallel_algorithm(alg, mr, *vec, x);
   EXPECT_EQ(par_reduced, expectedReduceResult);
 }
-
+/*
 TEST_P(CpuHostMemoryTest, Serial_MapFilter_MapReduce_Chained) {
   test_algorithm_3 first_alg(mr);
   test_algorithm_4 second_alg;
@@ -303,7 +297,6 @@ TEST_P(CpuHostMemoryTest, Parallel_Map_Extra_Param) {
   printf("mismatched values %d\n", count);
 }
 
-/*
 TEST_P(CpuHostMemoryTest, two_collections) {
   test_algorithm_6 alg;
 
@@ -315,7 +308,7 @@ TEST_P(CpuHostMemoryTest, two_collections) {
     y[i] = 1.0;
   }
   float a = 2.0;
-  vecmem::vector<float> result = vecpar::omp::parallel_map(alg, mr, y, x, a);
+  vecmem::vector<float> result = vecpar::ompt::parallel_map(alg, mr, y, x, a);
 
   for (int i = 0; i < result.size(); i++) {
     EXPECT_EQ(result.at(i), x[i] * a + 1.0);
@@ -325,7 +318,7 @@ TEST_P(CpuHostMemoryTest, two_collections) {
   cleanup::free(y);
   cleanup::free(result);
 }
-
+/*
 TEST_P(CpuHostMemoryTest, three_collections) {
   test_algorithm_7 alg;
 

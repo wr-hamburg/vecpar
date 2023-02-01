@@ -10,14 +10,15 @@
 #include "algorithm.hpp"
 
 class test_algorithm_2
-    : public traccc::algorithm<double *(vecmem::vector<int>, X)>,
+    :// public traccc::algorithm<double *(vecmem::vector<int>, X)>,
       public vecpar::algorithm::parallelizable_map_reduce<
           vecpar::collection::One, double, vecmem::vector<double>,
           vecmem::vector<int>, X> {
 
 public:
   test_algorithm_2()
-      : algorithm(), parallelizable_map_reduce() {}
+      : //algorithm(),
+      parallelizable_map_reduce() {}
 
   TARGET double &mapping_function(double &result_i, const int &first_i,
                      X &second_i) const {
@@ -38,7 +39,7 @@ public:
     return result;
   }
 
-  double *operator()(vecmem::vector<int> &data, X &more_data) override {
+  double *operator()(vecmem::vector<int> &data, X &more_data) { //override {
     double *result = new double();
     this->operator()(data, more_data, result);
     return result;

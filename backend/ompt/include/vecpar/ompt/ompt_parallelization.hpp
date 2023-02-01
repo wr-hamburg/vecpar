@@ -30,7 +30,7 @@ namespace vecpar::ompt {
 template <class Algorithm,
           typename R = typename Algorithm::intermediate_result_t, typename T,
           typename... Rest>
-requires detail::is_map<Algorithm, R, T, Rest...>
+requires detail::is_map_1<Algorithm, R, T, Rest...>
 R &parallel_map(Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, T &data,
                 Rest &...rest) {
@@ -43,8 +43,9 @@ R &parallel_map(Algorithm &algorithm,
   DEBUG_ACTION(
       printf("[OMPT][map]Attempt to run on device with default config \n");)
   Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
+  omp_target_memcpy(d_alg, &algorithm, sizeof(Algorithm), 0, 0,
+                    omp_get_default_device(), omp_get_initial_device());
   // if possible use shared memory
-
 #if _OPENMP >= 202111 and (__clang__ == 1 and __clang_major__ >= 16)
   const int grid_size = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
 #pragma omp target teams is_device_ptr(d_alg) map(to                           \
@@ -83,11 +84,9 @@ R &parallel_map(Algorithm &algorithm,
       }
     }
   }
-#else // no shared memory
-#pragma omp target teams distribute parallel for is_device_ptr(d_alg)          \
-    map(to                                                                     \
-        : d_data [0:size]) map(from                                            \
-                               : map_result [0:size])
+#else // no shared memory //
+#pragma omp target teams distribute parallel for is_device_ptr(d_alg) \
+    map(to:d_data[0:size]) map(from: map_result[0:size])
   for (int i = 0; i < size; i++) {
     d_alg->mapping_function(map_result[i], d_data[i], rest...);
   }
@@ -104,11 +103,84 @@ R &parallel_map(Algorithm &algorithm,
   return *vecmem_result;
 }
 
+    template <class Algorithm,
+            typename R = typename Algorithm::intermediate_result_t, typename T1, typename T2,
+            typename... Rest>
+    requires detail::is_map_2<Algorithm, R, T1, T2, Rest...>
+    R &parallel_map(Algorithm &algorithm,
+                    __attribute__((unused)) vecmem::memory_resource &mr, T1 &data, T2& in_2,
+                    Rest &...rest) {
+
+        int size = static_cast<int>(data.size());
+        value_type_t<R> *map_result = new value_type_t<R>[size];
+        value_type_t<T1> *d_data = data.data();
+        value_type_t<T2> *in_2_data = in_2.data();
+
+#if defined(COMPILE_FOR_DEVICE)
+        DEBUG_ACTION(
+      printf("[OMPT][map]Attempt to run on device with default config \n");)
+  Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
+  omp_target_memcpy(d_alg, &algorithm, sizeof(Algorithm), 0, 0,
+                    omp_get_default_device(), omp_get_initial_device());
+#pragma omp target teams distribute parallel for is_device_ptr(d_alg) \
+    map(to:d_data[0:size],in_2_data[0:size]) map(from: map_result[0:size])
+  for (int i = 0; i < size; i++) {
+    d_alg->mapping_function(map_result[i], d_data[i], in_2_data[i], rest...);
+  }
+#else // defined(COMPILE_FOR_HOST)
+        DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
+#pragma omp parallel for
+        for (int i = 0; i < size; i++) {
+            algorithm.mapping_function(map_result[i], data[i], in_2[i], rest...);
+        }
+#endif
+        R *vecmem_result = new R(size, &mr);
+        vecmem_result->assign(map_result, map_result + size);
+        return *vecmem_result;
+    }
+
+    template <class Algorithm,
+            typename R = typename Algorithm::intermediate_result_t, typename T1, typename T2, typename T3,
+            typename... Rest>
+    requires detail::is_map_3<Algorithm, R, T1, T2, T3, Rest...>
+    R &parallel_map(Algorithm &algorithm,
+                    __attribute__((unused)) vecmem::memory_resource &mr, T1 &data, T2& in_2,T3& in_3,
+                    Rest &...rest) {
+
+        int size = static_cast<int>(data.size());
+        value_type_t<R> *map_result = new value_type_t<R>[size];
+        value_type_t<T1> *d_data = data.data();
+        value_type_t<T2> *in_2_data = in_2.data();
+        value_type_t<T3> *in_3_data = in_3.data();
+
+#if defined(COMPILE_FOR_DEVICE)
+        DEBUG_ACTION(
+                printf("[OMPT][map]Attempt to run on device with default config \n");)
+        Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
+        omp_target_memcpy(d_alg, &algorithm, sizeof(Algorithm), 0, 0,
+                          omp_get_default_device(), omp_get_initial_device());
+#pragma omp target teams distribute parallel for is_device_ptr(d_alg) \
+    map(to:d_data[0:size],in_2_data[0:size], in_3_data[0:size]) map(from: map_result[0:size])
+        for (int i = 0; i < size; i++) {
+            d_alg->mapping_function(map_result[i], d_data[i], in_2_data[i], in_3_data[i], rest...);
+        }
+#else // defined(COMPILE_FOR_HOST)
+        DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
+#pragma omp parallel for
+        for (int i = 0; i < size; i++) {
+            algorithm.mapping_function(map_result[i], data[i], in_2[i], in_3[i], rest...);
+        }
+#endif
+        R *vecmem_result = new R(size, &mr);
+        vecmem_result->assign(map_result, map_result + size);
+        return *vecmem_result;
+    }
+
 // mmap without user config
 template <class Algorithm,
           typename R = typename Algorithm::intermediate_result_t, typename T,
           typename... Rest>
-requires detail::is_mmap<Algorithm, T, Rest...>
+requires detail::is_mmap_1<Algorithm, T, Rest...>
 R &parallel_map(Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, T &data,
                 Rest &...rest) {
@@ -159,7 +231,7 @@ R &parallel_map(Algorithm &algorithm,
 #else // no shared memory
 #pragma omp target teams distribute parallel for is_device_ptr(d_alg)          \
     map(tofrom                                                                 \
-        : d_data [0:size])
+        : d_data[0:size]) map(to:rest)
   for (int i = 0; i < size; i++) {
     d_alg->mapping_function(d_data[i], rest...);
   }
@@ -176,6 +248,85 @@ R &parallel_map(Algorithm &algorithm,
   data.assign(d_data, d_data + size);
   return data;
 }
+
+    template <class Algorithm,
+            typename R = typename Algorithm::intermediate_result_t, typename T1, typename T2,
+            typename... Rest>
+    requires detail::is_mmap_2<Algorithm, T1, T2, Rest...>
+    R &parallel_map(Algorithm &algorithm,
+                    __attribute__((unused)) vecmem::memory_resource &mr, T1 &data, T2& in_2,
+                    Rest &...rest) {
+
+        int size = static_cast<int>(data.size());
+        value_type_t<T1> *d_data = data.data();
+        value_type_t<T2> *in_2_data = in_2.data();
+
+#if defined(COMPILE_FOR_DEVICE)
+        // if a GPU is available, use it for the computations
+        DEBUG_ACTION(
+                printf("[OMPT][mmap]Attempt to run on device with default config \n");)
+
+        Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
+
+#pragma omp target teams distribute parallel for is_device_ptr(d_alg)          \
+    map(tofrom                                                                 \
+        : d_data[0:size]) map(to:in_2_data[0:size],rest)
+        for (int i = 0; i < size; i++) {
+            d_alg->mapping_function(d_data[i], in_2_data[i], rest...);
+        }
+#else // defined(COMPILE_FOR_HOST)
+        DEBUG_ACTION(printf("[OMPT][mmap]Running on host with default config \n");)
+#pragma omp parallel for
+  for (int i = 0; i < size; i++) {
+    algorithm.mapping_function(data[i], in_2[i], rest...);
+  }
+#endif
+
+        // update the input vector
+        data.assign(d_data, d_data + size);
+        return data;
+    }
+
+    template <class Algorithm,
+            typename R = typename Algorithm::intermediate_result_t, typename T1, typename T2, typename T3,
+            typename... Rest>
+    requires detail::is_mmap_3<Algorithm, T1, T2, T3, Rest...>
+    R &parallel_map(Algorithm &algorithm,
+                    __attribute__((unused)) vecmem::memory_resource &mr, T1 &data,
+                    T2& in_2, T3& in_3,
+                    Rest &...rest) {
+
+        int size = static_cast<int>(data.size());
+        value_type_t<T1> *d_data = data.data();
+        value_type_t<T2> *in_2_data = in_2.data();
+        value_type_t<T3> *in_3_data = in_3.data();
+
+#if defined(COMPILE_FOR_DEVICE)
+        // if a GPU is available, use it for the computations
+        DEBUG_ACTION(
+                printf("[OMPT][mmap]Attempt to run on device with default config \n");)
+
+        Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
+
+#pragma omp target teams distribute parallel for is_device_ptr(d_alg)          \
+    map(tofrom                                                                 \
+        : d_data[0:size]) map(to:in_2_data[0:size], in_3_data, rest)
+        for (int i = 0; i < size; i++) {
+            d_alg->mapping_function(d_data[i], in_2_data[i], in_3_data[i], rest...);
+        }
+#else // defined(COMPILE_FOR_HOST)
+        DEBUG_ACTION(printf("[OMPT][mmap]Running on host with default config \n");)
+#pragma omp parallel for
+  for (int i = 0; i < size; i++) {
+    algorithm.mapping_function(data[i], in_2[i], in_3[i], rest...);
+  }
+#endif
+
+        // update the input vector
+        data.assign(d_data, d_data + size);
+        return data;
+    }
+
 
 // reduce without user config
 template <class Algorithm, typename R>
@@ -438,5 +589,67 @@ T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
 
   return *result;
 }
+
+//TODO: implement this more efficient using #pragma omp target data
+// so that the data is transferred only once and reused by map and reduce
+    template <class Algorithm, typename Result, typename R, typename T,
+            typename... Arguments>
+    Result &parallel_map_reduce(Algorithm &algorithm, vecmem::memory_resource &mr,
+                                T &data, Arguments &...args) {
+        return vecpar::ompt::parallel_reduce(
+                algorithm, mr, vecpar::ompt::parallel_map(algorithm, mr, data, args...));
+    }
+
+//TODO: implement this more efficient using #pragma omp target data
+// so that the data is transferred only once and reused by map and filter
+    template <class Algorithm, typename R, typename T, typename... Arguments>
+    R &parallel_map_filter(Algorithm &algorithm, vecmem::memory_resource &mr,
+                           T &data, Arguments &...args) {
+
+        return vecpar::ompt::parallel_filter<Algorithm, R>(
+                algorithm, mr,
+                vecpar::ompt::parallel_map<Algorithm, R, T, Arguments...>(
+                        algorithm, mr, data, args...));
+    }
+
+    template <class MemoryResource, class Algorithm,
+            typename R = typename Algorithm::intermediate_result_t, typename T,
+            typename... Arguments>
+    requires algorithm::is_map<Algorithm, R, T, Arguments...> ||
+             algorithm::is_mmap<Algorithm, R, Arguments...>
+    R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
+                               T &data,
+                               Arguments &...args) {
+
+        return vecpar::ompt::parallel_map(algorithm, mr, data, args...);
+    }
+
+    template <class MemoryResource, class Algorithm,
+            typename Result = typename Algorithm::result_t,
+            typename R = typename Algorithm::intermediate_result_t, typename T,
+            typename... Arguments>
+    requires algorithm::is_map_reduce<Algorithm, Result, R, T, Arguments...> ||
+             algorithm::is_mmap_reduce<Algorithm, Result, T, Arguments...>
+    Result &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
+                               T &data,
+                               Arguments &...args) {
+
+        return vecpar::ompt::parallel_map_reduce<Algorithm, Result, R, T,
+                Arguments...>(algorithm, mr, data, args...);
+    }
+
+       template <class MemoryResource, class Algorithm,
+            class R = typename Algorithm::result_t, typename T,
+            typename... Arguments>
+    requires algorithm::is_map_filter<Algorithm, R, T, Arguments...> ||
+             algorithm::is_mmap_filter<Algorithm, T, Arguments...>
+    R &parallel_algorithm(Algorithm algorithm, MemoryResource &mr,
+                          T &data,
+                          Arguments &...args) {
+
+           return vecpar::ompt::parallel_map_filter<Algorithm, R, T, Arguments...>(
+                   algorithm, mr, data, args...);
+       }
+
 } // namespace vecpar::ompt
 #endif // VECPAR_OMPT_PARALLELIZATION_HPP
