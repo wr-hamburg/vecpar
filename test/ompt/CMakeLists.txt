@@ -56,11 +56,11 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
 
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
                 # NVIDIA flags
-                set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64 )
-                set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64 )
+                #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64 )
+                #set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64 )
                 # AMD flags
-                #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
-                #set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
+                set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
+                set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
         elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
                 set(COMPILE_FLAGS ${COMPILE_FLAGS} -foffload=nvptx-none)
                 set(LINK_FLAGS ${LINK_FLAGS} -foffload=nvptx-none)
@@ -84,6 +84,7 @@ endif()
 
 ### OMP target for CPU
 add_executable(benchmark_ompt_cpu "benchmark/ompt.cpp")
+target_compile_definitions(benchmark_ompt_cpu PRIVATE COMPILE_FOR_HOST)
 
 target_include_directories(benchmark_ompt_cpu PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/common)
@@ -131,7 +132,7 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
         set_target_properties(benchmark_ompt_gpu PROPERTIES CXX_STANDARD 20)
 
         ### Target options GPU
-        set(COMPILE_FLAGS -fopenmp -gline-tables-only)
+        set(COMPILE_FLAGS -fopenmp)
         set(LINK_FLAGS -fopenmp)
         target_compile_definitions(benchmark_ompt_gpu PRIVATE COMPILE_FOR_DEVICE)
 
@@ -154,7 +155,7 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
                 $<$<COMPILE_LANGUAGE:CXX>:${COMPILE_FLAGS}>)
         target_link_options(benchmark_ompt_gpu PRIVATE ${LINK_FLAGS})
 
-        target_link_libraries(benchmark_ompt_gpu GTest::gtest_main
+        target_link_libraries(benchmark_ompt_gpu
                 vecpar_ompt OpenMP::OpenMP_CXX)
 
         if (VECPAR_BUILD_WITH_CLANG)

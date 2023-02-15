@@ -210,28 +210,21 @@ TEST_P(CpuHostMemoryTest, Serial_Extra_Params_MapReduce) {
   double *result = alg(*vec, x);
   EXPECT_EQ(*result, expectedReduceResult);
 }
-/*
+
 TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_Separately) {
   test_algorithm_2 alg;
 
   X x{1, 1.0};
 
   // parallel execution
-  vecmem::vector<double> par_result(vec->size(), &mr);
 
-  vecpar::omp::parallel_map(vec->size(), [&] TARGET(int idx) {
-    alg.map(par_result[idx], vec->at(idx), x);
-  });
+  auto map_result = vecpar::ompt::parallel_map(alg, mr, *vec, x);
 
-  double *result = new double();
-  vecpar::omp::parallel_reduce(
-      vec->size(), result,
-      [&] TARGET(double *r, double tmp) { alg.reduce(r, tmp); },
-      par_result);
+  double result = vecpar::ompt::parallel_reduce(alg, mr, map_result);
 
-  EXPECT_EQ(*result, expectedReduceResult);
+  EXPECT_EQ(result, expectedReduceResult);
 }
-*/
+
 TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_Grouped) {
   test_algorithm_2 alg;
 

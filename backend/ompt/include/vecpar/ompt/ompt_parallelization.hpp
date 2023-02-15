@@ -1,24 +1,24 @@
 #ifndef VECPAR_OMPT_PARALLELIZATION_HPP
 #define VECPAR_OMPT_PARALLELIZATION_HPP
-
+/*
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <stdio.h>
 #include <type_traits>
 #include <utility>
-
+*/
 #include "omp.h"
 
 #include <vecmem/memory/memory_resource.hpp>
 
-#pragma omp declare target
+//#pragma omp declare target
 #include "vecpar/core/algorithms/parallelizable_filter.hpp"
 #include "vecpar/core/algorithms/parallelizable_map.hpp"
 #include "vecpar/core/algorithms/parallelizable_map_filter.hpp"
 #include "vecpar/core/algorithms/parallelizable_map_reduce.hpp"
 #include "vecpar/core/algorithms/parallelizable_reduce.hpp"
-#pragma omp end declare target
+//#pragma omp end declare target
 #include "vecpar/core/definitions/config.hpp"
 
 #include "vecpar/core/definitions/helper.hpp"
@@ -340,7 +340,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
 
   std::size_t size = data.size();
 #if defined(COMPILE_FOR_DEVICE)
-  constexpr std::size_t num_target_teams = 1;
+  constexpr std::size_t num_target_teams = 40;
 
   value_type_t<R> *d_data = data.data();
 
@@ -446,7 +446,7 @@ T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
   T *result;
 
 #if defined(COMPILE_FOR_DEVICE)
-  std::size_t num_target_teams = 5;
+  std::size_t num_target_teams = 40;
   std::size_t size = data.size();
   value_type_t<T> *d_data = data.data();
 
