@@ -8,24 +8,29 @@
 
 #include "../data_types.hpp"
 #include "algorithm.hpp"
+#include "omp.h"
 
 class test_algorithm_2
-    : public traccc::algorithm<double *(vecmem::vector<int>, X)>,
+    : // public traccc::algorithm<double *(vecmem::vector<int>, X)>,
       public vecpar::algorithm::parallelizable_map_reduce<
           vecpar::collection::One, double, vecmem::vector<double>,
           vecmem::vector<int>, X> {
 
 public:
   test_algorithm_2()
-      : algorithm(), parallelizable_map_reduce() {}
+      : // algorithm(),
+        parallelizable_map_reduce() {}
 
   TARGET double &mapping_function(double &result_i, const int &first_i,
-                     X &second_i) const {
+                                  X &second_i) const {
     result_i = first_i * second_i.f();
+
+    // printf("Running on device? = %d\n", !omp_is_initial_device());
     return result_i;
   }
 
-  TARGET double *reducing_function(double *result, double &result_i) const  {
+  TARGET double *reducing_function(double *result, double &result_i) const {
+    // printf("Running on device? = %d\n", !omp_is_initial_device());
     if (result_i > 0)
       *result += result_i;
     return result;
@@ -38,7 +43,7 @@ public:
     return result;
   }
 
-  double *operator()(vecmem::vector<int> &data, X &more_data) override {
+  double *operator()(vecmem::vector<int> &data, X &more_data) { // override {
     double *result = new double();
     this->operator()(data, more_data, result);
     return result;
