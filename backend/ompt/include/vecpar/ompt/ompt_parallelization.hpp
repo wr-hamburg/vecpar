@@ -353,14 +353,11 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
     typename R::value_type temp_result[BLOCK_SIZE];
 
 #pragma omp parallel num_threads(BLOCK_SIZE)
-    if ((std::size_t)(omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num()) <
-        size) {
-      temp_result[omp_get_thread_num()] =
-          d_data[omp_get_team_num() * BLOCK_SIZE + omp_get_thread_num()];
-    }
+          temp_result[omp_get_thread_num()] = algorithm.identity_function();
+    
 
 #pragma omp distribute parallel for num_threads(BLOCK_SIZE)
-    for (size_t i = num_target_teams * BLOCK_SIZE; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       //      printf("%d %f \n", d_data[i], map_result[i]);
       // printf("%d %f %f\n", omp_get_thread_num(), temp_result[i],
       // d_data[i]);
@@ -375,15 +372,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
       //        omp_get_team_num(), omp_get_thread_num());
     }
 
-    size_t j;
-    if ((std::size_t)((omp_get_team_num() + 1) * BLOCK_SIZE) < size) {
-      j = BLOCK_SIZE;
-    } else if ((std::size_t)(omp_get_team_num() * BLOCK_SIZE) < size) {
-      j = size - omp_get_team_num() * BLOCK_SIZE;
-    } else {
-      j = 0;
-    }
-    // printf("%d, %ld\n", omp_get_team_num(), j);
+    size_t j = BLOCK_SIZE;
     while (j > 1) {
       {
 #pragma omp parallel num_threads(BLOCK_SIZE)
@@ -405,7 +394,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
   }
 
   for (size_t i = 0;
-       i < std::min(num_target_teams, (size + BLOCK_SIZE - 1) / BLOCK_SIZE);
+       i < num_target_teams;
        i++) {
     // printf("t: %f\n", team_temp_result[i]);
     algorithm.reducing_function(result, team_temp_result[i]);
@@ -415,14 +404,14 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
 #else // defined(COMPILE_FOR_HOST)
 #pragma omp parallel
   {
-    data_value_type *temp_result = new data_value_type();
+    data_value_type temp_result = algorithm.identity_function();
 
 #pragma omp for nowait
     for (std::size_t i = 0; i < size; i++)
-      algorithm.reducing_function(temp_result, data[i]);
+      algorithm.reducing_function(&temp_result, data[i]);
 
 #pragma omp critical
-    algorithm.reducing_function(result, *temp_result);
+    algorithm.reducing_function(result, temp_result);
   }
 #endif
 
