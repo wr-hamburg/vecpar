@@ -29,7 +29,8 @@ R &parallel_map(Algorithm &algorithm,
                 Rest &...rest) {
 
   int size = static_cast<int>(data.size());
-  value_type_t<R> *map_result = new value_type_t<R>[size];
+  R *vecmem_result = new R(size, &mr);
+  value_type_t<R> *map_result = vecmem_result->data();
   value_type_t<T> *d_data = data.data();
 
 #if defined(COMPILE_FOR_DEVICE)
@@ -44,7 +45,7 @@ R &parallel_map(Algorithm &algorithm,
 #pragma omp target teams is_device_ptr(d_alg) map(to                           \
                                                   : d_data [0:size])           \
     map(from                                                                   \
-        : map_result [0:size]) num_teams(grid_size)
+        : map_result[0:size]) num_teams(grid_size)
   {
     value_type_t<R> buffer[BLOCK_SIZE];
 // if the compiler supports OpenMP 5.2 allocators
@@ -92,8 +93,6 @@ R &parallel_map(Algorithm &algorithm,
     algorithm.mapping_function(map_result[i], data[i], rest...);
   }
 #endif
-  R *vecmem_result = new R(size, &mr);
-  vecmem_result->assign(map_result, map_result + size);
   return *vecmem_result;
 }
 
@@ -106,7 +105,8 @@ R &parallel_map(Algorithm &algorithm,
                     Rest &...rest) {
 
         int size = static_cast<int>(data.size());
-        value_type_t<R> *map_result = new value_type_t<R>[size];
+        R *vecmem_result = new R(size, &mr);
+        value_type_t<R> *map_result = vecmem_result->data();
         value_type_t<T1> *d_data = data.data();
         value_type_t<T2> *in_2_data = in_2.data();
 
@@ -128,8 +128,6 @@ R &parallel_map(Algorithm &algorithm,
             algorithm.mapping_function(map_result[i], data[i], in_2[i], rest...);
         }
 #endif
-        R *vecmem_result = new R(size, &mr);
-        vecmem_result->assign(map_result, map_result + size);
         return *vecmem_result;
     }
 
@@ -142,7 +140,8 @@ R &parallel_map(Algorithm &algorithm,
                     Rest &...rest) {
 
         int size = static_cast<int>(data.size());
-        value_type_t<R> *map_result = new value_type_t<R>[size];
+        R *vecmem_result = new R(size, &mr);
+        value_type_t<R> *map_result = vecmem_result->data();
         value_type_t<T1> *d_data = data.data();
         value_type_t<T2> *in_2_data = in_2.data();
         value_type_t<T3> *in_3_data = in_3.data();
@@ -165,8 +164,6 @@ R &parallel_map(Algorithm &algorithm,
             algorithm.mapping_function(map_result[i], data[i], in_2[i], in_3[i], rest...);
         }
 #endif
-        R *vecmem_result = new R(size, &mr);
-        vecmem_result->assign(map_result, map_result + size);
         return *vecmem_result;
     }
 
@@ -240,7 +237,7 @@ R &parallel_map(Algorithm &algorithm,
 #endif
 
   // update the input vector
-  data.assign(d_data, d_data + size);
+ // data.assign(d_data, d_data + size);
   return data;
 }
 
@@ -278,7 +275,7 @@ R &parallel_map(Algorithm &algorithm,
 #endif
 
         // update the input vector
-        data.assign(d_data, d_data + size);
+    //    data.assign(d_data, d_data + size);
         return data;
     }
 
@@ -318,7 +315,7 @@ R &parallel_map(Algorithm &algorithm,
 #endif
 
         // update the input vector
-        data.assign(d_data, d_data + size);
+    //    data.assign(d_data, d_data + size);
         return data;
     }
 
