@@ -12,8 +12,7 @@ if (${OpenMP_FOUND} AND ${CUDAToolkit_FOUND})
         $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE>)
 
     target_link_libraries(mm_tests_compiled_for_cpu GTest::gtest_main
-        vecpar_all
-        vecmem::core vecmem::cuda)
+        vecpar_all)
 endif()
 
 ### Managed memory ; compiled for GPU ###
@@ -46,8 +45,7 @@ if (${OpenMP_FOUND})
             $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE>)
 
     target_link_libraries(hm_tests_compiled_for_cpu GTest::gtest_main
-            vecpar_all
-            vecmem::core)
+            vecpar_all)
 endif()
 
 ### Host memory ; compiled for GPU ###

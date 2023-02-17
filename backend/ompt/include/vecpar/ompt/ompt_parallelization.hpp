@@ -1,13 +1,6 @@
 #ifndef VECPAR_OMPT_PARALLELIZATION_HPP
 #define VECPAR_OMPT_PARALLELIZATION_HPP
-/*
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <stdio.h>
-#include <type_traits>
-#include <utility>
-*/
+
 #include "omp.h"
 
 #include <vecmem/memory/memory_resource.hpp>
@@ -88,6 +81,7 @@ R &parallel_map(Algorithm &algorithm,
 #pragma omp target teams distribute parallel for is_device_ptr(d_alg) \
     map(to:d_data[0:size]) map(from: map_result[0:size])
   for (int i = 0; i < size; i++) {
+    //  printf("running on device : %d\n", !omp_is_initial_device());
     d_alg->mapping_function(map_result[i], d_data[i], rest...);
   }
 #endif
@@ -231,7 +225,8 @@ R &parallel_map(Algorithm &algorithm,
 #else // no shared memory
 #pragma omp target teams distribute parallel for is_device_ptr(d_alg)          \
     map(tofrom                                                                 \
-        : d_data[0:size]) map(to:rest)
+        : d_data [0:size]) map(to                                              \
+                               : rest) // num_teams(size) num_threads(1)
   for (int i = 0; i < size; i++) {
     d_alg->mapping_function(d_data[i], rest...);
   }

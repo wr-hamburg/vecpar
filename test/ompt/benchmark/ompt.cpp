@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdlib.h>
 
-#include "vecpar/ompt/ompt_parallelization.hpp"
 #include <string>
 #include <vecmem/containers/vector.hpp>
 #include <vecmem/memory/host_memory_resource.hpp>
@@ -10,6 +9,7 @@
 
 #include "../../common/algorithm/test_algorithm_2.hpp"
 #include "../../common/infrastructure/TimeLogger.hpp"
+#include "vecpar/ompt/ompt_parallelization.hpp"
 
 vecmem::host_memory_resource mr;
 std::chrono::time_point<std::chrono::steady_clock> start_time;

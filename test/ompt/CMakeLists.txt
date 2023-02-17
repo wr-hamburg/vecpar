@@ -56,8 +56,8 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
 
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
                 # NVIDIA flags
-                #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64 )
-                #set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64 )
+                #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64-nvidia-cuda)# -fopenmp-targets=nvptx64 )
+                #set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64-nvidia-cuda) #-fopenmp-targets=nvptx64 )
                 # AMD flags
                 set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
                 set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
@@ -76,10 +76,13 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
         target_link_libraries(tests_ompt_gpu GTest::gtest_main
                 vecpar_ompt OpenMP::OpenMP_CXX)
 
-        if (VECPAR_BUILD_WITH_CLANG)
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -foffload-lto")
-                target_link_options(tests_ompt_gpu PRIVATE -foffload-lto)
+        #just for clang
+        if (CMAKE_BUILD_TYPE MATCHES RELEASE )
+                target_compile_options(tests_ompt_gpu PUBLIC
+                        $<$<COMPILE_LANGUAGE:CXX>:-O3 -foffload-lto>)
+                target_link_options(tests_ompt_gpu PUBLIC -foffload-lto)
         endif()
+
 endif()
 
 ### OMP target for CPU
@@ -94,7 +97,7 @@ set_target_properties(benchmark_ompt_cpu PROPERTIES CXX_STANDARD 20)
 target_compile_options(benchmark_ompt_cpu PUBLIC
         $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE -fopenmp>)
 
-target_link_libraries(benchmark_ompt_cpu GTest::gtest_main
+target_link_libraries(benchmark_ompt_cpu
         vecpar_ompt OpenMP::OpenMP_CXX)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -138,8 +141,8 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
 
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
                 # NVIDIA flags
-                #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64 )
-                #set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64 )
+                #set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=nvptx64-nvidia-cuda) #-fopenmp-targets=nvptx64 )
+                #set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=nvptx64-nvidia-cuda) # -fopenmp-targets=nvptx64 )
                 # AMD flags
                 set(COMPILE_FLAGS ${COMPILE_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
                 set(LINK_FLAGS ${LINK_FLAGS} -fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march=gfx1031)
@@ -158,8 +161,10 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
         target_link_libraries(benchmark_ompt_gpu
                 vecpar_ompt OpenMP::OpenMP_CXX)
 
-        if (VECPAR_BUILD_WITH_CLANG)
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -foffload-lto")
-                target_link_options(benchmark_ompt_cpu PRIVATE -foffload-lto)
+        #just for clang
+        if (CMAKE_BUILD_TYPE MATCHES RELEASE )
+                target_compile_options(benchmark_ompt_gpu PUBLIC
+                        $<$<COMPILE_LANGUAGE:CXX>:-O3 -foffload-lto>)
+                target_link_options(benchmark_ompt_gpu PUBLIC -foffload-lto)
         endif()
 endif()

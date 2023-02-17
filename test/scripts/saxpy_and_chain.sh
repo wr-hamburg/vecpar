@@ -1,10 +1,11 @@
 #!/bin/sh
 
-spack load llvm@14.0.0
+spack load llvm@15.0.7
 spack load googletest@1.10.0
 spack load eigen@3.4.0
-spack load cmake@3.22.2
-spack load cuda@11.6
+spack load cmake@3.22.3 #%gcc@11.2.1
+spack load cuda@11.6.2
+spack load vecmem@0.22.0
 echo "Spack environment loaded!"
 
 # the number of repetitions
@@ -36,10 +37,13 @@ mkdir -p $FILE_F
 mv *.csv $FILE_F
 echo "Copy results to $FILE_F completed!"
 
-# clear environment
-spack unload llvm@14.0.0
+unset OMP_THREAD_LIMIT
+unset OMP_NUM_THREADS
+
+spack unload llvm@15.0.7
 spack unload googletest@1.10.0
 spack unload eigen@3.4.0
-spack unload cmake@3.22.2
-spack unload cuda@11.6
+spack unload cmake@3.22.3 #%gcc@11.2.1
+spack unload cuda@11.6.2
+spack unload vecmem@0.22.0
 echo "Spack environment unloaded!"
