@@ -8,7 +8,7 @@ target_include_directories(tests_ompt_cpu PUBLIC
 set_target_properties(tests_ompt_cpu PROPERTIES CXX_STANDARD 20)
 
 target_link_libraries(tests_ompt_cpu GTest::gtest_main
-        vecpar_ompt OpenMP::OpenMP_CXX)
+        vecpar_ompt OpenMP::OpenMP_CXX vecpar::all)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_compile_options(tests_ompt_cpu PUBLIC
@@ -74,7 +74,7 @@ if (${CUDAToolkit_FOUND} OR ${HIP_FOUND})
         target_link_options(tests_ompt_gpu PRIVATE ${LINK_FLAGS})
 
         target_link_libraries(tests_ompt_gpu GTest::gtest_main
-                vecpar_ompt OpenMP::OpenMP_CXX)
+                vecpar_ompt OpenMP::OpenMP_CXX vecpar::all)
 
         #just for clang
         if (CMAKE_BUILD_TYPE MATCHES RELEASE )
