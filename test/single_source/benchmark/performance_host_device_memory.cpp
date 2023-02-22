@@ -80,16 +80,16 @@ vecmem::cuda::device_memory_resource d_mem;
 vecmem::cuda::copy copy;
 
 template <class T>
-void benchmark(vecmem::vector<T> *x, vecmem::vector<T> *y, T a) {
+void benchmark(vecmem::vector<T> &x, vecmem::vector<T> &y, T a) {
 
   auto x_buffer =
-      copy.to(vecmem::get_data(*x), d_mem, vecmem::copy::type::host_to_device);
+      copy.to(vecmem::get_data(x), d_mem, vecmem::copy::type::host_to_device);
   auto x_view = vecmem::get_data(x_buffer);
 
   auto y_buffer =
-      copy.to(vecmem::get_data(*y), d_mem, vecmem::copy::type::host_to_device);
+      copy.to(vecmem::get_data(y), d_mem, vecmem::copy::type::host_to_device);
   auto y_view = vecmem::get_data(y_buffer);
-  vecpar::config c = vecpar::cuda::getDefaultConfig(x->size());
+  vecpar::config c = vecpar::cuda::getDefaultConfig(x.size());
 
   // call kernel
   kernel<T><<<c.m_gridSize, c.m_blockSize, c.m_memorySize>>>(x_view, y_view, a);
@@ -97,15 +97,15 @@ void benchmark(vecmem::vector<T> *x, vecmem::vector<T> *y, T a) {
   CHECK_ERROR(cudaGetLastError());
   CHECK_ERROR(cudaDeviceSynchronize());
 
-  copy(y_buffer, *y, vecmem::copy::type::device_to_host);
+  copy(y_buffer, y, vecmem::copy::type::device_to_host);
 }
 #else
 template <class T>
-void benchmark(vecmem::vector<T>* x, vecmem::vector<T> *y, T a) {
+void benchmark(vecmem::vector<T> &x, vecmem::vector<T> &y, T a) {
   int threadsNum = 1;
 #pragma omp parallel for
-  for (size_t i = 0; i < x->size(); i++) {
-    y->at(i) = x->at(i) * a + y->at(i);
+  for (size_t i = 0; i < x.size(); i++) {
+    y[i] = x[i] * a + y[i];
     DEBUG_ACTION(threadsNum = omp_get_num_threads();)
   }
   DEBUG_ACTION(printf("Using %d OpenMP threads \n", threadsNum);)
@@ -115,23 +115,23 @@ void benchmark(vecmem::vector<T>* x, vecmem::vector<T> *y, T a) {
 TEST_P(PerformanceTest_HostDevice, Saxpy) {
   saxpy alg;
 
-  vecmem::vector<float>* x = new vecmem::vector<float>(GetParam(), &mr);
-  vecmem::vector<float>* y = new vecmem::vector<float>(GetParam(), &mr);
-  vecmem::vector<float>* expected_result = new vecmem::vector<float>(GetParam(), &mr);
+  vecmem::vector<float> x(GetParam(), &mr);
+  vecmem::vector<float> y(GetParam(), &mr);
+  vecmem::vector<float> expected_result(GetParam(), &mr);
   float a = 2.0;
 
   // init vec
   for (int i = 0; i < GetParam(); i++) {
-    x->at(i) = i % 100;
-    y->at(i) = (i - 1) % 100;
-    expected_result->at(i) = y->at(i) + x->at(i) * a;
+    x[i] = i % 100;
+    y[i] = (i - 1) % 100;
+    expected_result[i] = y[i] + x[i] * a;
   }
   start_time = std::chrono::steady_clock::now();
   benchmark<float>(x, y, a);
   end_time = std::chrono::steady_clock::now();
   // check results
-  for (size_t i = 0; i < y->size(); i++) {
-    EXPECT_EQ(y->at(i), expected_result->at(i));
+  for (size_t i = 0; i < y.size(); i++) {
+    EXPECT_EQ(y[i], expected_result[i]);
   }
   // check time
   std::chrono::duration<double> diff_benchmark = end_time - start_time;
@@ -139,16 +139,16 @@ TEST_P(PerformanceTest_HostDevice, Saxpy) {
 
   // init vec
   for (int i = 0; i < GetParam(); i++) {
-    x->at(i) = i % 100;
-    y->at(i) = (i - 1) % 100;
+    x[i] = i % 100;
+    y[i] = (i - 1) % 100;
   }
 
   start_time = std::chrono::steady_clock::now();
-  vecpar::parallel_algorithm(alg, mr, *y, *x, a);
+  vecpar::parallel_algorithm(alg, mr, y, x, a);
   end_time = std::chrono::steady_clock::now();
   // check results
-  for (size_t i = 0; i < y->size(); i++) {
-    EXPECT_EQ(y->at(i), expected_result->at(i));
+  for (size_t i = 0; i < y.size(); i++) {
+    EXPECT_EQ(y[i], expected_result[i]);
   }
   // check time
   std::chrono::duration<double> diff = end_time - start_time;
@@ -161,31 +161,28 @@ TEST_P(PerformanceTest_HostDevice, Saxpy) {
   write_to_csv("cpu_saxpy_hd.csv", GetParam(), diff_benchmark.count(),
                diff.count());
 #endif
-
-  cleanup::free(*x);
-  cleanup::free(*y);
 }
 
     TEST_P(PerformanceTest_HostDevice, Daxpy) {
         daxpy alg;
 
-        vecmem::vector<double>* x = new vecmem::vector<double>(GetParam(), &mr);
-        vecmem::vector<double>* y = new vecmem::vector<double>(GetParam(), &mr);
-        vecmem::vector<double>* expected_result = new vecmem::vector<double>(GetParam(), &mr);
+        vecmem::vector<double> x(GetParam(), &mr);
+        vecmem::vector<double> y(GetParam(), &mr);
+        vecmem::vector<double> expected_result(GetParam(), &mr);
         double a = 2.0;
 
         // init vec
         for (int i = 0; i < GetParam(); i++) {
-            x->at(i) = i % 100;
-            y->at(i) = (i - 1) % 100;
-            expected_result->at(i) = y->at(i) + x->at(i) * a;
+    x[i] = i % 100;
+    y[i] = (i - 1) % 100;
+    expected_result[i] = y[i] + x[i] * a;
         }
         start_time = std::chrono::steady_clock::now();
         benchmark<double>(x, y, a);
         end_time = std::chrono::steady_clock::now();
         // check results
-        for (size_t i = 0; i < y->size(); i++) {
-            EXPECT_EQ(y->at(i), expected_result->at(i));
+        for (size_t i = 0; i < y.size(); i++) {
+    EXPECT_EQ(y[i], expected_result[i]);
         }
         // check time
         std::chrono::duration<double> diff_benchmark = end_time - start_time;
@@ -193,16 +190,16 @@ TEST_P(PerformanceTest_HostDevice, Saxpy) {
 
         // init vec
         for (int i = 0; i < GetParam(); i++) {
-            x->at(i) = i % 100;
-            y->at(i) = (i - 1) % 100;
+    x[i] = i % 100;
+    y[i] = (i - 1) % 100;
         }
 
         start_time = std::chrono::steady_clock::now();
-        vecpar::parallel_algorithm(alg, mr, *y, *x, a);
+        vecpar::parallel_algorithm(alg, mr, y, x, a);
         end_time = std::chrono::steady_clock::now();
         // check results
-        for (size_t i = 0; i < y->size(); i++) {
-            EXPECT_EQ(y->at(i), expected_result->at(i));
+        for (size_t i = 0; i < y.size(); i++) {
+    EXPECT_EQ(y[i], expected_result[i]);
         }
         // check time
         std::chrono::duration<double> diff = end_time - start_time;
@@ -215,9 +212,6 @@ TEST_P(PerformanceTest_HostDevice, Saxpy) {
         write_to_csv("cpu_daxpy_hd.csv", GetParam(), diff_benchmark.count(),
                diff.count());
 #endif
-
-        cleanup::free(*x);
-        cleanup::free(*y);
     }
 
 INSTANTIATE_TEST_SUITE_P(PerformanceTest_HostDevice, PerformanceTest_HostDevice,

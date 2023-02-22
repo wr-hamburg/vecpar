@@ -8,6 +8,8 @@
 #include "../../common/infrastructure/TimeTest.hpp"
 #include "../../common/infrastructure/sizes.hpp"
 
+#include "../../common/algorithm/benchmark/daxpy.hpp"
+#include "../../common/algorithm/benchmark/saxpy.hpp"
 #include "../../common/algorithm/test_algorithm_3.hpp"
 #include "../../common/algorithm/test_algorithm_4.hpp"
 #include "../../common/algorithm/test_algorithm_6.hpp"
@@ -77,7 +79,8 @@ TEST_P(PerformanceTest_ManagedMemory, Chain) {
 #include "common.hpp"
 #include <vecmem/memory/cuda/managed_memory_resource.hpp>
 
-void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
+template <class T>
+void benchmark(vecmem::vector<T> &x, vecmem::vector<T> &y, T a) {
 
   auto x_view = vecmem::get_data(x);
   auto y_view = vecmem::get_data(y);
@@ -91,7 +94,8 @@ void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
   CHECK_ERROR(cudaDeviceSynchronize());
 }
 #else
-void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
+template <class T>
+void benchmark(vecmem::vector<T> &x, vecmem::vector<T> &y, T a) {
 #pragma omp parallel for
   for (size_t i = 0; i < x.size(); i++) {
     y[i] = x[i] * a + y[i];
@@ -100,7 +104,7 @@ void benchmark(vecmem::vector<float> &x, vecmem::vector<float> &y, float a) {
 #endif
 
 TEST_P(PerformanceTest_ManagedMemory, Saxpy) {
-  test_algorithm_6 alg;
+  saxpy alg;
 
   vecmem::vector<float> x(GetParam(), &mr);
   vecmem::vector<float> y(GetParam(), &mr);
@@ -114,9 +118,8 @@ TEST_P(PerformanceTest_ManagedMemory, Saxpy) {
     expected_result[i] = y[i] + x[i] * a;
   }
   start_time = std::chrono::steady_clock::now();
-  benchmark(x, y, a);
+  benchmark<float>(x, y, a);
   end_time = std::chrono::steady_clock::now();
-
   // check results
   for (size_t i = 0; i < y.size(); i++) {
     EXPECT_EQ(y[i], expected_result[i]);
@@ -127,16 +130,17 @@ TEST_P(PerformanceTest_ManagedMemory, Saxpy) {
 
   // init vec
   for (int i = 0; i < GetParam(); i++) {
-    x[i] = i % 100;
     y[i] = (i - 1) % 100;
   }
+
   start_time = std::chrono::steady_clock::now();
   vecpar::parallel_algorithm(alg, mr, y, x, a);
   end_time = std::chrono::steady_clock::now();
   // check results
   for (size_t i = 0; i < y.size(); i++) {
-    EXPECT_EQ(y.at(i), expected_result[i]);
+    EXPECT_EQ(y[i], expected_result[i]);
   }
+  // check time
   std::chrono::duration<double> diff = end_time - start_time;
   printf("SAXPY vecpar time  = %f s\n", diff.count());
 
@@ -147,8 +151,56 @@ TEST_P(PerformanceTest_ManagedMemory, Saxpy) {
   write_to_csv("cpu_saxpy_mm.csv", GetParam(), diff_benchmark.count(),
                diff.count());
 #endif
-  cleanup::free(x);
-  cleanup::free(y);
+}
+
+TEST_P(PerformanceTest_ManagedMemory, Daxpy) {
+  daxpy alg;
+
+  vecmem::vector<double> x(GetParam(), &mr);
+  vecmem::vector<double> y(GetParam(), &mr);
+  vecmem::vector<double> expected_result(GetParam(), &mr);
+  double a = 2.0;
+
+  // init vec
+  for (int i = 0; i < GetParam(); i++) {
+    x[i] = i % 100;
+    y[i] = (i - 1) % 100;
+    expected_result[i] = y[i] + x[i] * a;
+  }
+  start_time = std::chrono::steady_clock::now();
+  benchmark<double>(x, y, a);
+  end_time = std::chrono::steady_clock::now();
+  // check results
+  for (size_t i = 0; i < y.size(); i++) {
+    EXPECT_EQ(y[i], expected_result[i]);
+  }
+  // check time
+  std::chrono::duration<double> diff_benchmark = end_time - start_time;
+  printf("DAXPY native time  = %f s\n", diff_benchmark.count());
+
+  // init vec
+  for (int i = 0; i < GetParam(); i++) {
+    y[i] = (i - 1) % 100;
+  }
+
+  start_time = std::chrono::steady_clock::now();
+  vecpar::parallel_algorithm(alg, mr, y, x, a);
+  end_time = std::chrono::steady_clock::now();
+  // check results
+  for (size_t i = 0; i < y.size(); i++) {
+    EXPECT_EQ(y[i], expected_result[i]);
+  }
+  // check time
+  std::chrono::duration<double> diff = end_time - start_time;
+  printf("DAXPY vecpar time  = %f s\n", diff.count());
+
+#if defined(__CUDA__) && defined(__clang__)
+  write_to_csv("gpu_daxpy_mm.csv", GetParam(), diff_benchmark.count(),
+               diff.count());
+#else
+  write_to_csv("cpu_daxpy_mm.csv", GetParam(), diff_benchmark.count(),
+               diff.count());
+#endif
 }
 
 INSTANTIATE_TEST_SUITE_P(PerformanceTest_ManagedMemory,
