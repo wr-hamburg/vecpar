@@ -18,22 +18,8 @@ namespace {
     class PerformanceTest_HostDevice : public TimeTest,
                                        public testing::WithParamInterface<int> {
 
-    public:
-        PerformanceTest_HostDevice() {
-            vec = new vecmem::vector<int>(GetParam(), &mr);
-            for (size_t i = 0; i < vec->size(); i++) {
-                vec->at(i) = i;
-                expectedReduceResult += i * 1.0;
-            }
-            printf("*******************************\n");
-        }
-
-        ~PerformanceTest_HostDevice() { cleanup::free(*vec); }
-
     protected:
         vecmem::host_memory_resource mr;
-        vecmem::vector<int> *vec;
-        double expectedReduceResult = 1.0;
         std::chrono::time_point<std::chrono::steady_clock> start_time;
         std::chrono::time_point<std::chrono::steady_clock> end_time;
     };
