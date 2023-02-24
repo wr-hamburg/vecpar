@@ -9,8 +9,7 @@
 #include "../../common/infrastructure/sizes.hpp"
 #include "../../common/infrastructure/randoms.hpp"
 
-#include "../../common/algorithm/benchmark/daxpy.hpp"
-#include "../../common/algorithm/benchmark/saxpy.hpp"
+#include "../../common/algorithm/benchmark/axpy.hpp"
 #include "../../common/algorithm/test_algorithm_3.hpp"
 #include "../../common/algorithm/test_algorithm_4.hpp"
 
@@ -125,7 +124,7 @@ namespace {
 
 
     TEST_P(PerformanceTest_ManagedMemory, Saxpy) {
-        saxpy alg;
+        axpy<float> alg;
 
         // arrays used for benchmark
         vecmem::vector<float> x_b(GetParam(), &mr);
@@ -186,7 +185,7 @@ namespace {
     }
 
     TEST_P(PerformanceTest_ManagedMemory, Daxpy) {
-        daxpy alg;
+        axpy<double> alg;
 
         // arrays used for benchmark
         vecmem::vector<double> x_b(GetParam(), &mr);
