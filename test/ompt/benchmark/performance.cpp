@@ -8,10 +8,8 @@
 #include "../../common/infrastructure/sizes.hpp"
 #include "../../common/infrastructure/randoms.hpp"
 
-#include "../../common/algorithm/benchmark/daxpy.hpp"
-#include "../../common/algorithm/benchmark/saxpy.hpp"
+#include "../../common/algorithm/benchmark/axpy.hpp"
 
-#include "../../common/infrastructure/cleanup.hpp"
 #include "vecpar/all/main.hpp"
 
 namespace {
@@ -30,7 +28,7 @@ namespace {
     }
 
     TEST_P(PerformanceTest_HostDevice, Saxpy) {
-        saxpy alg;
+        axpy<float> alg;
 
         // arrays used for vecpar
         vecmem::vector<float> x_v(GetParam(), &mr);
@@ -73,7 +71,7 @@ namespace {
     }
 
     TEST_P(PerformanceTest_HostDevice, Daxpy) {
-        daxpy alg;
+        axpy<double> alg;
 
         // arrays used for vecpar
         vecmem::vector<double> x_v(GetParam(), &mr);
