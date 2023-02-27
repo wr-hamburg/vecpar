@@ -295,14 +295,14 @@ TEST_P(CpuHostMemoryTest, two_collections) {
   vecmem::vector<float> x(GetParam(), &mr);
   vecmem::vector<float> y(GetParam(), &mr);
 
-  for (int i = 0; i < x.size(); i++) {
+  for (std::size_t i = 0; i < x.size(); i++) {
     x[i] = i;
     y[i] = 1.0;
   }
   float a = 2.0;
   vecmem::vector<float> result = vecpar::ompt::parallel_map(alg, mr, y, x, a);
 
-  for (int i = 0; i < result.size(); i++) {
+  for (std::size_t i = 0; i < result.size(); i++) {
     EXPECT_EQ(result.at(i), x[i] * a + 1.0);
   }
 
