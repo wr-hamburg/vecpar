@@ -86,6 +86,7 @@ R &parallel_map(Algorithm &algorithm,
     d_alg->mapping_function(map_result[i], d_data[i], rest...);
   }
 #endif
+omp_target_free(d_alg, 0);
 #else // defined(COMPILE_FOR_HOST)
   DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
 #pragma omp parallel for
@@ -121,6 +122,7 @@ R &parallel_map(Algorithm &algorithm,
   for (int i = 0; i < size; i++) {
     d_alg->mapping_function(map_result[i], d_data[i], in_2_data[i], rest...);
   }
+  omp_target_free(d_alg,0);
 #else // defined(COMPILE_FOR_HOST)
         DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
 #pragma omp parallel for
@@ -157,6 +159,7 @@ R &parallel_map(Algorithm &algorithm,
         for (int i = 0; i < size; i++) {
             d_alg->mapping_function(map_result[i], d_data[i], in_2_data[i], in_3_data[i], rest...);
         }
+        omp_target_free(d_alg,0);
 #else // defined(COMPILE_FOR_HOST)
         DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
 #pragma omp parallel for
@@ -185,7 +188,8 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
       printf("[OMPT][mmap]Attempt to run on device with default config \n");)
 
   Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
-
+  omp_target_memcpy(d_alg, &algorithm, sizeof(Algorithm), 0, 0,
+                          omp_get_default_device(), omp_get_initial_device());
 #if _OPENMP >= 202111 and (__clang__ == 1 and __clang_major__ >= 16)
   // use shared memory
   const int grid_size = (size + BLOCK_SIZE - 1) / BLOCK_SIZE;
@@ -228,6 +232,7 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
     d_alg->mapping_function(d_data[i], rest...);
   }
 #endif
+omp_target_free(d_alg,0);
 #else // defined(COMPILE_FOR_HOST)
   DEBUG_ACTION(printf("[OMPT][mmap]Running on host with default config \n");)
 #pragma omp parallel for
@@ -259,6 +264,8 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
                 printf("[OMPT][mmap]Attempt to run on device with default config \n");)
 
         Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
+        omp_target_memcpy(d_alg, &algorithm, sizeof(Algorithm), 0, 0,
+                          omp_get_default_device(), omp_get_initial_device());
 
 #pragma omp target teams distribute parallel for is_device_ptr(d_alg)          \
     map(tofrom                                                                 \
@@ -266,6 +273,7 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
         for (int i = 0; i < size; i++) {
             d_alg->mapping_function(d_data[i], in_2_data[i], rest...);
         }
+        omp_target_free(d_alg,0);
 #else // defined(COMPILE_FOR_HOST)
         DEBUG_ACTION(printf("[OMPT][mmap]Running on host with default config \n");)
 #pragma omp parallel for
@@ -299,13 +307,16 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
                 printf("[OMPT][mmap]Attempt to run on device with default config \n");)
 
         Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
+        omp_target_memcpy(d_alg, &algorithm, sizeof(Algorithm), 0, 0,
+                    omp_get_default_device(), omp_get_initial_device());
 
 #pragma omp target teams distribute parallel for is_device_ptr(d_alg)          \
     map(tofrom                                                                 \
-        : d_data[0:size]) map(to:in_2_data[0:size], in_3_data, rest)
+        : d_data[0:size]) map(to:in_2_data[0:size], in_3_data[0:size], rest)
         for (int i = 0; i < size; i++) {
             d_alg->mapping_function(d_data[i], in_2_data[i], in_3_data[i], rest...);
         }
+        omp_target_free(d_alg,0);
 #else // defined(COMPILE_FOR_HOST)
         DEBUG_ACTION(printf("[OMPT][mmap]Running on host with default config \n");)
 #pragma omp parallel for
