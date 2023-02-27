@@ -328,7 +328,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, R &data) {
 
   using data_value_type = typename R::value_type;
-  data_value_type *result = new data_value_type();
+  data_value_type* result = new data_value_type(algorithm.identity_function());
 
   std::size_t size = data.size();
 #if defined(COMPILE_FOR_DEVICE)
@@ -571,6 +571,83 @@ T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
   return *result;
 }
 
+template <class Algorithm, typename Result,
+          typename R = typename Algorithm::intermediate_result_t, typename T,
+          typename... Rest>
+requires algorithm::is_map_reduce_1<Algorithm, Result, R, T, Rest...>
+Result &parallel_map_reduce(Algorithm &algorithm, vecmem::memory_resource &mr, T &data, Rest &... rest) {
+  
+  #if defined(COMPILE_FOR_DEVICE)
+
+  std::size_t size = data.size();
+  using data_value_type = Result;
+  data_value_type *result = new data_value_type;
+  *result = algorithm.identity_function();
+
+
+  constexpr std::size_t num_target_teams = 4;
+
+  value_type_t<T> *d_data = data.data();
+
+  data_value_type team_temp_result[num_target_teams];
+
+  #pragma omp target teams map(to: d_data[0:size]) map(from : team_temp_result [0:num_target_teams]) num_teams(num_target_teams)
+  {
+
+    data_value_type temp_result[BLOCK_SIZE];
+
+    #pragma omp parallel num_threads(BLOCK_SIZE)
+      temp_result[omp_get_thread_num()] = algorithm.identity_function();
+
+    #pragma omp distribute parallel for num_threads(BLOCK_SIZE)
+    for (size_t i = 0; i < size; i++) {
+      value_type_t<R> temp;
+      algorithm.mapping_function(temp, d_data[i], rest...);
+      algorithm.reducing_function(temp_result + omp_get_thread_num(), temp);
+    }
+
+
+    size_t j = BLOCK_SIZE;
+    while (j > 1) {
+      {
+#pragma omp parallel num_threads(BLOCK_SIZE)
+        {
+          size_t i = omp_get_thread_num();
+          if (i < j / 2) {
+            /*printf("Current: team %d, thread %d, value: %f, value2: %f, j: "
+                   "%ld,i: %ld, %ld\n",
+                   omp_get_team_num(), omp_get_thread_num(), temp_result[i],
+                   temp_result[j - (j / 2) + i], j, i, j - (j / 2) + i);*/
+            algorithm.reducing_function(temp_result + i,
+                                        temp_result[j - (j / 2) + i]);
+          }
+        }
+        j = (j + 1) / 2;
+      }
+    }
+    team_temp_result[omp_get_team_num()] = temp_result[0];
+
+    
+  }
+
+
+  for (size_t i = 0;
+       i < num_target_teams;
+       i++) {
+    //printf("t: %f\n", team_temp_result[i]);
+    algorithm.reducing_function(result, team_temp_result[i]);
+    //printf("r: %f\n", *result);
+  }
+
+  //printf("I was here\n");
+  return *result;
+  
+  #else
+  return vecpar::ompt::parallel_reduce(algorithm, mr, vecpar::ompt::parallel_map(algorithm, mr, data, rest...));
+  #endif
+  
+}
+ 
 //TODO: implement this more efficient using #pragma omp target data
 // so that the data is transferred only once and reused by map and reduce
     template <class Algorithm, typename Result, typename R, typename T,
