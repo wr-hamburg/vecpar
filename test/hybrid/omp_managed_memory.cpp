@@ -163,6 +163,7 @@ TEST_P(CpuManagedMemoryTest, Parallel_MapReduce_Separately) {
   vecpar::omp::parallel_reduce(
       vec->size(), result,
       [&] (double *r, double tmp) mutable { alg.reducing_function(r, tmp); },
+      [&] () {return 0.0;},
       par_result);
 
   EXPECT_EQ(*result, expectedReduceResult);
@@ -201,6 +202,7 @@ TEST_P(CpuManagedMemoryTest, Parallel_Extra_Params_MapReduce_Separately) {
   vecpar::omp::parallel_reduce(
       vec->size(), result,
       [&] (double *r, double tmp) mutable { alg.reducing_function(r, tmp); },
+      [&] () {return 0.0;},
       par_result);
 
   EXPECT_EQ(*result, expectedReduceResult);
