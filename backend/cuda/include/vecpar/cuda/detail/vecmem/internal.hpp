@@ -72,8 +72,8 @@ get_view(vecmem::data::jagged_vector_buffer<value_type_t<T>> &coll) {
 
 namespace internal {
 
-vecmem::cuda::device_memory_resource d_mem;
-vecmem::cuda::copy copy;
+static vecmem::cuda::device_memory_resource d_mem;
+static vecmem::cuda::copy copy;
 
 template <typename Algorithm, typename R = typename Algorithm::result_t,
           typename T, typename... Arguments>
