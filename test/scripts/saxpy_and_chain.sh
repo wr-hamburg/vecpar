@@ -6,13 +6,16 @@
 # $4 = destination folder
 # e.g. ./saxpy_and_chain.sh 20 16 ~/vecpar-release-build/test/ ~/results/
 
-spack load llvm@15.0.7
+spack load llvm@14.0.0
 spack load googletest@1.10.0
 spack load eigen@3.4.0
 spack load cmake@3.22.3 %gcc@11.2.1
 spack load cuda@11.6.2
 spack load vecmem@0.22.0
 echo "Spack environment loaded!"
+
+echo "clang version: "
+clang --version
 
 # the number of repetitions
 N=$1
@@ -62,7 +65,7 @@ unset OMP_THREAD_LIMIT
 unset OMP_NUM_THREADS
 
 # cleanup
-spack unload llvm@15.0.7
+spack unload llvm@14.0.0
 spack unload googletest@1.10.0
 spack unload eigen@3.4.0
 spack unload cmake@3.22.3 %gcc@11.2.1

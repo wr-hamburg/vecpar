@@ -63,19 +63,3 @@ if (VECPAR_BUILD_WITH_CLANG)
     target_link_libraries(hm_tests_compiled_for_gpu GTest::gtest_main
             vecpar_all)
 endif()
-
-# if compiled with OpenMP target support by gcc or clang compiler
-#if (${OpenMP_FOUND} AND ${CUDAToolkit_FOUND})
- #   set(CMAKE_EXE_LINKER_FLAGS "-fopenmp")
- #   add_executable(hm_ompt_tests_compiled_for_gpu "SingleSource_HM_Tests.cpp")
-
-  #  target_include_directories(hm_ompt_tests_compiled_for_gpu PUBLIC
-   #         ${CMAKE_CURRENT_SOURCE_DIR}/common)
-
-   # target_compile_options(hm_ompt_tests_compiled_for_gpu PUBLIC
-    #        $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -fopenmp > #-foffload-options=nvptx-none=-latomic
-     #       $<$<COMPILE_LANGUAGE:CXX>:-DVECMEM_HAVE_PMR_MEMORY_RESOURCE>)
-
-   # target_link_libraries(hm_ompt_tests_compiled_for_gpu GTest::gtest_main
-    #        vecpar_all)
-#endif()
