@@ -10,6 +10,8 @@ target_include_directories(vecpar_cuda INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
+include_directories(CUDAToolkit_INCLUDE_DIRS)
+
 target_link_libraries(vecpar_cuda INTERFACE
         vecpar_core
         vecmem::core vecmem::cuda CUDA::cudart)
