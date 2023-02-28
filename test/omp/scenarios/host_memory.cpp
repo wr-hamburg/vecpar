@@ -73,6 +73,7 @@ TEST_P(CpuHostMemoryTest, Parallel_ReduceOnly) {
   vecpar::omp::parallel_reduce(
       vec->size(), result,
       [&] (double *r, double tmp)  { alg.reducing_function(r, tmp); },
+      [&] () {return 0.0;},
       *vec_d);
 
   EXPECT_EQ(*result, expectedReduceResult);
@@ -183,6 +184,7 @@ TEST_P(CpuHostMemoryTest, Parallel_MapReduce_Separately) {
   vecpar::omp::parallel_reduce(
       vec->size(), result,
       [&] (double *r, double tmp)  { alg.reducing_function(r, tmp); },
+      [&] () {return 0.0;},
       par_result);
 
   EXPECT_EQ(*result, expectedReduceResult);
@@ -221,6 +223,7 @@ TEST_P(CpuHostMemoryTest, Parallel_Extra_Params_MapReduce_Separately) {
   vecpar::omp::parallel_reduce(
       vec->size(), result,
       [&] (double *r, double tmp)  { alg.reducing_function(r, tmp); },
+      [&] () {return 0.0;},
       par_result);
 
   EXPECT_EQ(*result, expectedReduceResult);

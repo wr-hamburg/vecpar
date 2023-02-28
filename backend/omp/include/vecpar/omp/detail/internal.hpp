@@ -28,18 +28,18 @@ void offload_map(vecpar::config config, int size, Function f,
 
 /// based on article:
 /// https://coderwall.com/p/gocbhg/openmp-improve-reduction-techniques
-template <typename R, typename Function>
-void offload_reduce(int size, R *result, Function f,
+template <typename R, typename Function, typename IdentityFunction>
+void offload_reduce(int size, R *result, Function f, IdentityFunction identityFunction,
                     vecmem::vector<R> &map_result) {
 #pragma omp parallel
   {
-    R *tmp_result = new R();
+    R tmp_result = identityFunction();
 #pragma omp for nowait
     for (int i = 0; i < size; i++)
-      f(tmp_result, map_result[i]);
+      f(&tmp_result, map_result[i]);
 
 #pragma omp critical
-    f(result, *tmp_result);
+    f(result, tmp_result);
   }
 }
 

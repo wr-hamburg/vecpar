@@ -32,9 +32,9 @@ void parallel_map(size_t size, Function f, Arguments &...args) {
   parallel_map(omp::getDefaultConfig(), size, f, args...);
 }
 
-template <typename Function, typename R, typename... Arguments>
-void parallel_reduce(size_t size, R &result, Function f, Arguments &...args) {
-  internal::offload_reduce(size, result, f, args...);
+template <typename Function, typename IdentityFunction, typename R, typename... Arguments>
+void parallel_reduce(size_t size, R &result, Function f, IdentityFunction identityFunction, Arguments &...args) {
+  internal::offload_reduce(size, result, f, identityFunction, args...);
 }
 
 /// specific simple implementations
@@ -42,12 +42,12 @@ template <class Algorithm,
           typename R = typename Algorithm::intermediate_result_t, typename T,
           typename... Rest>
 requires detail::is_map<Algorithm, R, T, Rest...> R &
-parallel_map(Algorithm &algorithm,
-             vecmem::memory_resource &mr,
+parallel_map(Algorithm &algorithm, vecmem::memory_resource &mr,
              vecpar::config config, T &data, Rest &...rest) {
   R *map_result = new R(data.size(), &mr);
   internal::offload_map(config, data.size(), [&](int idx) {
-      algorithm.mapping_function(map_result->at(idx), data[idx], get(idx, rest)...);
+    algorithm.mapping_function(map_result->at(idx), data[idx],
+                               get(idx, rest)...);
   });
   return *map_result;
 }
@@ -71,7 +71,7 @@ parallel_map(Algorithm &algorithm,
              __attribute__((unused)) vecmem::memory_resource &mr,
              vecpar::config config, T &data, Rest &...rest) {
   internal::offload_map(config, data.size(), [&](int idx) {
-      algorithm.mapping_function(data[idx], get(idx, rest)...);
+    algorithm.mapping_function(data[idx], get(idx, rest)...);
   });
   return data;
 }
@@ -97,9 +97,9 @@ typename R::value_type &parallel_reduce(Algorithm algorithm,
   internal::offload_reduce(
       data.size(), result,
       [&](typename R::value_type *r, typename R::value_type tmp) {
-          algorithm.reducing_function(r, tmp);
+        algorithm.reducing_function(r, tmp);
       },
-      data);
+      [&]() { return algorithm.identity_function(); }, data);
 
   return *result;
 }
