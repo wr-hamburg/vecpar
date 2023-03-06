@@ -581,6 +581,31 @@ reduce_t &parallel_map_reduce(Algorithm &algorithm, __attribute__((unused)) vecm
   
 }
  
+template <class Algorithm, typename reduce_t,
+          typename R = typename Algorithm::intermediate_result_t, typename T1, typename T2,
+          typename... Rest>
+requires algorithm::is_map_reduce_2<Algorithm, reduce_t, R, T1, T2, Rest...>
+reduce_t &parallel_map_reduce(Algorithm &algorithm, __attribute__((unused)) vecmem::memory_resource &mr, T1 &data1, T2 &data2, Rest &... rest) {
+  
+  #if defined(COMPILE_FOR_DEVICE)
+
+  typename T1::value_type *data1_gpu = data1.data();
+  typename T2::value_type *data2_gpu = data2.data();
+
+  reduce_t* temp = new reduce_t();
+  #pragma omp target data map(to:data1_gpu[0:data1.size()]) map(to:data2_gpu[0:data2.size()])
+  {
+    *temp = internal_reduce<Algorithm, R>(algorithm, data1.size(), [&](std::size_t i, typename T1::value_type *in_1, typename T2::value_type *in_2, Rest &... local_rest) {reduce_t temp; algorithm.mapping_function(temp, in_1[i], in_2[i], local_rest...); return temp;}, data1_gpu, data2_gpu, rest...);
+  }
+  return *temp;
+    
+  #else
+  return vecpar::omp::parallel_map_reduce<Algorithm, reduce_t, R, T1, T2, Rest...>(algorithm, mr, data1, data2, rest...);
+  #endif
+  
+}
+
+
 //TODO: implement this more efficient using #pragma omp target data
 // so that the data is transferred only once and reused by map and reduce
     template <class Algorithm, typename Result, typename R, typename T,
