@@ -16,6 +16,8 @@
 
 #include "vecpar/core/definitions/helper.hpp"
 
+#include "vecpar/omp/omp_parallelization.hpp"
+
 #define BLOCK_SIZE 32
 
 namespace vecpar::ompt {
@@ -27,13 +29,13 @@ requires detail::is_map_1<Algorithm, R, T, Rest...>
 R &parallel_map(Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, T &data,
                 Rest &...rest) {
+  #if defined(COMPILE_FOR_DEVICE)
 
   int size = static_cast<int>(data.size());
   R *vecmem_result = new R(size, &mr);
   value_type_t<R> *map_result = vecmem_result->data();
   value_type_t<T> *d_data = data.data();
 
-#if defined(COMPILE_FOR_DEVICE)
   DEBUG_ACTION(
       printf("[OMPT][map]Attempt to run on device with default config \n");)
   Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
@@ -87,14 +89,10 @@ R &parallel_map(Algorithm &algorithm,
   }
 #endif
 omp_target_free(d_alg, 0);
-#else // defined(COMPILE_FOR_HOST)
-  DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
-#pragma omp parallel for
-  for (int i = 0; i < size; i++) {
-    algorithm.mapping_function(map_result[i], data[i], rest...);
-  }
-#endif
   return *vecmem_result;
+  #else
+    return vecpar::omp::parallel_map<Algorithm, R, T, Rest...>(algorithm, mr, data, rest...);
+#endif
 }
 
     template <class Algorithm,
@@ -105,13 +103,13 @@ omp_target_free(d_alg, 0);
                     __attribute__((unused)) vecmem::memory_resource &mr, T1 &data, T2& in_2,
                     Rest &...rest) {
 
+#if defined(COMPILE_FOR_DEVICE)
         int size = static_cast<int>(data.size());
         R *vecmem_result = new R(size, &mr);
         value_type_t<R> *map_result = vecmem_result->data();
         value_type_t<T1> *d_data = data.data();
         value_type_t<T2> *in_2_data = in_2.data();
 
-#if defined(COMPILE_FOR_DEVICE)
         DEBUG_ACTION(
       printf("[OMPT][map]Attempt to run on device with default config \n");)
   Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
@@ -123,14 +121,11 @@ omp_target_free(d_alg, 0);
     d_alg->mapping_function(map_result[i], d_data[i], in_2_data[i], rest...);
   }
   omp_target_free(d_alg,0);
+        return *vecmem_result;
 #else // defined(COMPILE_FOR_HOST)
         DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
-#pragma omp parallel for
-        for (int i = 0; i < size; i++) {
-            algorithm.mapping_function(map_result[i], data[i], in_2[i], rest...);
-        }
+    return vecpar::omp::parallel_map<Algorithm, R, T1, T2, Rest...>(algorithm, mr, data, in_2, rest...);
 #endif
-        return *vecmem_result;
     }
 
     template <class Algorithm,
@@ -141,6 +136,7 @@ omp_target_free(d_alg, 0);
                     __attribute__((unused)) vecmem::memory_resource &mr, T1 &data, T2& in_2,T3& in_3,
                     Rest &...rest) {
 
+#if defined(COMPILE_FOR_DEVICE)
         int size = static_cast<int>(data.size());
         R *vecmem_result = new R(size, &mr);
         value_type_t<R> *map_result = vecmem_result->data();
@@ -148,7 +144,6 @@ omp_target_free(d_alg, 0);
         value_type_t<T2> *in_2_data = in_2.data();
         value_type_t<T3> *in_3_data = in_3.data();
 
-#if defined(COMPILE_FOR_DEVICE)
         DEBUG_ACTION(
                 printf("[OMPT][map]Attempt to run on device with default config \n");)
         Algorithm *d_alg = (Algorithm *)omp_target_alloc(sizeof(Algorithm), 0);
@@ -160,14 +155,11 @@ omp_target_free(d_alg, 0);
             d_alg->mapping_function(map_result[i], d_data[i], in_2_data[i], in_3_data[i], rest...);
         }
         omp_target_free(d_alg,0);
+        return *vecmem_result;
 #else // defined(COMPILE_FOR_HOST)
         DEBUG_ACTION(printf("[OMPT][map]Running on host with default config \n");)
-#pragma omp parallel for
-        for (int i = 0; i < size; i++) {
-            algorithm.mapping_function(map_result[i], data[i], in_2[i], in_3[i], rest...);
-        }
+    return vecpar::omp::parallel_map<Algorithm, R, T1, T2, T3, Rest...>(algorithm, mr, data, in_2, in_3, rest...);
 #endif
-        return *vecmem_result;
     }
 
 // mmap without user config
@@ -179,10 +171,10 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, T &data,
                 Rest &...rest) {
 
+#if defined(COMPILE_FOR_DEVICE)
   int size = static_cast<int>(data.size());
   value_type_t<T> *d_data = data.data();
 
-#if defined(COMPILE_FOR_DEVICE)
   // if a GPU is available, use it for the computations
   DEBUG_ACTION(
       printf("[OMPT][mmap]Attempt to run on device with default config \n");)
@@ -233,17 +225,15 @@ R &parallel_map(__attribute__((unused)) Algorithm &algorithm,
   }
 #endif
 omp_target_free(d_alg,0);
+  return data;
 #else // defined(COMPILE_FOR_HOST)
   DEBUG_ACTION(printf("[OMPT][mmap]Running on host with default config \n");)
-#pragma omp parallel for
-  for (int i = 0; i < size; i++) {
-    algorithm.mapping_function(data[i], rest...);
-  }
+
+    return vecpar::omp::parallel_map<Algorithm, R, T, Rest...>(algorithm, mr, data, rest...);
 #endif
 
   // update the input vector
  // data.assign(d_data, d_data + size);
-  return data;
 }
 
     template <class Algorithm,
@@ -254,11 +244,11 @@ omp_target_free(d_alg,0);
                     __attribute__((unused)) vecmem::memory_resource &mr, T1 &data, T2& in_2,
                     Rest &...rest) {
 
+#if defined(COMPILE_FOR_DEVICE)
         int size = static_cast<int>(data.size());
         value_type_t<T1> *d_data = data.data();
         value_type_t<T2> *in_2_data = in_2.data();
 
-#if defined(COMPILE_FOR_DEVICE)
         // if a GPU is available, use it for the computations
         DEBUG_ACTION(
                 printf("[OMPT][mmap]Attempt to run on device with default config \n");)
@@ -274,17 +264,14 @@ omp_target_free(d_alg,0);
             d_alg->mapping_function(d_data[i], in_2_data[i], rest...);
         }
         omp_target_free(d_alg,0);
+        return data;
 #else // defined(COMPILE_FOR_HOST)
         DEBUG_ACTION(printf("[OMPT][mmap]Running on host with default config \n");)
-#pragma omp parallel for
-  for (int i = 0; i < size; i++) {
-    algorithm.mapping_function(data[i], in_2[i], rest...);
-  }
+    return vecpar::omp::parallel_map<Algorithm, R, T1, T2, Rest...>(algorithm, mr, data, in_2, rest...);
 #endif
 
         // update the input vector
     //    data.assign(d_data, d_data + size);
-        return data;
     }
 
     template <class Algorithm,
@@ -296,12 +283,12 @@ omp_target_free(d_alg,0);
                     T2& in_2, T3& in_3,
                     Rest &...rest) {
 
+#if defined(COMPILE_FOR_DEVICE)
         int size = static_cast<int>(data.size());
         value_type_t<T1> *d_data = data.data();
         value_type_t<T2> *in_2_data = in_2.data();
         value_type_t<T3> *in_3_data = in_3.data();
 
-#if defined(COMPILE_FOR_DEVICE)
         // if a GPU is available, use it for the computations
         DEBUG_ACTION(
                 printf("[OMPT][mmap]Attempt to run on device with default config \n");)
@@ -317,17 +304,14 @@ omp_target_free(d_alg,0);
             d_alg->mapping_function(d_data[i], in_2_data[i], in_3_data[i], rest...);
         }
         omp_target_free(d_alg,0);
+        return data;
 #else // defined(COMPILE_FOR_HOST)
         DEBUG_ACTION(printf("[OMPT][mmap]Running on host with default config \n");)
-#pragma omp parallel for
-  for (int i = 0; i < size; i++) {
-    algorithm.mapping_function(data[i], in_2[i], in_3[i], rest...);
-  }
+    return vecpar::omp::parallel_map<Algorithm, R, T1, T2, T3, Rest...>(algorithm, mr, data, in_2, in_3, rest...);
 #endif
 
         // update the input vector
     //    data.assign(d_data, d_data + size);
-        return data;
     }
 
 
@@ -338,11 +322,11 @@ typename R::value_type &
 parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
                 __attribute__((unused)) vecmem::memory_resource &mr, R &data) {
 
+#if defined(COMPILE_FOR_DEVICE)
   using reduce_t = typename R::value_type;
   reduce_t* result = new reduce_t(algorithm.identity_function());
 
   std::size_t size = data.size();
-#if defined(COMPILE_FOR_DEVICE)
   constexpr std::size_t num_target_teams = 40;
 
   reduce_t *d_data = data.data();
@@ -412,21 +396,11 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
     // printf("r: %f\n", *result);
   }
   // }
+  return *result;
 #else // defined(COMPILE_FOR_HOST)
-#pragma omp parallel
-  {
-    reduce_t thread_result = algorithm.identity_function();
-
-#pragma omp for nowait
-    for (std::size_t i = 0; i < size; i++)
-      algorithm.reducing_function(&thread_result, data[i]);
-
-#pragma omp critical
-    algorithm.reducing_function(result, thread_result);
-  }
+  return vecpar::omp::parallel_reduce<Algorithm, R>(algorithm, mr, data);
 #endif
 
-  return *result;
 }
 
 // filter without user config
@@ -435,9 +409,9 @@ requires detail::is_filter<Algorithm, T>
 T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
                    vecmem::memory_resource &mr, T &data) {
 
+#if defined(COMPILE_FOR_DEVICE)
   T *result;
 
-#if defined(COMPILE_FOR_DEVICE)
   std::size_t num_target_teams = 40;
   std::size_t size = data.size();
   value_type_t<T> *d_data = data.data();
@@ -563,23 +537,11 @@ T &parallel_filter(__attribute__((unused)) Algorithm algorithm,
       }
     }
   }
+  return *result;
 #else // defined(COMPILE_FOR_HOST)
-  result = new T(data.size(), &mr);
-
-  std::size_t result_index = 0;
-  for (std::size_t i = 0; i < data.size(); i++) {
-
-    if (algorithm.filtering_function(data[i])) {
-
-      result->data()[result_index] = data.data()[i];
-      result_index++;
-    }
-  }
-
-  result->resize(result_index);
+  return vecpar::omp::parallel_filter<Algorithm, T>(algorithm, mr, data);
 #endif
 
-  return *result;
 }
 
 template <class Algorithm, typename reduce_t,
@@ -651,7 +613,7 @@ reduce_t &parallel_map_reduce(Algorithm &algorithm, __attribute__((unused)) vecm
   return *result;
   
   #else
-  return vecpar::ompt::parallel_reduce(algorithm, mr, vecpar::ompt::parallel_map(algorithm, mr, data, rest...));
+  return vecpar::omp::parallel_map_reduce<Algorithm, reduce_t, R, T, Rest...>(algorithm, mr, data, rest...);
   #endif
   
 }
