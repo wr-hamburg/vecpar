@@ -314,22 +314,14 @@ omp_target_free(d_alg,0);
     //    data.assign(d_data, d_data + size);
     }
 
+template <class Algorithm, typename R, typename Function, typename ...Data>
+typename R::value_type internal_reduce(__attribute__((unused)) Algorithm &algorithm, std::size_t size, Function f, Data... data) {
 
-// reduce without user config
-template <class Algorithm, typename R>
-requires detail::is_reduce<Algorithm, R>
-typename R::value_type &
-parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
-                __attribute__((unused)) vecmem::memory_resource &mr, R &data) {
 
-#if defined(COMPILE_FOR_DEVICE)
-  using reduce_t = typename R::value_type;
+ using reduce_t = typename R::value_type;
   reduce_t* result = new reduce_t(algorithm.identity_function());
 
-  std::size_t size = data.size();
   constexpr std::size_t num_target_teams = 40;
-
-  reduce_t *d_data = data.data();
 
   // data_value_type *temp_result = (data_value_type *)omp_target_alloc(
   //     sizeof(data_value_type) * num_target_teams * BLOCK_SIZE, 0);
@@ -337,8 +329,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
   reduce_t team_result[num_target_teams];
   // memset(team_temp_result, 0, sizeof(typename R::value_type) * 2);
 
-#pragma omp target teams map(to                                                \
-                             : d_data [0:size])                                \
+#pragma omp target teams                                \
     map(from                                                                   \
         : team_result [0:num_target_teams]) num_teams(num_target_teams)
   // is_device_ptr(temp_result)
@@ -356,8 +347,9 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
       //      printf("%d %f \n", d_data[i], map_result[i]);
       // printf("%d %f %f\n", omp_get_thread_num(), temp_result[i],
       // d_data[i]);
+      reduce_t temp = f(i, data...);
       algorithm.reducing_function(thread_result + omp_get_thread_num(),
-                                  d_data[i]);
+                                  temp);
       // printf("%d %f %f\n", omp_get_thread_num(), temp_result[i],
       // d_data[i]);
       //  printf("Running on device? = %d\n", !omp_is_initial_device());
@@ -397,7 +389,29 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
   }
   // }
   return *result;
-#else // defined(COMPILE_FOR_HOST)
+  
+}
+
+
+// reduce without user config
+template <class Algorithm, typename R>
+requires detail::is_reduce<Algorithm, R>
+typename R::value_type &
+parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
+                __attribute__((unused)) vecmem::memory_resource &mr, R &data) {
+
+#if defined(COMPILE_FOR_DEVICE)
+
+ using reduce_t = typename R::value_type;
+  reduce_t *data_gpu = data.data();
+  
+  reduce_t* temp = new R::value_type();
+  #pragma omp target data map(to:data_gpu[0:data.size()])
+  {
+    *temp = internal_reduce<Algorithm, R>(algorithm, data.size(), [&](std::size_t i, reduce_t* in_1){ return in_1[i];}, data_gpu);
+  }
+  return *temp;
+ #else // defined(COMPILE_FOR_HOST)
   return vecpar::omp::parallel_reduce<Algorithm, R>(algorithm, mr, data);
 #endif
 
@@ -552,66 +566,15 @@ reduce_t &parallel_map_reduce(Algorithm &algorithm, __attribute__((unused)) vecm
   
   #if defined(COMPILE_FOR_DEVICE)
 
-  std::size_t size = data.size();
-  reduce_t *result = new reduce_t(algorithm.identity_function());
+  typename T::value_type *data_gpu = data.data();
 
-  constexpr std::size_t num_target_teams = 40;
-
-  value_type_t<T> *d_data = data.data();
-
-  reduce_t team_result[num_target_teams];
-
-  #pragma omp target teams map(to: d_data[0:size]) map(from : team_result [0:num_target_teams]) num_teams(num_target_teams)
+  reduce_t* temp = new reduce_t();
+  #pragma omp target data map(to:data_gpu[0:data.size()])
   {
-
-    reduce_t thread_result[BLOCK_SIZE];
-
-    #pragma omp parallel num_threads(BLOCK_SIZE)
-      thread_result[omp_get_thread_num()] = algorithm.identity_function();
-
-    #pragma omp distribute parallel for num_threads(BLOCK_SIZE)
-    for (size_t i = 0; i < size; i++) {
-      reduce_t temp;
-      algorithm.mapping_function(temp, d_data[i], rest...);
-      algorithm.reducing_function(thread_result + omp_get_thread_num(), temp);
-    }
-
-
-    size_t j = BLOCK_SIZE;
-    while (j > 1) {
-      {
-#pragma omp parallel num_threads(BLOCK_SIZE)
-        {
-          size_t i = omp_get_thread_num();
-          if (i < j / 2) {
-            /*printf("Current: team %d, thread %d, value: %f, value2: %f, j: "
-                   "%ld,i: %ld, %ld\n",
-                   omp_get_team_num(), omp_get_thread_num(), temp_result[i],
-                   temp_result[j - (j / 2) + i], j, i, j - (j / 2) + i);*/
-            algorithm.reducing_function(thread_result + i,
-                                        thread_result[j - (j / 2) + i]);
-          }
-        }
-        j = (j + 1) / 2;
-      }
-    }
-    team_result[omp_get_team_num()] = thread_result[0];
-
+    *temp = internal_reduce<Algorithm, R>(algorithm, data.size(), [&](std::size_t i, typename T::value_type *in_1, Rest &... local_rest) {reduce_t temp; algorithm.mapping_function(temp, in_1[i], local_rest...); return temp;}, data_gpu, rest...);
+  }
+  return *temp;
     
-  }
-
-
-  for (size_t i = 0;
-       i < num_target_teams;
-       i++) {
-    //printf("t: %f\n", team_temp_result[i]);
-    algorithm.reducing_function(result, team_result[i]);
-    //printf("r: %f\n", *result);
-  }
-
-  //printf("I was here\n");
-  return *result;
-  
   #else
   return vecpar::omp::parallel_map_reduce<Algorithm, reduce_t, R, T, Rest...>(algorithm, mr, data, rest...);
   #endif
