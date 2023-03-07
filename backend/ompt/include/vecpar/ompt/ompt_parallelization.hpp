@@ -405,7 +405,7 @@ parallel_reduce(__attribute__((unused)) Algorithm &algorithm,
  using reduce_t = typename R::value_type;
   reduce_t *data_gpu = data.data();
   
-  reduce_t* temp = new R::value_type();
+  reduce_t* temp = new reduce_t();
   #pragma omp target data map(to:data_gpu[0:data.size()])
   {
     *temp = internal_reduce<Algorithm, R>(algorithm, data.size(), [&](std::size_t i, reduce_t* in_1){ return in_1[i];}, data_gpu);
