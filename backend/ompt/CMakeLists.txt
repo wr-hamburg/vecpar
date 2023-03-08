@@ -7,7 +7,7 @@ target_include_directories(vecpar_ompt INTERFACE
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 target_link_libraries(vecpar_ompt INTERFACE
-        vecpar_core vecmem::core OpenMP::OpenMP_CXX)
+        vecpar_core vecmem::core OpenMP::OpenMP_CXX vecpar::omp)
 
 set_target_properties(vecpar_ompt PROPERTIES EXPORT_NAME ompt)
 add_library(vecpar::ompt ALIAS vecpar_ompt)
