@@ -66,6 +66,7 @@ To install the library
 ```sh 
 cmake --install <build_directory>
 ```
+<!---
 ## Collection types
 vecpar supports `vecmem::vectors` as input and/or output for all operations. 
 `vecmem::jagged_vectors` are supported for a restricted subset (marked with x):
@@ -77,3 +78,9 @@ vecpar supports `vecmem::vectors` as input and/or output for all operations.
 | reduce |                            |                     |
 | map-filter | x                          |                     |
 | map-reduce | x                          |                     |
+-->
+
+## Usability
+To use vecpar from a different project, add the following import line into the root `cmake` file:
+
+```find_package( vecpar REQUIRED 0.0.3)```
