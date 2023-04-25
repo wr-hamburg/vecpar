@@ -5,6 +5,7 @@ This is a header-only library for enabling single source code (C++) to target he
 <ul>
   <li> (CPU) OpenMP </li>
   <li> (GPU) CUDA </li>
+  <li> (GPU) OpenMP target - experimental </li>
 </ul>
 
 ## Dependencies
