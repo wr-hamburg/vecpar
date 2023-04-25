@@ -9,10 +9,16 @@ This is a header-only library for enabling single source code (C++) to target he
 </ul>
 
 ## Dependencies
-The project requires LLVM/Clang to build the sources. Recommendation:
+To enable all the supported backends, the project requires LLVM/Clang to build the sources. 
+Recommendation:
 ```sh
 spack install llvm@14.0.0 +all_targets +cuda cuda_arch=<XY>
 ```
+Any C/C++ compiler (with OpenMP support) can build the CPU OpenMP backend. 
+
+To compile the GPU OpenMP backend, gcc/clang need a specific build configuration. For targeting NVIDIA hardware, this can be easily achieved by installing `gcc` or `llvm` with flags `+nvptx` and `+cuda` respectively from spack. When targeting AMD hardware, the configuration steps need to be done manually as show in the online documentation. 
+
+For the CUDA backend, `clang` or `nvcc` can be used to compile the code. 
 
 | Dependency                                               | OpenMP backend | CUDA backend | Tests |
 |----------------------------------------------------------|---|--------------|-------|
