@@ -9,25 +9,31 @@ This is a header-only library for enabling single source code (C++) to target he
 </ul>
 
 ## Dependencies
-To enable all the supported backends, the project requires LLVM/Clang to build the sources. 
-Recommendation:
+
+Common dependencies for all the backends:
+1. [Vecmem library](https://github.com/acts-project/vecmem)
+2. [GoogleTest](https://github.com/google/googletest)
+
+LLVM/clang is currently the only compiler that can build all the vecpar backends. Recommended setup on a system with NVIDIA GPU:
 ```sh
 spack install llvm@14.0.0 +all_targets +cuda cuda_arch=<XY>
-```
+spack install vecmem +cuda cuda_arch=<XY>
+spack install googletest
+```  
+vecpar uses [nestoroprysk/FunctionComposition](https://github.com/nestoroprysk/FunctionComposition) for supporting the algorithm chaining functionality.
+
+### Dependency for the OpenMP for CPU backend
 Any C/C++ compiler (with OpenMP support) can build the CPU OpenMP backend. 
 
-To compile the GPU OpenMP backend, gcc/clang need a specific build configuration. For targeting NVIDIA hardware, this can be easily achieved by installing `gcc` or `llvm` with flags `+nvptx` and `+cuda` respectively from spack. When targeting AMD hardware, the configuration steps need to be done manually as show in the online documentation. 
+### Dependency for the CUDA backend
+For the CUDA backend, `clang` or `nvcc` can be used to compile the code. Additionally, the CUDA libraries must be accessible at compile and runtime.
 
-For the CUDA backend, `clang` or `nvcc` can be used to compile the code. 
-
-| Dependency                                               | OpenMP backend | CUDA backend | Tests |
-|----------------------------------------------------------|---|--------------|-------|
-| [vecmem library](https://github.com/acts-project/vecmem) | x | x| x     |
-| OpenMP 5.0 (enabled by default with LLVM14)              | x | |       |
-| CUDA 11.5.0                                              | | x |       |
-| GoogleTest                                               | | | x     |
-
-vecpar uses [nestoroprysk/FunctionComposition](https://github.com/nestoroprysk/FunctionComposition) for supporting the algorithm chaining functionality.
+### Dependency for the OpenMP Target backend
+To compile the GPU OpenMP backend, `gcc`/`clang` need a specific build configuration when targeting different GPU:
+* NVIDIA - this can be easily achieved by installing `gcc` or `llvm` with flags `+nvptx` and `+cuda` respectively from spack. 
+* AMD - the configuration steps need to be done manually as show in the online documentation. For AMD GPU, [AOMP compiler](https://github.com/ROCm-Developer-Tools/aomp) can be used as an alternative.
+    
+Also, the GPU driver and the associated libraries (CUDA or ROCm) need to be accessible at compile and runtime.
 
 ## Installation
 
